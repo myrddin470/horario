@@ -92,14 +92,21 @@ button { padding:8px 12px; border-radius:8px; border:none; font-weight:bold; cur
 
 <script>
 // ================== CONFIG FIREBASE ==================
+
 const firebaseConfig = {
-  apiKey: "TU_API_KEY",
-  authDomain: "TU_AUTH_DOMAIN",
-  projectId: "TU_PROJECT_ID",
-  storageBucket: "TU_STORAGE_BUCKET",
-  messagingSenderId: "TU_MESSAGING_SENDER_ID",
-  appId: "TU_APP_ID"
+  apiKey: "AIzaSyA6_BtwhDpDkwPAEvL1QW8uKzBVj3m3cqI",
+  authDomain: "controlhorario-cc874.firebaseapp.com",
+  databaseURL: "https://controlhorario-cc874-default-rtdb.firebaseio.com",
+  projectId: "controlhorario-cc874",
+  storageBucket: "controlhorario-cc874.firebasestorage.app",
+  messagingSenderId: "984659015045",
+  appId: "1:984659015045:web:51a4124887121bd61ec0ec"
 };
+
+
+
+
+
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
