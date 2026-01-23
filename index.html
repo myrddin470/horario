@@ -3,8 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Control Horario Jornada Partida HH:MM</title>
+<title>Control Horario Firebase</title>
 <style>
+/* ================== ESTILOS ================== */
 body { font-family:"Segoe UI",sans-serif; background:#f0f2f5; margin:0; padding:0; }
 header { text-align:center; padding:5px; background:#34495e; color:white; box-shadow:0 4px 8px rgba(0,0,0,0.2);}
 .container { max-width:1200px; margin:20px auto; padding:15px; background:white; border-radius:12px; box-shadow:0 6px 15px rgba(0,0,0,0.2);}
@@ -24,11 +25,11 @@ select { padding:5px 10px; border-radius:8px; border:1px solid #ccc; font-size:1
 .comision { background: #d2b48c; color: white; font-weight: bold;}
 .domingo { background:#e74c3c; color:white; font-weight:bold;}
 .festivo { background:#e74c3c; color:white; font-weight:bold;}
-.day.hoy { position: relative; border-radius: 8px; box-shadow: 0 0 10px rgba(12, 12, 12, 0.8), 0 0 20px rgba(10, 10, 10, 0.5), 0 0 30px rgba(3, 3, 3, 0.3); z-index: 2; border: 2px solid rgb(12, 12, 12);}
-.modal, .modal-resumen, .modal-login { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); justify-content:center; align-items:center; z-index:999;}
-.modal .content, .modal-resumen .content, .modal-login .content { background:white; padding:18px; border-radius:12px; width:92%; max-width:420px; box-shadow:0 8px 24px rgba(0,0,0,0.25);}
+.day.hoy { border:2px solid #000; box-shadow:0 0 10px rgba(0,0,0,0.8);}
+.modal, .modal-resumen { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); justify-content:center; align-items:center; z-index:999;}
+.modal .content, .modal-resumen .content { background:white; padding:18px; border-radius:12px; width:92%; max-width:420px; box-shadow:0 8px 24px rgba(0,0,0,0.25);}
 label { display:block; margin-top:6px;}
-input[type="time"], input[type="email"], input[type="password"], textarea { width:100%; padding:6px; border-radius:6px; border:1px solid #ccc; margin-top:4px;}
+input[type="time"], textarea { width:100%; padding:6px; border-radius:6px; border:1px solid #ccc; margin-top:4px;}
 .checkbox-row { margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;}
 .btn-row { display:flex; gap:8px; justify-content:space-between; margin-top:12px;}
 button { padding:8px 12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer;}
@@ -40,216 +41,191 @@ button { padding:8px 12px; border-radius:8px; border:none; font-weight:bold; cur
 .legend-item { display:flex; gap:8px; align-items:center; cursor:pointer; padding:6px 8px; border-radius:8px; transition:0.12s;}
 .legend-item:hover { transform:scale(1.03); box-shadow:0 3px 8px rgba(0,0,0,0.12);}
 .legend-color { width:18px; height:18px; border-radius:4px;}
-table { width:100%; border-collapse:collapse; margin-top:10px;}
-th,td { border:1px solid #ddd; padding:6px; text-align:center; font-size:0.95em;}
-th { background:#007bff; color:white;}
-tfoot td { font-weight:bold; background:#f2f2f2;}
-@media(max-width:700px){ .calendar { grid-template-columns:repeat(3,1fr);} }
+.login-container { display:flex; flex-direction:column; justify-content:center; align-items:center; height:100vh;}
+.login-container input { padding:8px; margin:6px 0; border-radius:6px; border:1px solid #ccc; width:200px;}
+.login-container button { background:#007bff; color:white; border:none; padding:8px 12px; border-radius:6px; cursor:pointer; font-weight:bold;}
 </style>
 </head>
 <body>
 <header><h1>Control Horario Inspección de transportes</h1></header>
 
-<!-- LOGIN MODAL -->
-<div class="modal-login" id="loginModal">
-  <div class="content">
-    <h3>Iniciar Sesión</h3>
-    <label>Correo:</label><input type="email" id="loginEmail">
-    <label>Contraseña:</label><input type="password" id="loginPassword">
-    <div class="btn-row">
-      <button class="save" id="loginBtn">Entrar</button>
+<div id="loginScreen" class="login-container">
+  <h2>Inicia sesión</h2>
+  <input type="email" id="email" placeholder="Correo electrónico">
+  <input type="password" id="password" placeholder="Contraseña">
+  <button id="loginBtn">Login</button>
+  <p id="loginError" style="color:red;"></p>
+</div>
+
+<div id="app" style="display:none;">
+  <div class="container">
+    <div class="controls">
+      <button id="btnPrevMes" type="button">◀</button>
+      <label>Mes: <select id="monthSelect"></select></label>
+      <label>Año: <select id="yearSelect"></select></label>
+      <button id="btnNextMes" type="button">▶</button>
+      <button class="export" id="exportBtn">Exportar Excel</button>
+      <input type="file" id="importFile" style="display:none;">
+      <button class="import" id="importBtn">Importar Excel</button>
+    </div>
+    <div class="info">
+      <div>Horas mensuales: <span id="horasObjetivo">00:00</span></div>
+      <div>Horas restantes/extras: <span id="horasRestantes">00:00</span></div>
+      <button id="verHorasExtras" class="export" style="margin-left:10px;">Ver Horas Extras</button>
+    </div>
+    <div class="calendar" id="calendar"></div>
+    <div class="legend" id="legend">
+      <div class="legend-item" id="legCom"><div class="legend-color" style="background:#d2b48c"></div><span>Comisión</span></div>
+      <div class="legend-item" id="legVac"><div class="legend-color" style="background:#3498db"></div><span>Vacaciones</span></div>
+      <div class="legend-item" id="legPH"><div class="legend-color" style="background:#ff69b4"></div><span>Permiso horas</span></div>
+      <div class="legend-item" id="legAP"><div class="legend-color" style="background:#27ae60"></div><span>Asuntos propios</span></div>
+      <div class="legend-item" id="legOtros"><div class="legend-color" style="background:#95a5a6"></div><span>Otros</span></div>
+      <div class="legend-item"><button class="export" id="verAnualBtn" type="button">Permisos año</button></div>
     </div>
   </div>
 </div>
 
-<div class="container">
-  <div class="controls">
-    <button id="btnPrevMes" type="button">◀</button>
-    <label>Mes: <select id="monthSelect"></select></label>
-    <label>Año: <select id="yearSelect"></select></label>
-    <button id="btnNextMes" type="button">▶</button>
-    <button class="export" id="exportBtn">Exportar Excel</button>
-    <input type="file" id="importFile" style="display:none;">
-    <button class="import" id="importBtn">Importar Excel</button>
-  </div>
-  <div class="info">
-    <div>Horas mensuales: <span id="horasObjetivo">00:00</span></div>
-    <div>Horas restantes/extras: <span id="horasRestantes">00:00</span></div>
-    <button id="verHorasExtras" class="export" style="margin-left:10px;">Ver Horas Extras</button>
-  </div>
-  <div class="calendar" id="calendar"></div>
-  <div class="legend" id="legend">
-    <div class="legend-item" id="legCom"><div class="legend-color" style="background:#d2b48c"></div><span>Comisión</span></div>
-    <div class="legend-item" id="legVac"><div class="legend-color" style="background:#3498db"></div><span>Vacaciones</span></div>
-    <div class="legend-item" id="legPH"><div class="legend-color" style="background:#ff69b4"></div><span>Permiso horas</span></div>
-    <div class="legend-item" id="legAP"><div class="legend-color" style="background:#27ae60"></div><span>Asuntos propios</span></div>
-    <div class="legend-item" id="legOtros"><div class="legend-color" style="background:#95a5a6"></div><span>Otros</span></div>
-    <div class="legend-item"><button class="export" id="verAnualBtn" type="button">Permisos año</button></div>
-  </div>
-</div>
-
-<!-- Modal edición de día -->
-<div class="modal" id="modal">
-  <div class="content">
-    <h3 id="modalDateTitle"></h3>
-    <label>Entrada Mañana</label><input type="time" id="entrada1">
-    <label>Salida Mañana</label><input type="time" id="salida1">
-    <label>Entrada Tarde</label><input type="time" id="entrada2">
-    <label>Salida Tarde</label><input type="time" id="salida2">
-    <label>Nota</label><textarea id="nota" rows="2"></textarea>
-    <div class="checkbox-row">
-      <label><input type="checkbox" id="chkLaborable"> Laborable</label>
-      <label><input type="checkbox" id="chkVac"> Vacaciones</label>
-      <label><input type="checkbox" id="chkPH"> Permiso horas</label>
-      <label><input type="checkbox" id="chkAP"> Asuntos propios</label>
-      <label><input type="checkbox" id="chkOtros"> Otros</label>
-      <label><input type="checkbox" id="chkComision"> Comisión</label>
-      <label><input type="checkbox" id="chkFestivo"> Festivo</label>
-    </div>
-    <div class="btn-row">
-      <button class="save" id="btnSave">Guardar</button>
-      <button class="delete" id="btnDelete">Borrar</button>
-      <button class="cancel" id="btnCancel">Cancelar</button>
-    </div>
-  </div>
-</div>
-
-<!-- Modal resumen anual -->
-<div class="modal-resumen" id="modalResumen">
-  <div class="content">
-    <h2 id="resumenTitulo">Vacaciones y permisos — 0000</h2>
-    <table id="resumenTabla">
-      <thead>
-        <tr><th>Mes</th><th>Vacaciones</th><th>Permiso horas</th><th>Asuntos propios</th><th>Otros</th></tr>
-      </thead>
-      <tbody></tbody>
-      <tfoot>
-        <tr><td><strong>Total</strong></td><td id="totVac">0</td><td id="totPH">0</td><td id="totAP">0</td><td id="totOtros">0</td></tr>
-      </tfoot>
-    </table>
-    <div style="text-align:center;margin-top:10px;display:flex;justify-content:center;gap:10px;">
-      <button class="cancel" id="cerrarResumenBtn">Cerrar</button>
-      <button class="export" id="verAnualBtn">Año</button>
-    </div>
-  </div>
-</div>
-
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<!-- Firebase SDK -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-app.js";
-import { getDatabase, ref, set, get, onValue } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-database.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
-
-// 🔹 CONFIGURA AQUÍ TU FIREBASE 🔹
+<script>
+// ================== CONFIG FIREBASE ==================
 const firebaseConfig = {
-  apiKey: "AIzaSyA6_BtwhDpDkwPAEvL1QW8uKzBVj3m3cqI",
-  authDomain: "controlhorario-cc874.firebaseapp.com",
-  databaseURL: "https://controlhorario-cc874-default-rtdb.firebaseio.com",
-  projectId: "controlhorario-cc874",
-  storageBucket: "controlhorario-cc874.firebasestorage.app",
-  messagingSenderId: "984659015045",
-  appId: "1:984659015045:web:51a4124887121bd61ec0ec"
+  apiKey: "TU_API_KEY",
+  authDomain: "TU_AUTH_DOMAIN",
+  projectId: "TU_PROJECT_ID",
+  storageBucket: "TU_STORAGE_BUCKET",
+  messagingSenderId: "TU_MESSAGING_SENDER_ID",
+  appId: "TU_APP_ID"
 };
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const auth = getAuth(app);
-
-// ELEMENTOS
-const loginModal = document.getElementById('loginModal');
-const loginEmail = document.getElementById('loginEmail');
-const loginPassword = document.getElementById('loginPassword');
+// ================== LOGIN ==================
+const loginScreen = document.getElementById('loginScreen');
+const appDiv = document.getElementById('app');
 const loginBtn = document.getElementById('loginBtn');
-
-let data = {}; // se reemplaza tras login
-let currentMonth, currentYear, selectedKey;
-
-// MOSTRAR LOGIN
-loginModal.style.display = 'flex';
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const loginError = document.getElementById('loginError');
 
 loginBtn.onclick = () => {
-  signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value)
-    .then(userCredential => {
-      loginModal.style.display = 'none';
-      const uid = userCredential.user.uid;
-      // Leer datos del usuario
-      const dbRef = ref(db, 'users/'+uid+'/controlHorario');
-      get(dbRef).then(snapshot => {
-        if(snapshot.exists()) data = snapshot.val();
-        else data = {};
-        init();
-      });
-
-      // Sincronización en tiempo real
-      onValue(dbRef, snapshot => {
-        if(snapshot.exists()) {
-          data = snapshot.val();
-          renderCalendar();
-        }
-      });
-    })
-    .catch(err => alert("Error login: "+err.message));
+  loginError.textContent = '';
+  const email = emailInput.value;
+  const password = passwordInput.value;
+  auth.signInWithEmailAndPassword(email,password)
+    .then(()=>{ loginScreen.style.display='none'; appDiv.style.display='block'; loadData(); })
+    .catch(err=>loginError.textContent = err.message);
 };
 
-// Revisar si usuario ya logueado
-onAuthStateChanged(auth, user => {
-  if(user) loginModal.style.display='none';
+auth.onAuthStateChanged(user=>{
+  if(user){
+    loginScreen.style.display='none';
+    appDiv.style.display='block';
+    loadData();
+  }else{
+    loginScreen.style.display='flex';
+    appDiv.style.display='none';
+  }
 });
-</script>
 
-<!-- AQUÍ IRÍA TODO TU SCRIPT ORIGINAL (init, renderCalendar, btnSave, btnDelete, calcularHoras, export/import, etc.) -->
-<!-- Solo hay que modificar btnSave para que guarde también en Firebase -->
-
-<script type="module">
+// ================== VARIABLES ==================
 const monthSelect=document.getElementById('monthSelect');
 const yearSelect=document.getElementById('yearSelect');
 const calendar=document.getElementById('calendar');
 const horasObjetivoEl=document.getElementById('horasObjetivo');
 const horasRestantesEl=document.getElementById('horasRestantes');
-const modal=document.getElementById('modal');
-const modalDateTitle=document.getElementById('modalDateTitle');
-const entrada1El=document.getElementById('entrada1');
-const salida1El=document.getElementById('salida1');
-const entrada2El=document.getElementById('entrada2');
-const salida2El=document.getElementById('salida2');
-const notaEl=document.getElementById('nota');
-const chkLaborable=document.getElementById('chkLaborable');
-const chkVac=document.getElementById('chkVac');
-const chkPH=document.getElementById('chkPH');
-const chkAP=document.getElementById('chkAP');
-const chkOtros=document.getElementById('chkOtros');
-const chkComision=document.getElementById('chkComision');
-const chkFestivo=document.getElementById('chkFestivo');
-const btnSave=document.getElementById('btnSave');
-const btnDelete=document.getElementById('btnDelete');
-const btnCancel=document.getElementById('btnCancel');
+const exportBtn=document.getElementById('exportBtn');
+const importBtn=document.getElementById('importBtn');
+const importFile=document.getElementById('importFile');
 
-btnSave.onclick=()=>{
-  const e1=entrada1El.value,s1=salida1El.value,e2=entrada2El.value,s2=salida2El.value;
-  const diff1=diffHoras(e1,s1),diff2=diffHoras(e2,s2);
-  data[selectedKey]={entrada1:e1,salida1:s1,entrada2:e2,salida2:s2,totalHoras:formatHHMM(diff1+diff2),
-    nota:notaEl.value.trim()||'',
-    laborable:chkLaborable.checked,
-    vacaciones:chkVac.checked,
-    permisoHoras:chkPH.checked,
-    asuntosPropios:chkAP.checked,
-    otros:chkOtros.checked,
-    comision: chkComision.checked,
-    festivo: chkFestivo.checked
-  };
-  if(data[selectedKey].vacaciones||data[selectedKey].permisoHoras||data[selectedKey].asuntosPropios||data[selectedKey].otros)data[selectedKey].laborable=false;
-  // Guardar en Firebase
-  const uid = auth.currentUser.uid;
-  set(ref(db,'users/'+uid+'/controlHorario'), data);
-  // Limpiar campos
-  entrada1El.value=salida1El.value=entrada2El.value=salida2El.value=notaEl.value='';
-  chkLaborable.checked=chkVac.checked=chkPH.checked=chkAP.checked=chkOtros.checked=chkComision.checked=chkFestivo.checked=false;
-  modal.style.display='none';
+let data={}; // datos cargados de Firebase
+let currentMonth,currentYear,selectedKey;
+const userRef = () => db.collection('users').doc(auth.currentUser.uid);
+
+// ================== UTILIDADES ==================
+function formatHHMM(minutes){ 
+  const h=Math.floor(minutes/60); 
+  const m=minutes%60; 
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`; 
+}
+
+// ================== INICIALIZACIÓN ==================
+function init(){
+  const now=new Date();
+  currentMonth=now.getMonth();
+  currentYear=now.getFullYear();
+  for(let m=0;m<12;m++){
+    const opt=document.createElement('option');
+    opt.value=m; opt.text=new Date(0,m).toLocaleString('es-ES',{month:'long'});
+    monthSelect.appendChild(opt);
+  }
+  for(let y=2020;y<=2035;y++){
+    const opt=document.createElement('option'); opt.value=y; opt.text=y; yearSelect.appendChild(opt);
+  }
+  monthSelect.value=currentMonth; yearSelect.value=currentYear;
   renderCalendar();
-};
-</script>
+}
 
+// ================== CARGA DATOS ==================
+function loadData(){
+  userRef().collection('controlHorario').get().then(snapshot=>{
+    snapshot.forEach(doc=>{
+      data[doc.id]=doc.data();
+    });
+    init();
+  });
+}
+
+// ================== GUARDAR DÍA ==================
+function saveDay(key, info){
+  data[key] = info;
+  userRef().collection('controlHorario').doc(key).set(info);
+}
+
+// ================== RENDER CALENDARIO ==================
+function renderCalendar(){
+  calendar.innerHTML='';
+  const days=['L','M','X','J','V','S','D'];
+  days.forEach(d=>{
+    const el=document.createElement('div'); el.className='weekday'; el.textContent=d; calendar.appendChild(el);
+  });
+
+  const first=(new Date(currentYear,currentMonth,1).getDay()+6)%7;
+  for(let i=0;i<first;i++) calendar.appendChild(document.createElement('div'));
+
+  const dim=new Date(currentYear,currentMonth+1,0).getDate();
+  for(let d=1;d<=dim;d++){
+    const key=`${currentYear}-${currentMonth+1}-${d}`;
+    let info=data[key]||{};
+    const wd=new Date(currentYear,currentMonth,d).getDay();
+    if(info.laborable===undefined){ info.laborable = (wd !== 0 && wd !== 6);}
+    const cell=document.createElement('div'); cell.className='day'; cell.innerHTML=`<div class="day-number">${d}</div>`;
+    cell.onclick=()=>editDay(key);
+    calendar.appendChild(cell);
+  }
+}
+
+// ================== EDITAR DÍA ==================
+function editDay(key){
+  let info = data[key] || {};
+  const e1 = prompt('Entrada mañana (HH:MM)', info.entrada1||'');
+  const s1 = prompt('Salida mañana (HH:MM)', info.salida1||'');
+  const e2 = prompt('Entrada tarde (HH:MM)', info.entrada2||'');
+  const s2 = prompt('Salida tarde (HH:MM)', info.salida2||'');
+  const vac = confirm('Vacaciones?');
+  const ph = confirm('Permiso horas?');
+  info = {entrada1:e1, salida1:s1, entrada2:e2, salida2:s2, vacaciones:vac, permisoHoras:ph};
+  saveDay(key, info);
+  renderCalendar();
+}
+
+// ================== EVENTOS ==================
+monthSelect.onchange=()=>{currentMonth=parseInt(monthSelect.value); renderCalendar();};
+yearSelect.onchange=()=>{currentYear=parseInt(yearSelect.value); renderCalendar();};
+</script>
 </body>
 </html>
