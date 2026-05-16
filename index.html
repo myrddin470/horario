@@ -3,774 +3,789 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Horario - JCOS</title>
-    
-    <!-- SDK de Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    
+    <title>Control Horario - Premium</title>
     <style>
         :root {
-            --primary: #4f46e5; --bg: #f1f5f9; --card: #ffffff; --text: #1e293b;
-            --c-laborable: #ffffff; --c-nolaborable-sat: #ffffff;
-            --c-nolaborable-other: #e2e8f0; --c-comision: #f0e2a7; 
-            --c-vacaciones: #3b82f6; --c-asuntos: #10b981; 
-            --c-extras: #d946ef; --c-festivo: #ef4444; 
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg: #f1f5f9;
+            --card: #ffffff;
+            --text: #1e293b;
+            --c-laborable: #ffffff;
+            --c-nolaborable-sat: #ffffff; 
+            --c-nolaborable-other: #e2e8f0; 
+            --c-comision: #f0e2a7; 
+            --c-vacaciones: #3b82f6; 
+            --c-asuntos: #10b981; 
+            --c-extras: #d946ef; 
+            --c-festivo: #ef4444; 
         }
 
-        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
-        .app-container { width: 100%; max-width: 1250px; padding: 15px; box-sizing: border-box; } 
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .app-container { width: 100%; max-width: 1100px; }
         .hidden { display: none !important; }
 
-        /* LOGIN OVERLAY */
-        #login-container { 
-            position: fixed; inset: 0; background: var(--bg); z-index: 3000; 
-            display: flex; justify-content: center; align-items: center; 
+        /* PANTALLA DE CARGA */
+        .loading-screen {
+            position: fixed; inset: 0; background: var(--bg); display: flex;
+            flex-direction: column; justify-content: center; align-items: center; z-index: 2000;
         }
-        .login-card { 
-            background: white; padding: 40px; border-radius: 24px; 
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 350px; 
-            text-align: center;
+        .spinner {
+            width: 40px; height: 40px; border: 4px solid #cbd5e1;
+            border-top-color: var(--primary); border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin-bottom: 15px;
         }
-        .login-input { 
-            width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 10px; 
-            border: 1px solid #cbd5e1; font-family: inherit; box-sizing: border-box;
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { font-weight: 700; color: #64748b; font-size: 1rem; }
 
-        /* HEADER */
-        .main-header-bar { width: 100%; background: var(--card); padding: 15px 0; border-bottom: 1px solid #e2e8f0; text-align: center; }
-        .main-header-bar h1 { margin: 0; font-size: 1.3rem; letter-spacing: 2px; color: var(--primary); font-weight: 900; }
-        
-       .header-nav { 
-            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; 
-            background: var(--card); padding: 15px; border-radius: 16px; gap: 12px; margin-bottom: 20px;
-            box-sizing: border-box; width: 100%;
+        /* PANTALLA DE LOGIN */
+        .login-container {
+            background: var(--card); padding: 40px; border-radius: 20px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 400px;
+            margin-top: 10vh; border: 1px solid #e2e8f0; text-align: center;
         }
-        /* Nueva subclase para agrupar y empujar los botones de copia a la derecha */
-        .nav-actions-right { display: flex; gap: 10px; margin-left: auto; }
+        .login-container h2 { margin: 0 0 10px 0; color: var(--primary); font-weight: 900; text-transform: uppercase; font-size: 1.4rem; letter-spacing: 2px; }
+        .login-container p { color: #64748b; font-size: 0.9rem; margin-bottom: 25px; font-weight: 500; }
+        .login-group { display: flex; flex-direction: column; text-align: left; gap: 6px; margin-bottom: 15px; }
+        .login-group label { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; }
+        .login-group input { padding: 12px; border: 2px solid #f1f5f9; border-radius: 10px; font-size: 1rem; font-family: inherit; }
+        .login-group input:focus { outline: none; border-color: var(--primary); }
+        .btn-login { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
+        .btn-login:hover { background: var(--primary-hover); }
+        .login-error { color: #ef4444; font-size: 0.85rem; font-weight: 700; margin-top: 15px; }
+
+        /* INTERFAZ PRINCIPAL */
+        .main-header-bar {
+            width: 100%; max-width: 1100px; background: var(--card); padding: 16px 0; border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 15px; text-align: center; border: 1px solid #e2e8f0;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+        }
+        .main-header-bar h1 { margin: 0; font-size: 1.1rem; letter-spacing: 3px; color: var(--primary); font-weight: 900; text-transform: uppercase; }
+        .copy-text { font-size: 0.9rem; color: #64748b; font-weight: 600; margin-left: 10px; }
+        .user-info-box { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .user-logged-text { font-size: 0.85rem; color: #64748b; font-weight: 700; text-transform: uppercase; background: #e2e8f0; padding: 4px 12px; border-radius: 20px; display: inline-block; }
+        .btn-logout { background: #ef4444; color: white; border: none; padding: 4px 12px; font-size: 0.75rem; font-weight: 700; border-radius: 20px; cursor: pointer; text-transform: uppercase; transition: background 0.2s; }
+        .btn-logout:hover { background: #dc2626; }
+
+        .header-nav { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; gap: 10px; flex-wrap: wrap; }
         .nav-controls { display: flex; align-items: center; gap: 10px; }
-        .btn-nav { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 800; }
-        .btn-secondary { background: #64748b; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 800; }
-        .btn-logout { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.8rem; margin-top: 10px; }
-        
-        select { padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; cursor: pointer; }
+        .btn-nav { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
+        .btn-nav:hover { opacity: 0.9; }
+        select { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 600; background: white; cursor: pointer; }
 
-        /* ESTADÍSTICAS */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
-        .stat-card { background: var(--card); padding: 15px; border-radius: 16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
-        .stat-label { font-size: 0.78rem; color: #64748b; text-transform: uppercase; font-weight: 800; }
-        .stat-value { display: block; font-size: 1.35rem; font-weight: 900; margin-top: 6px; color: var(--primary); }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: var(--card); padding: 20px; border-radius: 16px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .stat-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 800; }
+        .stat-value { display: block; font-size: 1.4rem; font-weight: 800; margin-top: 8px; }
+        .btn-view-extras { margin-top: 10px; background: #6366f1; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; font-weight: 700; text-transform: uppercase; transition: background 0.2s; }
+        .btn-view-extras:hover { background: #4f46e5; }
 
-        .card-vacaciones { background-color: var(--c-vacaciones) !important; color: white !important; }
-        .card-asuntos { background-color: var(--c-asuntos) !important; color: white !important; }
-        .card-extras { background-color: var(--c-extras) !important; color: white !important; }
-        .card-vacaciones .stat-label, .card-asuntos .stat-label, .card-extras .stat-label { color: rgba(255, 255, 255, 0.85); }
-        .card-vacaciones .stat-value, .card-asuntos .stat-value, .card-extras .stat-value { color: white; }
-
-        /* CALENDARIO */
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
-        .day-header-name { text-align: center; font-weight: 900; color: #64748b; font-size: 0.85rem; padding-bottom: 8px; }
-        .day-box { background: var(--card); border-radius: 14px; min-height: 120px; padding: 12px; border: 1px solid #e2e8f0; cursor: pointer; display: flex; flex-direction: column; transition: all 0.2s; position: relative; }
-        .day-box:hover { transform: translateY(-2px); border-color: var(--primary); }
-        .day-number { font-weight: 900; font-size: 1.2rem; }
-        .day-top-bar { display: flex; justify-content: space-between; align-items: flex-start; }
-        .day-info { font-size: 0.95rem; font-weight: 700; margin-top: 5px; color: #334155; }
-        .day-total { margin-top: auto; font-weight: 900; font-size: 0.85rem; text-align: right; color: var(--primary); background: rgba(79, 70, 229, 0.1); padding: 2px 5px; border-radius: 4px; }
+        .day-header-name { text-align: center; font-weight: 800; color: #94a3b8; font-size: 0.8rem; padding: 10px 0; }
+        .day-box { background: var(--card); border-radius: 14px; min-height: 120px; padding: 12px; border: 1px solid #e2e8f0; cursor: pointer; position: relative; display: flex; flex-direction: column; transition: transform 0.15s, box-shadow 0.15s; }
+        .day-box:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .day-top-bar { display: flex; justify-content: space-between; align-items: center; }
+        .day-number { font-weight: 800; font-size: 1.2rem; }
+        .comment-indicator { font-size: 0.9rem; opacity: 0.8; cursor: help; }
+        .day-info { font-size: 0.95rem; font-weight: 700; margin-top: 6px; color: #475569; line-height: 1.3; }
+        .day-total { margin-top: auto; font-weight: 900; font-size: 0.95rem; text-align: right; color: var(--primary); background: rgba(79, 70, 229, 0.1); padding: 2px 6px; border-radius: 6px; align-self: flex-end; }
 
-        /* MODALES */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
-        .modal { background: white; padding: 22px; border-radius: 20px; width: 95%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
-        .extra-table { width: 100%; border-collapse: collapse; }
-        .extra-table th { text-align: left; padding: 10px; border-bottom: 2px solid #e2e8f0; font-size: 0.8rem; }
-        .extra-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; font-weight: 600; }
-
-        .loading-overlay { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.8); display: none; justify-content: center; align-items: center; z-index: 2000; font-weight: 900; color: var(--primary); }
-
-        /* COLORES JORNADAS */
+        /* COLORES DINÁMICOS */
         .bg-laborable { background-color: var(--c-laborable); }
         .bg-nolaborable-sat { background-color: var(--c-nolaborable-sat); }
         .bg-nolaborable-other { background-color: var(--c-nolaborable-other); }
         .bg-comision { background-color: var(--c-comision); }
-        .bg-vacaciones { background-color: var(--c-vacaciones) !important; color: white; }
-        .bg-asuntos { background-color: var(--c-asuntos) !important; color: white; }
-        .bg-extras { background-color: var(--c-extras) !important; color: white; }
-        .bg-festivo { background-color: var(--c-festivo) !important; color: white; }
+        .bg-vacaciones { background-color: var(--c-vacaciones); color: white; }
+        .bg-vacaciones .day-total { color: white; background: rgba(255,255,255,0.2); }
+        .bg-asuntos { background-color: var(--c-asuntos); color: white; }
+        .bg-asuntos .day-total { color: white; background: rgba(255,255,255,0.2); }
+        .bg-extras { background-color: var(--c-extras); color: white; }
+        .bg-extras .day-total { color: white; background: rgba(255,255,255,0.2); }
+        .bg-festivo { background-color: var(--c-festivo); color: white; }
+        .bg-festivo .day-total { color: white; background: rgba(255,255,255,0.2); }
 
-        .annual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .mini-month { background: white; padding: 15px; border-radius: 16px; border: 1px solid #e2e8f0; }
-        .mini-month-title { text-align: center; font-weight: 900; margin-bottom: 10px; color: var(--primary); }
-        .mini-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .mini-day { aspect-ratio: 1; border-radius: 4px; font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 1px solid #f1f5f9; }
-    /* --- ESTILOS DEL INDICADOR DE CONEXIÓN --- */
-        .status-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 13px;
-            font-weight: 600;
-            padding: 6px 12px;
-            border-radius: 20px;
-            transition: all 0.3s ease;
-        }
-        .status-badge.online {
-            background: #e6f4ea;
-            color: #137333;
-        }
-        .status-badge.offline {
-            background: #fce8e6;
-            color: #c5221f;
-            animation: pulse-offline 2s infinite;
-        }
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            transition: background 0.3s ease;
-        }
-        .status-badge.online .status-dot { background: #137333; }
-        .status-badge.offline .status-dot { background: #c5221f; }
+        .annual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; width: 100%; }
+        .mini-month { background: white; padding: 15px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
+        .mini-month-name { text-align: center; font-weight: 800; margin-bottom: 10px; color: var(--primary); text-transform: uppercase; font-size: 0.9rem; }
+        .mini-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+        .mini-day { aspect-ratio: 1; border-radius: 4px; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid #f1f5f9; }
+        
+        .annual-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
+        .summary-item { padding: 15px; border-radius: 12px; color: white; text-align: center; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
 
-        @keyframes pulse-offline {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-    
-    
+        /* MODALES */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
+        .modal { background: white; padding: 25px; border-radius: 20px; width: 95%; max-width: 950px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .modal-day-edit, .modal-config-edit { max-width: 440px; }
+        
+        .extra-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
+        .extra-table th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 800; color: #64748b; }
+        .extra-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
+        .extra-table tr.total-row { background: #f1f5f9; font-weight: 900; color: var(--primary); }
+        .text-neg { color: #ef4444 !important; font-weight: bold; }
+        .text-pos { color: #10b981 !important; font-weight: bold; }
+
+        .footer-tools { margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-bottom: 40px; }
+        .btn-tool { padding: 10px 18px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; color: #475569; font-weight: 700; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: background 0.2s; }
+        .btn-tool:hover { background: #f8fafc; }
+
+        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
+        .input-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+        .input-group label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; }
+        input, select, textarea { padding: 10px; border: 2px solid #f1f5f9; border-radius: 8px; font-size: 0.9rem; font-family: inherit; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+
+        .progress-bar-container { width: 100%; background-color: rgba(255,255,255,0.3); border-radius: 10px; height: 8px; margin-top: 6px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.3s ease; background-color: rgba(255, 255, 255, 0.85); }
     </style>
 </head>
 <body>
 
-    <div id="loading" class="loading-overlay">SINCRONIZANDO...</div>
-
-    <div id="login-container">
-        <div class="login-card">
-            <h2 style="color:var(--primary); margin-bottom:25px;">Control Horario</h2>
-            <input type="email" id="login-email" class="login-input" placeholder="Tu correo electrónico">
-            <input type="password" id="login-pass" class="login-input" placeholder="Tu contraseña">
-            <button onclick="login()" class="btn-nav" style="width:100%; padding:14px;">ENTRAR</button>
-            <p id="login-error" style="color:red; font-size:0.8rem; display:none; margin-top:15px; font-weight:600;"></p>
-        </div>
+    <div class="loading-screen" id="app-loading-screen">
+        <div class="spinner"></div>
+        <div class="loading-text" id="loading-status-text">Iniciando Control Horario...</div>
     </div>
 
-    <header class="main-header-bar">
-        <h1>CONTROL HORARIO - JCOS</h1>
-        <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
-    </header>
+    <div class="login-container hidden" id="login-screen">
+        <h2>Control Horario</h2>
+        <p>Área del empleado • Multiusuario</p>
+        
+        <div class="login-group">
+            <label>Usuario</label>
+            <input type="text" id="login-user" placeholder="Ej: juan">
+        </div>
+        <div class="login-group">
+            <label>Contraseña</label>
+            <input type="password" id="login-pass" placeholder="••••">
+        </div>
+        
+        <button class="btn-login" onclick="execLogin()">Iniciar Sesión</button>
+        <div class="login-error hidden" id="login-error-msg">Usuario o contraseña incorrectos</div>
+    </div>
 
-    <div class="app-container" id="view-monthly">
-       <header class="header-nav">
-            <div class="nav-controls">
-                <button class="btn-nav" onclick="changeMonth(-1)">❮</button>
-                <select id="monthSelect" onchange="updateDateFromSelects()"></select>
-                <select id="yearSelect" onchange="updateDateFromSelects()"></select>
-                <button class="btn-nav" onclick="changeMonth(1)">❯</button>
-                
-                <!-- El botón de Vista Anual ahora se coloca aquí, justo al lado del selector de año -->
-                <button class="btn-secondary" style="margin-left: 5px;" onclick="toggleView()">VISTA ANUAL</button>
-            </div>
-            
-            <!-- Grupo de botones de respaldo alineados estrictamente a la derecha -->
-            <div class="nav-actions-right">
-                <div id="connection-status" class="status-badge online">
-                    <span class="status-dot"></span>
-                    <span id="status-text">Conectado</span>
-                </div>
-
-                <button class="btn-secondary" style="background:#0284c7;" onclick="exportarBackup()">EXPORTAR COPIA</button>
-                <button class="btn-secondary" style="background:#475569;" onclick="document.getElementById('importFile').click()">IMPORTAR COPIA</button>
-                <input type="file" id="importFile" class="hidden" accept=".json" onchange="importarBackup(event)">
+    <div class="app-container hidden" id="main-app-content">
+        <header class="main-header-bar">
+            <h1>CONTROL HORARIO <span class="copy-text">© JCOS</span></h1>
+            <div class="user-info-box">
+                <span class="user-logged-text" id="label-logged-user"></span>
+                <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
             </div>
         </header>
 
-        <div class="stats-grid">
-            <div class="stat-card"><span class="stat-label">Objetivo</span><span class="stat-value" id="target-hours">0h</span></div>
-            <div class="stat-card"><span class="stat-label">Trabajado</span><span class="stat-value" id="worked-hours">0h</span></div>
-            <div class="stat-card">
-                <span class="stat-label">Saldo / Extras</span>
-                <span class="stat-value" id="balance-extras">0h</span>
-                <button class="btn-nav" style="font-size: 0.7rem; padding: 5px; width:100%; margin-top:5px;" onclick="openExtraReport()">INFORME EXTRAS</button>
-            </div>
-        </div>
-        <div class="calendar-grid" id="calendar-body"></div>
-    </div>
-
-    <div class="app-container hidden" id="view-annual">
-        <header class="header-nav">
-            <h2 style="margin:0; color:var(--primary);">Resumen Anual <span id="annual-title-year"></span></h2>
-            <button class="btn-secondary" onclick="toggleView()">VOLVER AL MES</button>
-        </header>
-        <div class="stats-grid">
-            <div class="stat-card card-vacaciones"><span class="stat-label">Vacaciones</span><span class="stat-value" id="annual-vacations">0 días</span></div>
-            <div class="stat-card card-asuntos"><span class="stat-label">Asuntos</span><span class="stat-value" id="annual-asuntos">0 días</span></div>
-            <div class="stat-card card-extras"><span class="stat-label">Días compensados</span><span class="stat-value" id="annual-extras">0 días</span></div>
-        </div>
-        <div class="annual-grid" id="annual-calendar-container"></div>
-    </div>
-
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal">
-            <h2 id="modalDateTitle" style="color:var(--primary); margin-top:0;">Editar Día</h2>
-            <div style="display:flex; flex-direction:column; gap:15px;">
-                <div>
-                    <label style="font-weight:800; font-size:0.8rem;">TIPO DE JORNADA</label>
-                    <select id="dayType" style="width:100%; margin-top:5px;">
-                        <option value="laborable">Laborable</option>
-                        <option value="nolaborable">No Laborable</option>
-                        <option value="comision">Comisión de Servicio</option>
-                        <option value="vacaciones">Vacaciones</option>
-                        <option value="asuntos">Asuntos Propios</option>
-                        <option value="extras">Día Horas Extras</option>
-                        <option value="festivo">Festivo</option>
-                    </select>
+        <div id="view-monthly">
+            <header class="header-nav">
+                <div class="nav-controls">
+                    <button class="btn-nav" onclick="changeMonth(-1)">❮</button>
+                    <select id="monthSelect" onchange="updateDateFromSelects()"></select>
+                    <select id="yearSelect" onchange="updateDateFromSelects()"></select>
+                    <button class="btn-nav" onclick="changeMonth(1)">❯</button>
                 </div>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
-                    <fieldset style="border:1px solid #cbd5e1; border-radius:10px;">
-                        <legend style="font-size:0.7rem; font-weight:800; padding:0 5px;">MAÑANA</legend>
-                        <input type="time" id="t-in-1" style="width:40%;"> <input type="time" id="t-out-1" style="width:40%;">
-                    </fieldset>
-                    <fieldset style="border:1px solid #cbd5e1; border-radius:10px;">
-                        <legend style="font-size:0.7rem; font-weight:800; padding:0 5px;">TARDE</legend>
-                        <input type="time" id="t-in-2" style="width:40%;"> <input type="time" id="t-out-2" style="width:40%;">
-                    </fieldset>
-                </div>
-                <textarea id="dayNotes" placeholder="Notas..." rows="2" style="width:100%; border-radius:10px; border:1px solid #cbd5e1; padding:10px; box-sizing:border-box;"></textarea>
                 <div style="display:flex; gap:10px;">
-                    <button class="btn-secondary" style="flex:1" onclick="closeModal()">CANCELAR</button>
-                    <button class="btn-nav" style="flex:1; background:#10b981" onclick="saveDayData()">GUARDAR</button>
+                    <button class="btn-nav" style="background: #4f46e5;" onclick="openConfigModal()">⚙️ Ajustes Horario</button>
+                    <button class="btn-nav" style="background: #4f46e5;" onclick="toggleView()">Vista Anual</button>
                 </div>
-                <button class="btn-secondary" style="background:#475569" onclick="clearDayFields()">BORRAR</button>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card"><span class="stat-label">Horas Objetivo</span><span class="stat-value" id="target-hours">0h</span></div>
+                <div class="stat-card"><span class="stat-label">Horas Trabajadas</span><span class="stat-value" id="worked-hours">0h</span></div>
+                <div class="stat-card">
+                    <span class="stat-label">Saldo / H. Extras</span>
+                    <span class="stat-value" id="balance-extras">0 / 0</span>
+                    <button class="btn-view-extras" onclick="openExtraReport()">Ver H. Extras</button>
+                </div>
             </div>
+
+            <div class="calendar-grid" id="calendar-body"></div>
+        </div>
+
+        <div class="app-container hidden" id="view-annual">
+            <header class="header-nav">
+                <h2 id="annual-title" style="margin:0;">Resumen Anual <span id="annual-year-text" style="color: var(--primary);"></span></h2>
+                <button class="btn-nav" style="background: #4f46e5;" onclick="toggleView()">Volver al Mes</button>
+            </header>
+
+            <div class="annual-summary">
+                <div class="summary-item" style="background: var(--c-vacaciones); display: flex; flex-direction: column; gap: 5px;">
+                    <div>Vacaciones: <span id="count-vaca">0</span></div>
+                    <div class="progress-bar-container">
+                        <div id="bar-vaca" class="progress-bar-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="summary-item" style="background: var(--c-asuntos); display: flex; flex-direction: column; gap: 5px;">
+                    <div>Asuntos propios: <span id="count-asun">0</span></div>
+                    <div class="progress-bar-container">
+                        <div id="bar-asun" class="progress-bar-fill" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div class="summary-item" style="background: var(--c-extras)">
+                    H. Extras: <span id="count-extr">0</span>
+                </div>
+            </div>
+            <div class="annual-grid" id="annual-calendar-container"></div>
         </div>
     </div>
 
     <div class="modal-overlay" id="extraReportOverlay">
-        <div class="modal" style="max-width:800px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                <h2 style="margin:0; color:var(--primary);">Compensación Horas Extras</h2>
-                <button class="btn-secondary" style="background:#ef4444" onclick="closeExtraReport()">CERRAR</button>
+        <div class="modal">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <h2 style="margin:0; color: var(--primary);">Informe de Compensación <span id="report-year"></span></h2>
+                <button class="btn-nav" style="background:#ef4444" onclick="closeExtraReport()">Cerrar</button>
             </div>
-            <div style="overflow-x:auto;">
-                <table class="extra-table">
-                    <thead>
-                        <tr>
-                            <th>MES</th>
-                            <th>EXTRAS</th>
-                            <th>X1.75</th>
-                            <th>H. GENERADAS</th>
-                            <th>DIAS PERMISO HORAS</th>
-                            <th>SALDO</th>
-                        </tr>
-                    </thead>
-                    <tbody id="report-body"></tbody>
-                </table>
+            <table class="extra-table">
+                <thead>
+                    <tr>
+                        <th>MES</th>
+                        <th>H. EXTRAS (100%)</th>
+                        <th>COMPENSACIÓN (1.75)</th>
+                        <th>DÍAS GENERADOS</th>
+                        <th>DÍAS DISFRUTADOS</th>
+                        <th>SALDO (D H M)</th>
+                    </tr>
+                </thead>
+                <tbody id="report-body"></tbody>
+                <tfoot id="report-footer"></tfoot>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal modal-day-edit">
+            <h3 id="modalDateTitle" style="margin-top:0">Editar Día</h3>
+            <div class="input-group">
+                <label>Tipo de Día</label>
+                <select id="dayType">
+                    <option value="laborable">Laborable</option>
+                    <option value="nolaborable">No Laborable</option>
+                    <option value="comision">Comisión de Servicio</option>
+                    <option value="vacaciones">Vacaciones</option>
+                    <option value="asuntos">Asuntos Propios</option>
+                    <option value="extras">Horas Extras </option>
+                    <option value="festivo">Festivo </option>
+                </select>
+            </div>
+            <div class="modal-grid">
+                <div class="input-group"><label>Entrada M.</label><input type="time" id="t-in-1"></div>
+                <div class="input-group"><label>Salida M.</label><input type="time" id="t-out-1"></div>
+                <div class="input-group"><label>Entrada T.</label><input type="time" id="t-in-2"></div>
+                <div class="input-group"><label>Salida T.</label><input type="time" id="t-out-2"></div>
+            </div>
+            <div class="input-group">
+                <label>Comentarios</label>
+                <textarea id="dayNotes" rows="2" placeholder="Escribe aquí anotaciones..."></textarea>
+            </div>
+           
+            <div style="display:flex; flex-direction:column; gap:8px; margin-top:20px;">
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-nav" style="flex:2" onclick="saveDayData()">Guardar Datos</button>
+                    <button class="btn-nav" style="flex:1; background:#cbd5e1; color:#334155" onclick="closeModal()">Cancelar</button>
+                </div>
+                <div style="display:flex; gap:10px;">
+                    
+                    <button class="btn-nav" style="flex:1; background:#475569; color:white; font-size:0.8rem;" onclick="clearDayData()">Eliminar Todo</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        // --- CONFIGURACIÓN FIREBASE ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyDbsSut5HAbYWknU4Rr0iaMGtryeIp5HY8",
-            authDomain: "control-horario-jcos.firebaseapp.com",
-            databaseURL: "https://control-horario-jcos-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "control-horario-jcos",
-            storageBucket: "control-horario-jcos.firebasestorage.app",
-            messagingSenderId: "600016407629",
-            appId: "1:600016407629:web:dc1c8cdff6babf6bbc2004"
-        };
+    <div class="modal-overlay" id="configModalOverlay">
+        <div class="modal modal-config-edit">
+            <h3 style="margin-top:0; color: var(--primary);">⚙️ Parámetros del Año <span id="configModalYearTitle"></span></h3>
+            
+            <div class="modal-grid">
+                <div class="input-group">
+                    <label>Tope Vacaciones (Días)</label>
+                    <input type="number" id="input-top-vaca" min="0">
+                </div>
+                <div class="input-group">
+                    <label>Tope Asuntos (Días)</label>
+                    <input type="number" id="input-top-asun" min="0">
+                </div>
+            </div>
+            
+            <div class="input-group">
+                <label>Jornada Diaria Estándar</label>
+                <input type="time" id="input-cfg-jornada">
+            </div>
 
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-        const auth = firebase.auth();
+            <div class="modal-grid">
+                <div class="input-group">
+                    <label>Límite Extras Mañana</label>
+                    <input type="time" id="input-cfg-h-manana">
+                </div>
+                <div class="input-group">
+                    <label>Límite Extras Tarde</label>
+                    <input type="time" id="input-cfg-h-tarde">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:10px; margin-top:25px;">
+                <button class="btn-nav" style="flex:2;" onclick="saveAnnualLimits()">Guardar Ajustes</button>
+                <button class="btn-nav" style="flex:1; background:#cbd5e1; color:#334155" onclick="closeConfigModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer-tools hidden" id="footer-tools-bar">
+        <button class="btn-tool" onclick="exportData()">📥 Exportar JSON</button>
+        <button class="btn-tool" onclick="document.getElementById('importInput').click()">📤 Importar JSON</button>
+        <button class="btn-tool" onclick="clearData()" style="color:red">🗑️ Borrar Todo</button>
+        <input type="file" id="importInput" class="hidden" accept=".json" onchange="importData(event)">
+    </div>
+
+    <script>
+        const CLOUD_URL = "https://script.google.com/macros/s/AKfycbzEazD0IDAA5f08ZWn5nWGLLhxudi66WByn_eIJHMbzJiLKFjakHihPEsuFj75kBFhPhw/exec";
 
         let currentDate = new Date();
         let db = {}; 
-        let userId = null;
-        let currentEditingKey = '';
+        let loggedUser = "";
+        let loggedPass = "";
+
         const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-        const MIN_DAY = 7 * 60; 
-        const LIMIT_MORNING = 7 * 60 + 30; 
-        const LIMIT_EVENING = 18 * 60 + 30; 
+        const dayNames = ["LU", "MA", "MI", "JU", "VI", "SA", "DO"];
 
-        // --- AUTH / INICIO CORREGIDO ---
-        window.onload = function() {
-            // 1. Rellenar desplegables primero para fijar la fecha seleccionada
-            populateSelects();
-            // 2. Ahora sí pintará el mes correctamente sin dar fallo
-            renderMonthly();
+        function tToM(t) { if(!t) return 0; const [h, m] = t.split(':').map(Number); return h*60+m; }
+        function mToT(m) { const h = Math.floor(m/60), mm = m%60; return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`; }
+        function fmtH(m) { const a=Math.abs(m); return `${m<0?'-':''}${Math.floor(a/60)}h ${a%60}m`; }
+        function fmtReportH(m) { const a = Math.abs(m), hh = Math.floor(a/60), mm = a%60; return `${m<0?'-':''}<strong>${hh}h ${mm}m</strong>`; }
+        
+        function getConfig(year) {
+            const def = { maxVaca: 22, maxAsun: 6, minDay: 7*60, limitMorning: 7*60+30, limitEvening: 18*60+30 };
+            if (!db._config || !db._config[year]) return def;
+            const c = db._config[year];
+            return {
+                maxVaca: c.maxVaca !== undefined ? c.maxVaca : def.maxVaca,
+                maxAsun: c.maxAsun !== undefined ? c.maxAsun : def.maxAsun,
+                minDay: c.minDay !== undefined ? c.minDay : def.minDay,
+                limitMorning: c.limitMorning !== undefined ? c.limitMorning : def.limitMorning,
+                limitEvening: c.limitEvening !== undefined ? c.limitEvening : def.limitEvening
+            };
+        }
 
-            // 3. Escuchar Firebase en segundo plano
-            auth.onAuthStateChanged(user => {
-                if (user) {
-                    userId = user.uid;
-                    document.getElementById('login-container').classList.add('hidden');
-                    listenToData();
-                } else {
-    userId = null;
-    // Forzamos el borrado preventivo al mostrar el login
-    document.getElementById('login-email').value = '';
-    document.getElementById('login-pass').value = '';
-    
-    document.getElementById('login-container').classList.remove('hidden');
-    document.getElementById('loading').style.display = 'none';
-}
-            });
+        function fmtReportDHM(m, year) { 
+            const cfg = getConfig(year);
+            const a = Math.abs(m), dd = Math.floor(a/cfg.minDay), rem = a%cfg.minDay, hh = Math.floor(rem/60), mm = rem%60; 
+            return `${m<0?'-':''}<strong>${dd}d ${hh}h ${mm}m</strong>`; 
+        }
+
+        window.onload = async function() {
+            const savedUser = localStorage.getItem('sesion_usuario');
+            const savedPass = localStorage.getItem('sesion_password');
+
+            if (savedUser && savedPass) {
+                document.getElementById("loading-status-text").innerText = "Cargando copia local...";
+                loggedUser = savedUser;
+                loggedPass = savedPass;
+
+                const cacheLocal = localStorage.getItem(`cache_calendar_${loggedUser}`);
+                if (cacheLocal) db = JSON.parse(cacheLocal);
+                
+                populateSelects();
+                renderMonthly();
+                
+                document.getElementById("app-loading-screen").classList.add("hidden");
+                document.getElementById("main-app-content").classList.remove("hidden");
+                document.getElementById("footer-tools-bar").classList.remove("hidden");
+                document.getElementById("label-logged-user").innerText = `Usuario: ${loggedUser}`;
+
+                try {
+                    const response = await fetch(CLOUD_URL, {
+                        method: 'POST',
+                        mode: 'cors',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                        body: `action=read&user=${encodeURIComponent(loggedUser)}&pass=${encodeURIComponent(loggedPass)}`
+                    });
+                    const resultado = await response.json();
+                    if (resultado.status === "success" && resultado.data) {
+                        db = typeof resultado.data === 'string' ? JSON.parse(resultado.data) : resultado.data;
+                        localStorage.setItem(`cache_calendar_${loggedUser}`, JSON.stringify(db));
+                        renderMonthly();
+                    }
+                } catch (e) {
+                    console.warn("Trabajando offline.");
+                }
+            } else {
+                document.getElementById("app-loading-screen").classList.add("hidden");
+                document.getElementById("login-screen").classList.remove("hidden");
+            }
         };
 
-        function login() {
-            const email = document.getElementById('login-email').value;
-            const pass = document.getElementById('login-pass').value;
-            auth.signInWithEmailAndPassword(email, pass).catch(err => {
-                const errEl = document.getElementById('login-error');
-                errEl.innerText = "Error: Datos incorrectos";
-                errEl.style.display = 'block';
-            });
-        }
+        async function execLogin() {
+            const userField = document.getElementById("login-user").value.trim().toLowerCase();
+            const passField = document.getElementById("login-pass").value;
+            const errorMsg = document.getElementById("login-error-msg");
 
-       // CÓDIGO NUEVO:
-function logout() { 
-    auth.signOut().then(() => {
-        // Limpia por completo los campos del formulario al salir
-        document.getElementById('login-email').value = '';
-        document.getElementById('login-pass').value = '';
-        const errEl = document.getElementById('login-error');
-        if (errEl) {
-            errEl.innerText = '';
-            errEl.style.display = 'none';
-        }
-    }).catch(error => {
-        console.error("Error al cerrar sesión: ", error);
-    });
-}
-
-        function listenToData() {
-            document.getElementById('loading').style.display = 'flex';
-            
-            // Intento de precarga rápida desde LocalStorage para que la app responda al instante
-            const copiaLocal = localStorage.getItem('backup_jornadas_' + userId);
-            if (copiaLocal) {
-                db = JSON.parse(copiaLocal);
-                renderMonthly();
-                if(!document.getElementById('view-annual').classList.contains('hidden')) renderAnnual();
+            if (!userField || !passField) {
+                errorMsg.innerText = "Por favor, rellena todos los campos.";
+                errorMsg.classList.remove("hidden");
+                return;
             }
 
-            database.ref('usuarios/' + userId + '/jornadas').on('value', snapshot => {
-                db = snapshot.val() || {};
-                
-                // OPCON 3: Guardamos automáticamente en el LocalStorage de este navegador
-                localStorage.setItem('backup_jornadas_' + userId, JSON.stringify(db));
-                
-                document.getElementById('loading').style.display = 'none';
-                renderMonthly();
-                if(!document.getElementById('view-annual').classList.contains('hidden')) renderAnnual();
-            }, error => {
-                console.error("Error en Firebase, usando copia de LocalStorage:", error);
-                document.getElementById('loading').style.display = 'none';
-                
-                // Si falla Firebase, nos aseguramos de que pinte lo que tenga en LocalStorage
-                const backupFallback = localStorage.getItem('backup_jornadas_' + userId);
-                if (backupFallback) {
-                    db = JSON.parse(backupFallback);
+            errorMsg.classList.add("hidden");
+            document.getElementById("login-screen").classList.add("hidden");
+            document.getElementById("app-loading-screen").classList.remove("hidden");
+            document.getElementById("loading-status-text").innerText = "Validando credenciales en Drive...";
+
+            try {
+                const response = await fetch(CLOUD_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `action=read&user=${encodeURIComponent(userField)}&pass=${encodeURIComponent(passField)}`
+                });
+                const resultado = await response.json();
+
+                if (resultado.status === "success") {
+                    loggedUser = userField;
+                    loggedPass = passField;
+                    localStorage.setItem('sesion_usuario', loggedUser);
+                    localStorage.setItem('sesion_password', loggedPass);
+
+                    db = resultado.data && resultado.data !== "{}" ? (typeof resultado.data === 'string' ? JSON.parse(resultado.data) : resultado.data) : {};
+                    localStorage.setItem(`cache_calendar_${loggedUser}`, JSON.stringify(db));
+
+                    document.getElementById("app-loading-screen").classList.add("hidden");
+                    document.getElementById("main-app-content").classList.remove("hidden");
+                    document.getElementById("footer-tools-bar").classList.remove("hidden");
+                    document.getElementById("label-logged-user").innerText = `Usuario: ${loggedUser}`;
+
+                    populateSelects();
                     renderMonthly();
                 } else {
-                    alert("Error al conectar con Firebase y no se encontró ninguna copia local en este navegador.");
+                    document.getElementById("app-loading-screen").classList.add("hidden");
+                    document.getElementById("login-screen").classList.remove("hidden");
+                    errorMsg.innerText = resultado.message || "Usuario o contraseña incorrectos.";
+                    errorMsg.classList.remove("hidden");
                 }
-            });
+            } catch (error) {
+                document.getElementById("app-loading-screen").classList.add("hidden");
+                document.getElementById("login-screen").classList.remove("hidden");
+                errorMsg.innerText = "Error de conexión con el servidor de Google.";
+                errorMsg.classList.remove("hidden");
+            }
+        }
+
+        async function saveDataToCloud() {
+            if (!loggedUser) return;
+            try {
+                const datosFormateados = JSON.stringify(db);
+                localStorage.setItem(`cache_calendar_${loggedUser}`, datosFormateados);
+                await fetch(CLOUD_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: `action=save&user=${encodeURIComponent(loggedUser)}&pass=${encodeURIComponent(loggedPass)}&data=${encodeURIComponent(datosFormateados)}`
+                });
+            } catch (error) {
+                console.error("Guardado en local:", error);
+            }
+        }
+
+        function cerrarSesion() {
+            if(confirm("¿Quieres cerrar sesión?")) {
+                localStorage.removeItem('sesion_usuario');
+                localStorage.removeItem('sesion_password');
+                localStorage.removeItem(`cache_calendar_${loggedUser}`);
+                location.reload();
+            }
         }
 
         function populateSelects() {
             const mSel = document.getElementById('monthSelect'), ySel = document.getElementById('yearSelect');
-            mSel.innerHTML = ''; ySel.innerHTML = '';
+            mSel.innerHTML = ""; ySel.innerHTML = "";
             months.forEach((m, i) => mSel.add(new Option(m, i)));
-            for(let i = 2024; i <= 2030; i++) ySel.add(new Option(i, i));
-            
-            mSel.value = currentDate.getMonth();
-            ySel.value = currentDate.getFullYear();
+            const curY = new Date().getFullYear();
+            for(let i = curY - 5; i <= curY + 10; i++) ySel.add(new Option(i, i));
         }
 
         function renderMonthly() {
-            const mSel = document.getElementById('monthSelect'), ySel = document.getElementById('yearSelect');
-            if(!mSel || !ySel) return; // Salvaguarda preventiva
+            const y = currentDate.getFullYear(), m = currentDate.getMonth();
+            const cfg = getConfig(y);
 
-            const y = parseInt(ySel.value), m = parseInt(mSel.value);
+            document.getElementById('monthSelect').value = m;
+            document.getElementById('yearSelect').value = y;
             const grid = document.getElementById('calendar-body');
-            if(!grid) return;
-            
             grid.innerHTML = '';
-            ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"].forEach(d => {
-                const div = document.createElement('div'); div.className='day-header-name'; div.innerText=d; grid.appendChild(div);
-            });
+            dayNames.forEach(d => { const div = document.createElement('div'); div.className='day-header-name'; div.innerText=d; grid.appendChild(div); });
 
             const firstDay = new Date(y, m, 1).getDay();
             const offset = (firstDay === 0) ? 6 : firstDay - 1;
             for(let i=0; i<offset; i++) grid.appendChild(document.createElement('div'));
 
             let tWork = 0, tTarget = 0, tExtra = 0;
-            const daysInMonth = new Date(y, m+1, 0).getDate();
-
-            for(let d=1; d<=daysInMonth; d++) {
+            for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
                 const k = `${y}-${m}-${d}`, dow = new Date(y,m,d).getDay();
-                
-                // NUEVA LÓGICA PARA ASIGNAR EL TIPO POR DEFECTO
-                let def = 'laborable';
-                if (dow === 0) {
-                    def = 'festivo';       // Domingo
-                } else if (dow === 6) {
-                    def = 'nolaborable';   // Sábado por defecto NO LABORABLE
-                }
+                let defaultType = 'laborable';
+                if (dow === 0) defaultType = 'festivo';
+                if (dow === 6) defaultType = 'nolaborable';
 
-               // NUEVA LÓGICA ANUAL
-                    let defAnual = 'laborable';
-                    if (dow === 0) {
-                        defAnual = 'festivo';
-                    } else if (dow === 6) {
-                        defAnual = 'nolaborable';
-                    }
-                    
-                    const data = db[k] || { type: defAnual };
-                
-                if (data.type === 'laborable' || data.type === 'comision') tTarget += MIN_DAY;
-                const dMin = calcMin(data); tWork += dMin;
-                tExtra += calcSEx(data, dow);
+                const data = db[k] || { type: defaultType };
+                if (data.type === 'laborable' || data.type === 'comision') tTarget += cfg.minDay;
+
+                const dMin = calcMin(data), sEx = calcSEx(data, k);
+                tWork += dMin; tExtra += sEx;
                 
                 let colorClass = `bg-${data.type}`;
                 if (data.type === 'nolaborable') colorClass = (dow === 6) ? 'bg-nolaborable-sat' : 'bg-nolaborable-other';
 
                 const dayBox = document.createElement('div');
                 dayBox.className = `day-box ${colorClass}`;
-                // BLOQUE NUEVO:
-dayBox.innerHTML = `
-    <div class="day-top-bar">
-        <div class="day-number">${d}</div>
-        ${data.notes ? '💬' : ''}
-    </div>
-    <div class="day-info">
-        ${data.tIn1 ? `${data.tIn1}${data.tOut1 ? '-' + data.tOut1 : ''}` : ''}
-        ${data.tIn2 ? `<br> ${data.tIn2}${data.tOut2 ? '-' + data.tOut2 : ''}` : ''}
-    </div>
-    ${dMin>0 ? `<div class="day-total">${fmtH(dMin)}</div>` : ''}`;
+                dayBox.innerHTML = `<div class="day-top-bar"><div class="day-number">${d}</div>${data.notes?'<div class="comment-indicator" title="Tiene anotaciones">💬</div>':''}</div>
+                    <div class="day-info">${data.tIn1?`${data.tIn1}-${data.tOut1}`:''}${data.tIn2?` ${data.tIn2}-${data.tOut2}`:''}</div>
+                    ${dMin>0?`<div class="day-total">${fmtH(dMin)}</div>`:''}`;
                 dayBox.onclick = () => openModal(k, d);
                 grid.appendChild(dayBox);
             }
-            document.getElementById('target-hours').innerText = `${Math.floor(tTarget / 60)}h`;
+            document.getElementById('target-hours').innerText = fmtH(tTarget);
             document.getElementById('worked-hours').innerText = fmtH(tWork);
-            document.getElementById('balance-extras').innerText = `${fmtH(tWork-tTarget)} / ${fmtH(tExtra)}`;
+            document.getElementById('balance-extras').innerText = `${(tWork-tTarget>=0?'+':'')}${fmtH(tWork-tTarget)} / ${fmtH(tExtra)}`;
         }
 
-        function saveDayData() {
-            const type = document.getElementById('dayType').value;
-            const tIn1 = document.getElementById('t-in-1').value, tOut1 = document.getElementById('t-out-1').value;
-            const tIn2 = document.getElementById('t-in-2').value, tOut2 = document.getElementById('t-out-2').value;
-            const notes = document.getElementById('dayNotes').value;
+        function calcMin(d) {
+            let m = 0;
+            if(d.tIn1 && d.tOut1) m += (tToM(d.tOut1) - tToM(d.tIn1));
+            if(d.tIn2 && d.tOut2) m += (tToM(d.tOut2) - tToM(d.tIn2));
+            return m;
+        }
 
-            const mIn1 = tToM(tIn1), mOut1 = tToM(tOut1), mIn2 = tToM(tIn2), mOut2 = tToM(tOut2);
-            if (tIn1 && tOut1 && mOut1 <= mIn1) { alert("Error: Mañana incorrecta"); return; }
-            if (tIn2 && tOut2 && mOut2 <= mIn2) { alert("Error: Tarde incorrecta"); return; }
+        function calcSEx(d, k) {
+            if (!d.tIn1 && !d.tIn2) return 0;
+            const [year, month, day] = k.split('-').map(Number);
+            const dow = new Date(year, month, day).getDay();
+            const cfg = getConfig(year);
             
-            const data = { type, tIn1, tOut1, tIn2, tOut2, notes };
-          // Enviamos los datos (Firebase se encarga de guardarlos en local y subirlos cuando haya red)
-database.ref('usuarios/' + userId + '/jornadas/' + currentEditingKey).set(data);
+            if (dow === 0 || dow === 6 || d.type === 'festivo' || d.type === 'nolaborable' || d.type === 'extras') return calcMin(d); 
 
-// Cerramos el modal AL INSTANTE sin esperar a internet
-closeModal();
-
-// Forzamos el redibujado para que veas el cambio de color (ej. a Vacaciones) en el acto
-renderMonthly();
-if(!document.getElementById('view-annual').classList.contains('hidden')) renderAnnual();
+            let ex = 0; const rs = [];
+            if(d.tIn1 && d.tOut1) rs.push([tToM(d.tIn1), tToM(d.tOut1)]);
+            if(d.tIn2 && d.tOut2) rs.push([tToM(d.tIn2), tToM(d.tOut2)]);
+            rs.forEach(([s, e]) => {
+                if (s < cfg.limitMorning) ex += Math.min(e, cfg.limitMorning) - s;
+                if (e > cfg.limitEvening) ex += e - Math.max(s, cfg.limitEvening);
+            });
+            return ex;
         }
 
-        function clearDayFields() {
-            if (!confirm("¿Borrar todo el día?")) return;
-            // Si tienes un botón de borrar, cámbialo también así:
-database.ref('usuarios/' + userId + '/jornadas/' + currentEditingKey).remove();
-closeModal();
-renderMonthly();
-if(!document.getElementById('view-annual').classList.contains('hidden')) renderAnnual();
+        function openExtraReport() {
+            const y = currentDate.getFullYear(); const cfg = getConfig(y);
+            document.getElementById('report-year').innerText = y;
+            const body = document.getElementById('report-body');
+            const foot = document.getElementById('report-footer');
+            body.innerHTML = ''; let yEx=0, yCo=0, yDi=0;
+            
+            for(let m=0; m<12; m++) {
+                let mEx=0, mDi=0;
+                for(let d=1; d<=new Date(y,m+1,0).getDate(); d++) {
+                    const k=`${y}-${m}-${d}`; 
+                    if(db[k]){ mEx+=calcSEx(db[k], k); if(db[k].type==='extras') mDi+=cfg.minDay; }
+                }
+                let mCo=Math.round(mEx*1.75); yEx+=mEx; yCo+=mCo; yDi+=mDi;
+                const saldoMes = mCo - mDi;
+                
+                const txtEx = mEx === 0 ? "-" : fmtReportH(mEx);
+                const txtCo = mCo === 0 ? "-" : fmtReportH(mCo);
+                const txtGen = mCo === 0 ? "-" : fmtReportDHM(mCo, y);
+                const txtDis = mDi === 0 ? "-" : `<strong>${Math.floor(mDi / cfg.minDay)}d</strong>`;
+                
+                let txtSal = "-"; let claseColor = "";
+                if (saldoMes > 0) {
+                    const d = Math.floor(saldoMes/cfg.minDay), rem = saldoMes%cfg.minDay, h = Math.floor(rem/60), min = rem%60;
+                    txtSal = `<strong>+${d}d ${h}h ${min}m</strong>`; claseColor = "text-pos";
+                } else if (saldoMes < 0) { txtSal = fmtReportDHM(saldoMes, y); claseColor = "text-neg"; }
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td>${months[m]}</td><td>${txtEx}</td><td>${txtCo}</td><td>${txtGen}</td><td>${txtDis}</td><td class="${claseColor}">${txtSal}</td>`;
+                body.appendChild(tr);
+            }
+            
+            const saldoTotal = yCo - yDi;
+            const tTxtEx = yEx === 0 ? "-" : fmtReportH(yEx);
+            const tTxtCo = yCo === 0 ? "-" : fmtReportH(yCo);
+            const tTxtGen = yCo === 0 ? "-" : fmtReportDHM(yCo, y);
+            const tTxtDis = yDi === 0 ? "-" : `<strong>${Math.floor(yDi / cfg.minDay)}d</strong>`;
+            
+            let tTxtSal = "-"; let tClaseColor = "";
+            if (saldoTotal > 0) {
+                const d = Math.floor(saldoTotal/cfg.minDay), rem = saldoTotal%cfg.minDay, h = Math.floor(rem/60), min = rem%60;
+                tTxtSal = `<strong>+${d}d ${h}h ${min}m</strong>`; tClaseColor = "text-pos";
+            } else if (saldoTotal < 0) { tTxtSal = fmtReportDHM(saldoTotal, y); tClaseColor = "text-neg"; }
+
+            foot.innerHTML = `<tr class="total-row"><td>TOTAL ANUAL</td><td>${tTxtEx}</td><td>${tTxtCo}</td><td>${tTxtGen}</td><td>${tTxtDis}</td><td class="${tClaseColor}">${tTxtSal}</td></tr>`;
+            document.getElementById('extraReportOverlay').style.display = 'flex';
         }
 
-       
-function openExtraReport() {
-    const y = currentDate.getFullYear();
-    const body = document.getElementById('report-body'); 
-    body.innerHTML = '';
-    
-    // Variables para acumular los totales anuales
-    let totalAnualExtras = 0;
-    let totalAnualCoMinutos = 0;
-    let totalAnualGastadoMinutos = 0;
+        let currentEditingKey = null;
 
-    for(let m=0; m<12; m++) {
-        let mEx = 0, mDi = 0;
-        for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
-            const k = `${y}-${m}-${d}`, dow = new Date(y, m, d).getDay();
-            if(db[k]){ 
-                mEx += calcSEx(db[k], dow); 
-                if(db[k].type === 'extras') mDi += MIN_DAY; 
+        function openModal(k, d) {
+            currentEditingKey = k; const data = db[k] || {};
+            const dow = new Date(k.split('-')[0], k.split('-')[1], k.split('-')[2]).getDay();
+            let def = (dow === 0)?'festivo':(dow===6?'nolaborable':'laborable');
+            document.getElementById('modalDateTitle').innerText = `${d} de ${months[currentDate.getMonth()]}`;
+            document.getElementById('dayType').value = data.type || def;
+            document.getElementById('t-in-1').value = data.tIn1||''; document.getElementById('t-out-1').value = data.tOut1||'';
+            document.getElementById('t-in-2').value = data.tIn2||''; document.getElementById('t-out-2').value = data.tOut2||'';
+            document.getElementById('dayNotes').value = data.notes||'';
+            document.getElementById('modalOverlay').style.display = 'flex';
+        }
+
+        function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+        function closeExtraReport() { document.getElementById('extraReportOverlay').style.display = 'none'; }
+
+        function clearTimeInputs() {
+            document.getElementById('t-in-1').value = ''; document.getElementById('t-out-1').value = '';
+            document.getElementById('t-in-2').value = ''; document.getElementById('t-out-2').value = '';
+        }
+
+        function openConfigModal() {
+            const y = currentDate.getFullYear();
+            const cfg = getConfig(y);
+            
+            document.getElementById('configModalYearTitle').innerText = y;
+            document.getElementById('input-top-vaca').value = cfg.maxVaca;
+            document.getElementById('input-top-asun').value = cfg.maxAsun;
+            document.getElementById('input-cfg-jornada').value = mToT(cfg.minDay);
+            document.getElementById('input-cfg-h-manana').value = mToT(cfg.limitMorning);
+            document.getElementById('input-cfg-h-tarde').value = mToT(cfg.limitEvening);
+            
+            document.getElementById('configModalOverlay').style.display = 'flex';
+        }
+
+        function closeConfigModal() { document.getElementById('configModalOverlay').style.display = 'none'; }
+
+        function saveAnnualLimits() {
+            const y = currentDate.getFullYear();
+            if (!db._config) db._config = {};
+            if (!db._config[y]) db._config[y] = {};
+            
+            db._config[y].maxVaca = parseInt(document.getElementById('input-top-vaca').value, 10) || 0;
+            db._config[y].maxAsun = parseInt(document.getElementById('input-top-asun').value, 10) || 0;
+            db._config[y].minDay = tToM(document.getElementById('input-cfg-jornada').value) || 7*60;
+            db._config[y].limitMorning = tToM(document.getElementById('input-cfg-h-manana').value) || 7*60+30;
+            db._config[y].limitEvening = tToM(document.getElementById('input-cfg-h-tarde').value) || 18*60+30;
+            
+            saveDataToCloud(); 
+            closeConfigModal(); 
+            if(!document.getElementById('view-annual').classList.contains('hidden')) {
+                renderAnnual();
+            } else {
+                renderMonthly();
             }
         }
-        let mCo = Math.round(mEx * 1.75); // Minutos generados ya multiplicados por 1.75
-        
-        // Sumamos a los totales anuales
-        totalAnualExtras += mEx;
-        totalAnualCoMinutos += mCo;
-        totalAnualGastadoMinutos += mDi;
-        
-        // El saldo mensual arrastra el acumulado hasta ese mes (Generado - Gastado)
-        let saldoAcumuladoMes = totalAnualCoMinutos - totalAnualGastadoMinutos;
-        
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${months[m]}</td>
-            <td>${mEx === 0 ? '—' : fmtH(mEx)}</td>
-            <td>${mCo === 0 ? '—' : fmtH(mCo)}</td>
-            <td>${mCo === 0 ? '—' : fmtDiasHorasMin(mCo)}</td>
-            <td>${mDi === 0 ? '—' : fmtSoloDias(mDi)}</td>
-            <td style="color:${saldoAcumuladoMes < 0 ? 'red' : (saldoAcumuladoMes > 0 ? 'green' : 'inherit')}">
-                ${saldoAcumuladoMes === 0 ? '—' : fmtDiasHorasMin(saldoAcumuladoMes)}
-            </td>
-        `;
-        body.appendChild(tr);
+
+       function saveDayData() {
+    const newType = document.getElementById('dayType').value;
+    const [y, m, d] = currentEditingKey.split('-').map(Number);
+    const cfg = getConfig(y);
+    
+    // 1. CONTROL DE CAMPOS INCOMPLETOS O COHERENCIA DE HORAS
+    const in1 = document.getElementById('t-in-1').value;
+    const out1 = document.getElementById('t-out-1').value;
+    const in2 = document.getElementById('t-in-2').value;
+    const out2 = document.getElementById('t-out-2').value;
+
+    // Validar tramo de la mañana
+    if ((in1 && !out1) || (!in1 && out1)) {
+        alert("⚠️ Error en Turno de Mañana:\nDebes rellenar tanto la hora de entrada como la de salida.");
+        return;
+    }
+    if (in1 && out1 && tToM(out1) <= tToM(in1)) {
+        alert("⚠️ Error en Turno de Mañana:\nLa hora de salida no puede ser igual o anterior a la hora de entrada.");
+        return;
     }
 
-    // --- FILA DE TOTALES FINAL (TODO EN NEGRITA) ---
-    const saldoAnualFinal = totalAnualCoMinutos - totalAnualGastadoMinutos;
-    
-    const trTotal = document.createElement('tr');
-    trTotal.style.fontWeight = '900'; // 👈 Aplica negrita a toda la fila
-    trTotal.style.background = '#f1f5f9'; // Fondo grisáceo para resaltar
-    trTotal.style.borderTop = '2px solid #cbd5e1';
-    
-    trTotal.innerHTML = `
-        <td><strong>TOTAL ANUAL</strong></td>
-        <td><strong>${totalAnualExtras === 0 ? '—' : fmtH(totalAnualExtras)}</strong></td>
-        <td><strong>${totalAnualCoMinutos === 0 ? '—' : fmtH(totalAnualCoMinutos)}</strong></td>
-        <td><strong>${totalAnualCoMinutos === 0 ? '—' : fmtDiasHorasMin(totalAnualCoMinutos)}</strong></td>
-        <td><strong>${totalAnualGastadoMinutos === 0 ? '—' : fmtSoloDias(totalAnualGastadoMinutos)}</strong></td>
-        <td style="color:${saldoAnualFinal < 0 ? 'red' : (saldoAnualFinal > 0 ? 'green' : 'inherit')}">
-            <strong>${saldoAnualFinal === 0 ? '—' : fmtDiasHorasMin(saldoAnualFinal)}</strong>
-        </td>
-    `;
-    body.appendChild(trTotal);
+    // Validar tramo de la tarde
+    if ((in2 && !out2) || (!in2 && out2)) {
+        alert("⚠️ Error en Turno de Tarde:\nDebes rellenar tanto la hora de entrada como la de salida.");
+        return;
+    }
+    if (in2 && out2 && tToM(out2) <= tToM(in2)) {
+        alert("⚠️ Error en Turno de Tarde:\nLa hora de salida no puede ser igual o anterior a la hora de entrada.");
+        return;
+    }
 
-    document.getElementById('extraReportOverlay').style.display = 'flex';
+    // 2. CONTROL DE TOPES ANUALES (Vacaciones y Asuntos)
+    if (newType === 'vacaciones' || newType === 'asuntos') {
+        const maxAllowed = cfg[newType === 'vacaciones' ? 'maxVaca' : 'maxAsun'];
+        let count = 0;
+        for (let month = 0; month < 12; month++) {
+            for (let day = 1; day <= new Date(y, month + 1, 0).getDate(); day++) {
+                const k = `${y}-${month}-${day}`;
+                if (k !== currentEditingKey && db[k] && db[k].type === newType) count++;
+            }
+        }
+        if (count + 1 > maxAllowed) {
+            const nombreFiltro = newType === 'vacaciones' ? 'VACACIONES' : 'ASUNTOS PROPIOS';
+            if (!confirm(`⚠️ ¡ADVERTENCIA DE TOPE!\n\nVas a superar el límite anual de ${nombreFiltro}.\nLímite máximo permitido: ${maxAllowed} días.\nCon este día acumularás: ${count + 1} días.\n\n¿Quieres guardarlo de todas formas?`)) return;
+        }
+    }
+
+    // Si todo está correcto, se procede a guardar
+    db[currentEditingKey] = {
+        type: newType,
+        tIn1: in1, tOut1: out1,
+        tIn2: in2, tOut2: out2,
+        notes: document.getElementById('dayNotes').value
+    };
+    saveDataToCloud(); 
+    closeModal(); 
+    renderMonthly();
 }
 
+        function clearDayData() {
+            if(confirm("¿Seguro que quieres eliminar por completo todos los registros e historial de este día?")) { delete db[currentEditingKey]; saveDataToCloud(); closeModal(); renderMonthly(); }
+        }
 
+        function toggleView() {
+            document.getElementById('view-monthly').classList.toggle('hidden');
+            document.getElementById('view-annual').classList.toggle('hidden');
+            if(!document.getElementById('view-annual').classList.contains('hidden')) renderAnnual();
+            else renderMonthly();
+        }
 
-
-function renderAnnual() {
+        function renderAnnual() {
             const container = document.getElementById('annual-calendar-container'), y = currentDate.getFullYear();
-            container.innerHTML = ''; document.getElementById('annual-title-year').innerText = y;
-            let v=0, a=0, e=0;
+            document.getElementById('annual-year-text').innerText = y;
+            const cfg = getConfig(y);
+            
+            container.innerHTML = ''; let v=0, a=0, e=0;
             for(let m=0; m<12; m++) {
                 const mDiv = document.createElement('div'); mDiv.className = 'mini-month';
-                mDiv.innerHTML = `<div class="mini-month-title">${months[m].toUpperCase()}</div>`;
+                mDiv.innerHTML = `<div class="mini-month-name">${months[m]}</div>`;
                 const dDiv = document.createElement('div'); dDiv.className = 'mini-days';
                 const off = (new Date(y, m, 1).getDay() === 0) ? 6 : new Date(y, m, 1).getDay() - 1;
                 for(let i=0; i<off; i++) dDiv.appendChild(document.createElement('div'));
                 for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
                     const k=`${y}-${m}-${d}`, dow=new Date(y,m,d).getDay();
-
-                    // LÍNEA NUEVA CORREGIDA:
-const data = db[k] || { type: (dow === 0 ? 'festivo' : (dow === 6 ? 'nolaborable' : 'laborable')) };
-                    
-                    if(data.type === 'vacaciones') v++; 
-                    if(data.type === 'asuntos') a++; 
-                    if(data.type === 'extras') e++;
-                    
-                    // Si el día es comisión, forzamos visualmente a que se pinte como un día laborable normal en el año
-                    let typeClass = data.type;
-                    if(typeClass === 'comision') {
-                        typeClass = 'laborable';
-                    }
-
+                    let def = (dow === 0)?'festivo':(dow===6?'nolaborable':'laborable');
+                    const data = db[k] || { type: def };
+                    if(db[k]) { if(data.type==='vacaciones') v++; if(data.type==='asuntos') a++; if(data.type==='extras') e++; }
                     const dEl = document.createElement('div');
-                    dEl.className = `mini-day bg-${typeClass === 'nolaborable' ? (dow===6?'nolaborable-sat':'nolaborable-other') : typeClass}`;
-                    dEl.innerText = d; dDiv.appendChild(dEl);
+                    let typeClass = data.type;
+                    if(data.type === 'comision') typeClass = 'laborable';
+                    if(data.type === 'nolaborable') typeClass = (dow === 6) ? 'nolaborable-sat' : 'nolaborable-other';
+                    dEl.className = `mini-day bg-${typeClass}`; dEl.innerText = d; dDiv.appendChild(dEl);
                 }
                 mDiv.appendChild(dDiv); container.appendChild(mDiv);
             }
-            document.getElementById('annual-vacations').innerText = v + " d";
-            document.getElementById('annual-asuntos').innerText = a + " d";
-            document.getElementById('annual-extras').innerText = e + " d";
-        }
-        // --- HELPERS ---
-        function fmtDiasHorasMin(totalMinutos) {
-    const a = Math.abs(totalMinutos);
-    const dias = Math.floor(a / MIN_DAY); // MIN_DAY son 420 minutos (7h)
-    const minutosRestantes = a % MIN_DAY;
-    const horas = Math.floor(minutosRestantes / 60);
-    const minutos = minutosRestantes % 60;
-    
-    return `${totalMinutos < 0 ? '-' : ''}${dias} d ${horas}h ${minutos}m`;
-}
-        function tToM(t) { if(!t) return 0; const [h, m] = t.split(':').map(Number); return h*60+m; }
-        function fmtH(m) { const a=Math.abs(m); return `${m<0?'-':''}${Math.floor(a/60)}h ${a%60}m`; }
-        function fmtDHM_Gen(total) { const a=Math.abs(total); const d=Math.floor(a/MIN_DAY); const h=Math.floor((a%MIN_DAY)/60); return `${total<0?'-':''}${d}d ${h}h`; }
-        function fmtSoloDias(total) { return Math.floor(Math.abs(total)/MIN_DAY) + " d"; }
-        function calcMin(d) { let m=0; if(d.tIn1 && d.tOut1) m+=(tToM(d.tOut1)-tToM(d.tIn1)); if(d.tIn2 && d.tOut2) m+=(tToM(d.tOut2)-tToM(d.tIn2)); return m; }
-        function calcSEx(d, dow) {
-            if (dow===6 || dow===0) return calcMin(d);
-            let ex=0; const rs=[];
-            if(d.tIn1 && d.tOut1) rs.push([tToM(d.tIn1), tToM(d.tOut1)]);
-            if(d.tIn2 && d.tOut2) rs.push([tToM(d.tIn2), tToM(d.tOut2)]);
-            rs.forEach(([s, e]) => {
-                if (s<LIMIT_MORNING) ex += Math.min(e, LIMIT_MORNING)-s;
-                if (e>LIMIT_EVENING) ex += e-Math.max(s, LIMIT_EVENING);
-            });
-            return ex;
-        }
-
-       
-// CÓDIGO NUEVO CORREGIDO:
-function openModal(k, d) { 
-    currentEditingKey = k; 
-    const data = db[k] || {}; 
-    
-    document.getElementById('modalDateTitle').innerText = `${d} de ${months[currentDate.getMonth()]}`;
-    
-    // Si el día NO tiene datos guardados en Firebase, calculamos su tipo real por defecto
-    if (!data.type) {
-        // Desglosamos la clave (ej: "2026-4-16") para crear una fecha nativa exacta
-        const [year, month, day] = k.split('-').map(Number);
-        const dow = new Date(year, month, day).getDay(); // 0 = Domingo, 6 = Sábado
-        
-        if (dow === 0) {
-            data.type = 'festivo';       // Domingo por defecto
-        } else if (dow === 6) {
-            data.type = 'nolaborable';   // Sábado por defecto NO LABORABLE ¡Arreglado!
-        } else {
-            data.type = 'laborable';     // Lunes a Viernes por defecto
-        }
-    }
-    
-    // Ahora el desplegable adoptará el tipo correcto de forma automática
-    document.getElementById('dayType').value = data.type;
-    
-    document.getElementById('t-in-1').value = data.tIn1||''; document.getElementById('t-out-1').value = data.tOut1||'';
-    document.getElementById('t-in-2').value = data.tIn2||''; document.getElementById('t-out-2').value = data.tOut2||'';
-    document.getElementById('dayNotes').value = data.notes||'';
-    document.getElementById('modalOverlay').style.display = 'flex'; 
-}
-
-
-        function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
-        function closeExtraReport() { document.getElementById('extraReportOverlay').style.display = 'none'; }
-        function changeMonth(s) { currentDate.setMonth(currentDate.getMonth()+s); populateSelects(); renderMonthly(); }
-        
-        function updateDateFromSelects() { 
-            const mSel = document.getElementById('monthSelect'), ySel = document.getElementById('yearSelect');
-            currentDate.setFullYear(ySel.value); 
-            currentDate.setMonth(mSel.value); 
-            renderMonthly(); 
-        }
-        
-        function toggleView() { 
-            document.getElementById('view-monthly').classList.toggle('hidden'); 
-            document.getElementById('view-annual').classList.toggle('hidden'); 
-            if(!document.getElementById('view-annual').classList.contains('hidden')) renderAnnual(); 
-        }
-
-// --- FUNCIONES DE COPIA DE SEGURIDAD (BACKUP) ---
-        
-        // Genera y descarga el archivo JSON en tu ordenador
-        function exportarBackup() {
-            if (!db || Object.keys(db).length === 0) {
-                alert("No hay datos disponibles para exportar.");
-                return;
-            }
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
-            const downloadAnchor = document.createElement('a');
-            const fecha = new Date().toISOString().slice(0,10);
             
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `backup_horas_${fecha}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+            document.getElementById('count-vaca').innerText = `${v} / ${cfg.maxVaca}`;
+            document.getElementById('count-asun').innerText = `${a} / ${cfg.maxAsun}`;
+            document.getElementById('count-extr').innerText = e;
+            
+            const pctVaca = cfg.maxVaca > 0 ? Math.min((v / cfg.maxVaca) * 100, 100) : 0;
+            const pctAsun = cfg.maxAsun > 0 ? Math.min((a / cfg.maxAsun) * 100, 100) : 0;
+            
+            const barVacaEl = document.getElementById('bar-vaca'), barAsunEl = document.getElementById('bar-asun');
+            barVacaEl.style.width = pctVaca + '%'; barAsunEl.style.width = pctAsun + '%';
+            barVacaEl.style.backgroundColor = v > cfg.maxVaca ? '#ef4444' : '';
+            barAsunEl.style.backgroundColor = a > cfg.maxAsun ? '#ef4444' : '';
         }
 
-        // Lee el archivo JSON de tu ordenador y lo sube a Firebase + LocalStorage
-        function importarBackup(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-
-            if (!confirm("¿Estás seguro de que quieres importar esta copia? Se sobrescribirán los datos actuales.")) {
-                event.target.value = ''; // Limpia el input
-                return;
-            }
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    const datosImportados = JSON.parse(e.target.result);
-                    
-                    // Validación mínima para comprobar que es un formato correcto
-                    if (typeof datosImportados !== 'object') {
-                        throw new Error("Formato inválido");
-                    }
-
-                    document.getElementById('loading').style.display = 'flex';
-
-                    // 1. Guardar en Firebase
-                    database.ref('usuarios/' + userId + '/jornadas').set(datosImportados)
-                        .then(() => {
-                            // 2. Guardar en LocalStorage
-                            localStorage.setItem('backup_jornadas_' + userId, JSON.stringify(datosImportados));
-                            db = datosImportados;
-                            
-                            alert("¡Copia de seguridad restaurada e importada con éxito!");
-                            renderMonthly();
-                            if(!document.getElementById('view-annual').classList.contains('hidden')) renderAnnual();
-                            document.getElementById('loading').style.display = 'none';
-                        })
-                        .catch(err => {
-                            console.error(err);
-                            alert("Error al subir los datos a Firebase.");
-                            document.getElementById('loading').style.display = 'none';
-                        });
-
-                } catch (err) {
-                    alert("Error: El archivo seleccionado no es un archivo de copia válido.");
-                }
-            };
-            reader.readAsText(file);
-            event.target.value = ''; // Limpia el input al terminar
-        }
-
-        // --- DETECTOR DE CONEXIÓN ONLINE / OFFLINE ---
-        function actualizarEstadoConexion() {
-            const badge = document.getElementById('connection-status');
-            const text = document.getElementById('status-text');
-
-            if (navigator.onLine) {
-                badge.className = "status-badge online";
-                text.innerText = "Sincronizado";
-                
-                // Si vuelve internet y tenemos el ID del usuario, forzamos un reconexión con Firebase
-                if (typeof userId !== 'undefined' && userId) {
-                    database.goOnline(); 
-                }
-            } else {
-                badge.className = "status-badge offline";
-                text.innerText = "Modo Local (Sin Red)";
-                
-                // Avisamos a Firebase internamente de que no lo intente temporalmente
-                if (typeof database !== 'undefined') {
-                    database.goOffline();
-                }
-            }
-        }
-
-        // Escuchadores nativos del navegador (actúan al instante)
-        window.addEventListener('online', actualizarEstadoConexion);
-        window.addEventListener('offline', actualizarEstadoConexion);
-
-        // Comprobación inicial nada más cargar la página
-        document.addEventListener("DOMContentLoaded", actualizarEstadoConexion);
-
+        function changeMonth(s) { currentDate.setMonth(currentDate.getMonth()+s); renderMonthly(); }
+        function updateDateFromSelects() { currentDate.setFullYear(document.getElementById('yearSelect').value); currentDate.setMonth(document.getElementById('monthSelect').value); renderMonthly(); }
+        function exportData() { const blob = new Blob([JSON.stringify(db)], {type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`control_horario_${loggedUser}.json`; a.click(); }
+        function importData(e) { const r = new FileReader(); r.onload = (ev) => { db = JSON.parse(ev.target.result); renderMonthly(); saveDataToCloud(); }; r.readAsText(e.target.files[0]); }
+        function clearData() { if(confirm("¿Seguro que quieres borrar TODOS los datos guardados? Esto vaciará tu base de datos.")) { db = {}; renderMonthly(); saveDataToCloud(); } }
     </script>
 </body>
 </html>
