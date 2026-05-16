@@ -1,130 +1,776 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Control Horario Jornada Partida HH:MM</title>
-<style>
-/* ========================== ESTILOS ========================== */
-body { font-family:"Segoe UI",sans-serif; background:#f0f2f5; margin:0; padding:0; }
-header { text-align:center; padding:5px; background:#34495e; color:white; box-shadow:0 4px 8px rgba(0,0,0,0.2);}
-.container { max-width:1200px; margin:20px auto; padding:15px; background:white; border-radius:12px; box-shadow:0 6px 15px rgba(0,0,0,0.2);}
-.controls { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px; justify-content:center;}
-select { padding:5px 10px; border-radius:8px; border:1px solid #ccc; font-size:16px;}
-.info { display:flex; justify-content:space-around; flex-wrap:wrap; background:#ecf0f1; padding:10px; border-radius:10px; font-weight:bold; margin-bottom:15px;}
-.calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:8px;}
-.weekday { text-align:center; font-weight:bold; background:#007bff; color:white; border-radius:8px; padding:6px 0;}
-.day { aspect-ratio:1/1; background:#f9f9f9; border-radius:10px; box-shadow:0 2px 6px rgba(0,0,0,0.1); text-align:center; padding:8px; cursor:pointer; transition:0.12s; position:relative; display:flex; flex-direction:column; justify-content:space-between;}
-.day:hover { transform:scale(1.03); box-shadow:0 4px 10px rgba(0,0,0,0.15);}
-.day-number { font-weight:bold; font-size:1.1em;}
-.note-indicator { position:absolute; bottom:6px; right:6px; font-size:14px;}
-.vacaciones { background:#3498db; color:white; font-weight:bold;}
-.permiso-horas { background:#ff69b4; color:white; font-weight:bold;}
-.asuntos-propios { background:#27ae60; color:white; font-weight:bold;}
-.otros { background:#95a5a6; color:white; font-weight:bold;}
-.comision { background:#d2b48c; color:white; font-weight:bold;}
-.domingo { background:#e74c3c; color:white; font-weight:bold;}
-.festivo { background:#e74c3c; color:white; font-weight:bold;}
-.day.hoy { position: relative; border-radius: 8px; box-shadow: 0 0 10px rgba(12, 12, 12, 0.8), 0 0 20px rgba(10, 10, 10, 0.5), 0 0 30px rgba(3, 3, 3, 0.3); z-index: 2; border: 2px solid rgb(12, 12, 12);}
-.modal, .modal-resumen, .modal-login { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); justify-content:center; align-items:center; z-index:999;}
-.modal .content, .modal-resumen .content, .modal-login .content { background:white; padding:18px; border-radius:12px; width:92%; max-width:420px; box-shadow:0 8px 24px rgba(0,0,0,0.25);}
-label { display:block; margin-top:6px;}
-input[type="time"], input[type="text"], input[type="password"], textarea { width:100%; padding:6px; border-radius:6px; border:1px solid #ccc; margin-top:4px;}
-.checkbox-row { margin-top:8px; display:flex; gap:6px; flex-wrap:wrap;}
-.btn-row { display:flex; gap:8px; justify-content:space-between; margin-top:12px;}
-button { padding:8px 12px; border-radius:8px; border:none; font-weight:bold; cursor:pointer;}
-.save { background:#27ae60; color:white;}
-.cancel { background:#7f8c8d; color:white;}
-.delete { background:#c0392b; color:white;}
-.export, .import { background:#007bff; color:white;}
-.legend { margin-top:12px; display:flex; gap:14px; justify-content:center; flex-wrap:wrap;}
-.legend-item { display:flex; gap:8px; align-items:center; cursor:pointer; padding:6px 8px; border-radius:8px; transition:0.12s;}
-.legend-item:hover { transform:scale(1.03); box-shadow:0 3px 8px rgba(0,0,0,0.12);}
-.legend-color { width:18px; height:18px; border-radius:4px;}
-table { width:100%; border-collapse:collapse; margin-top:10px;}
-th,td { border:1px solid #ddd; padding:6px; text-align:center; font-size:0.95em;}
-th { background:#007bff; color:white;}
-tfoot td { font-weight:bold; background:#f2f2f2;}
-@media(max-width:700px){ .calendar { grid-template-columns:repeat(3,1fr);} }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Control Horario - JCOS</title>
+    
+    <!-- SDK de Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    
+    <style>
+        :root {
+            --primary: #4f46e5; --bg: #f1f5f9; --card: #ffffff; --text: #1e293b;
+            --c-laborable: #ffffff; --c-nolaborable-sat: #ffffff;
+            --c-nolaborable-other: #e2e8f0; --c-comision: #f0e2a7; 
+            --c-vacaciones: #3b82f6; --c-asuntos: #10b981; 
+            --c-extras: #d946ef; --c-festivo: #ef4444; 
+        }
+
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        .app-container { width: 100%; max-width: 1250px; padding: 15px; box-sizing: border-box; } 
+        .hidden { display: none !important; }
+
+        /* LOGIN OVERLAY */
+        #login-container { 
+            position: fixed; inset: 0; background: var(--bg); z-index: 3000; 
+            display: flex; justify-content: center; align-items: center; 
+        }
+        .login-card { 
+            background: white; padding: 40px; border-radius: 24px; 
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 350px; 
+            text-align: center;
+        }
+        .login-input { 
+            width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 10px; 
+            border: 1px solid #cbd5e1; font-family: inherit; box-sizing: border-box;
+        }
+
+        /* HEADER */
+        .main-header-bar { width: 100%; background: var(--card); padding: 15px 0; border-bottom: 1px solid #e2e8f0; text-align: center; }
+        .main-header-bar h1 { margin: 0; font-size: 1.3rem; letter-spacing: 2px; color: var(--primary); font-weight: 900; }
+        
+       .header-nav { 
+            display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; 
+            background: var(--card); padding: 15px; border-radius: 16px; gap: 12px; margin-bottom: 20px;
+            box-sizing: border-box; width: 100%;
+        }
+        /* Nueva subclase para agrupar y empujar los botones de copia a la derecha */
+        .nav-actions-right { display: flex; gap: 10px; margin-left: auto; }
+        .nav-controls { display: flex; align-items: center; gap: 10px; }
+        .btn-nav { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 800; }
+        .btn-secondary { background: #64748b; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 800; }
+        .btn-logout { background: #ef4444; color: white; border: none; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.8rem; margin-top: 10px; }
+        
+        select { padding: 8px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; cursor: pointer; }
+
+        /* ESTADÍSTICAS */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+        .stat-card { background: var(--card); padding: 15px; border-radius: 16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+        .stat-label { font-size: 0.78rem; color: #64748b; text-transform: uppercase; font-weight: 800; }
+        .stat-value { display: block; font-size: 1.35rem; font-weight: 900; margin-top: 6px; color: var(--primary); }
+
+        .card-vacaciones { background-color: var(--c-vacaciones) !important; color: white !important; }
+        .card-asuntos { background-color: var(--c-asuntos) !important; color: white !important; }
+        .card-extras { background-color: var(--c-extras) !important; color: white !important; }
+        .card-vacaciones .stat-label, .card-asuntos .stat-label, .card-extras .stat-label { color: rgba(255, 255, 255, 0.85); }
+        .card-vacaciones .stat-value, .card-asuntos .stat-value, .card-extras .stat-value { color: white; }
+
+        /* CALENDARIO */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+        .day-header-name { text-align: center; font-weight: 900; color: #64748b; font-size: 0.85rem; padding-bottom: 8px; }
+        .day-box { background: var(--card); border-radius: 14px; min-height: 120px; padding: 12px; border: 1px solid #e2e8f0; cursor: pointer; display: flex; flex-direction: column; transition: all 0.2s; position: relative; }
+        .day-box:hover { transform: translateY(-2px); border-color: var(--primary); }
+        .day-number { font-weight: 900; font-size: 1.2rem; }
+        .day-top-bar { display: flex; justify-content: space-between; align-items: flex-start; }
+        .day-info { font-size: 0.95rem; font-weight: 700; margin-top: 5px; color: #334155; }
+        .day-total { margin-top: auto; font-weight: 900; font-size: 0.85rem; text-align: right; color: var(--primary); background: rgba(79, 70, 229, 0.1); padding: 2px 5px; border-radius: 4px; }
+
+        /* MODALES */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
+        .modal { background: white; padding: 22px; border-radius: 20px; width: 95%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .extra-table { width: 100%; border-collapse: collapse; }
+        .extra-table th { text-align: left; padding: 10px; border-bottom: 2px solid #e2e8f0; font-size: 0.8rem; }
+        .extra-table td { padding: 10px; border-bottom: 1px solid #f1f5f9; font-size: 0.85rem; font-weight: 600; }
+
+        .loading-overlay { position: fixed; inset: 0; background: rgba(255, 255, 255, 0.8); display: none; justify-content: center; align-items: center; z-index: 2000; font-weight: 900; color: var(--primary); }
+
+        /* COLORES JORNADAS */
+        .bg-laborable { background-color: var(--c-laborable); }
+        .bg-nolaborable-sat { background-color: var(--c-nolaborable-sat); }
+        .bg-nolaborable-other { background-color: var(--c-nolaborable-other); }
+        .bg-comision { background-color: var(--c-comision); }
+        .bg-vacaciones { background-color: var(--c-vacaciones) !important; color: white; }
+        .bg-asuntos { background-color: var(--c-asuntos) !important; color: white; }
+        .bg-extras { background-color: var(--c-extras) !important; color: white; }
+        .bg-festivo { background-color: var(--c-festivo) !important; color: white; }
+
+        .annual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .mini-month { background: white; padding: 15px; border-radius: 16px; border: 1px solid #e2e8f0; }
+        .mini-month-title { text-align: center; font-weight: 900; margin-bottom: 10px; color: var(--primary); }
+        .mini-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .mini-day { aspect-ratio: 1; border-radius: 4px; font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; justify-content: center; border: 1px solid #f1f5f9; }
+    /* --- ESTILOS DEL INDICADOR DE CONEXIÓN --- */
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        .status-badge.online {
+            background: #e6f4ea;
+            color: #137333;
+        }
+        .status-badge.offline {
+            background: #fce8e6;
+            color: #c5221f;
+            animation: pulse-offline 2s infinite;
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            transition: background 0.3s ease;
+        }
+        .status-badge.online .status-dot { background: #137333; }
+        .status-badge.offline .status-dot { background: #c5221f; }
+
+        @keyframes pulse-offline {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+    
+    
+    </style>
 </head>
 <body>
-<header><h1>Control Horario Inspección de transportes</h1></header>
 
-<!-- LOGIN FIREBASE -->
-<div class="modal-login" id="modalLogin">
-  <div class="content">
-    <h2>Iniciar Sesión</h2>
-    <label>Correo: <input type="text" id="loginEmail"></label>
-    <label>Contraseña: <input type="password" id="loginPassword"></label>
-    <div class="btn-row">
-      <button class="save" id="btnLogin">Login</button>
+    <div id="loading" class="loading-overlay">SINCRONIZANDO...</div>
+
+    <div id="login-container">
+        <div class="login-card">
+            <h2 style="color:var(--primary); margin-bottom:25px;">Control Horario</h2>
+            <input type="email" id="login-email" class="login-input" placeholder="Tu correo electrónico">
+            <input type="password" id="login-pass" class="login-input" placeholder="Tu contraseña">
+            <button onclick="login()" class="btn-nav" style="width:100%; padding:14px;">ENTRAR</button>
+            <p id="login-error" style="color:red; font-size:0.8rem; display:none; margin-top:15px; font-weight:600;"></p>
+        </div>
     </div>
-    <p id="loginError" style="color:red;"></p>
-  </div>
-</div>
 
-<div class="container" id="mainContainer" style="display:none;">
-  <!-- Aquí va todo tu HTML original: controles, calendar, legend, modales... -->
-  <!-- Para no repetir, este contenedor se mantiene oculto hasta que el usuario se loguee -->
-</div>
+    <header class="main-header-bar">
+        <h1>CONTROL HORARIO - JCOS</h1>
+        <button class="btn-logout" onclick="logout()">Cerrar Sesión</button>
+    </header>
 
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <div class="app-container" id="view-monthly">
+       <header class="header-nav">
+            <div class="nav-controls">
+                <button class="btn-nav" onclick="changeMonth(-1)">❮</button>
+                <select id="monthSelect" onchange="updateDateFromSelects()"></select>
+                <select id="yearSelect" onchange="updateDateFromSelects()"></select>
+                <button class="btn-nav" onclick="changeMonth(1)">❯</button>
+                
+                <!-- El botón de Vista Anual ahora se coloca aquí, justo al lado del selector de año -->
+                <button class="btn-secondary" style="margin-left: 5px;" onclick="toggleView()">VISTA ANUAL</button>
+            </div>
+            
+            <!-- Grupo de botones de respaldo alineados estrictamente a la derecha -->
+            <div class="nav-actions-right">
+                <div id="connection-status" class="status-badge online">
+                    <span class="status-dot"></span>
+                    <span id="status-text">Conectado</span>
+                </div>
 
-<script>
-// ====================== CONFIGURACIÓN FIREBASE ======================
-const firebaseConfig = {
-  apiKey: "AIzaSyA6_BtwhDpDkwPAEvL1QW8uKzBVj3m3cqI",
-  authDomain: "controlhorario-cc874.firebaseapp.com",
-  databaseURL: "https://controlhorario-cc874-default-rtdb.firebaseio.com",
-  projectId: "controlhorario-cc874",
-  storageBucket: "controlhorario-cc874.firebasestorage.app",
-  messagingSenderId: "984659015045",
-  appId: "1:984659015045:web:51a4124887121bd61ec0ec"
-};
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+                <button class="btn-secondary" style="background:#0284c7;" onclick="exportarBackup()">EXPORTAR COPIA</button>
+                <button class="btn-secondary" style="background:#475569;" onclick="document.getElementById('importFile').click()">IMPORTAR COPIA</button>
+                <input type="file" id="importFile" class="hidden" accept=".json" onchange="importarBackup(event)">
+            </div>
+        </header>
 
-// ====================== LOGIN ======================
-const modalLogin = document.getElementById("modalLogin");
-const mainContainer = document.getElementById("mainContainer");
-const btnLogin = document.getElementById("btnLogin");
-const loginEmail = document.getElementById("loginEmail");
-const loginPassword = document.getElementById("loginPassword");
-const loginError = document.getElementById("loginError");
+        <div class="stats-grid">
+            <div class="stat-card"><span class="stat-label">Objetivo</span><span class="stat-value" id="target-hours">0h</span></div>
+            <div class="stat-card"><span class="stat-label">Trabajado</span><span class="stat-value" id="worked-hours">0h</span></div>
+            <div class="stat-card">
+                <span class="stat-label">Saldo / Extras</span>
+                <span class="stat-value" id="balance-extras">0h</span>
+                <button class="btn-nav" style="font-size: 0.7rem; padding: 5px; width:100%; margin-top:5px;" onclick="openExtraReport()">INFORME EXTRAS</button>
+            </div>
+        </div>
+        <div class="calendar-grid" id="calendar-body"></div>
+    </div>
 
-modalLogin.style.display = 'flex';
+    <div class="app-container hidden" id="view-annual">
+        <header class="header-nav">
+            <h2 style="margin:0; color:var(--primary);">Resumen Anual <span id="annual-title-year"></span></h2>
+            <button class="btn-secondary" onclick="toggleView()">VOLVER AL MES</button>
+        </header>
+        <div class="stats-grid">
+            <div class="stat-card card-vacaciones"><span class="stat-label">Vacaciones</span><span class="stat-value" id="annual-vacations">0 días</span></div>
+            <div class="stat-card card-asuntos"><span class="stat-label">Asuntos</span><span class="stat-value" id="annual-asuntos">0 días</span></div>
+            <div class="stat-card card-extras"><span class="stat-label">Días compensados</span><span class="stat-value" id="annual-extras">0 días</span></div>
+        </div>
+        <div class="annual-grid" id="annual-calendar-container"></div>
+    </div>
 
-btnLogin.onclick = () => {
-  const email = loginEmail.value.trim();
-  const password = loginPassword.value.trim();
-  loginError.textContent = "";
-  if(!email || !password){ loginError.textContent="Introduce correo y contraseña"; return; }
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h2 id="modalDateTitle" style="color:var(--primary); margin-top:0;">Editar Día</h2>
+            <div style="display:flex; flex-direction:column; gap:15px;">
+                <div>
+                    <label style="font-weight:800; font-size:0.8rem;">TIPO DE JORNADA</label>
+                    <select id="dayType" style="width:100%; margin-top:5px;">
+                        <option value="laborable">Laborable</option>
+                        <option value="nolaborable">No Laborable</option>
+                        <option value="comision">Comisión de Servicio</option>
+                        <option value="vacaciones">Vacaciones</option>
+                        <option value="asuntos">Asuntos Propios</option>
+                        <option value="extras">Día Horas Extras</option>
+                        <option value="festivo">Festivo</option>
+                    </select>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                    <fieldset style="border:1px solid #cbd5e1; border-radius:10px;">
+                        <legend style="font-size:0.7rem; font-weight:800; padding:0 5px;">MAÑANA</legend>
+                        <input type="time" id="t-in-1" style="width:40%;"> <input type="time" id="t-out-1" style="width:40%;">
+                    </fieldset>
+                    <fieldset style="border:1px solid #cbd5e1; border-radius:10px;">
+                        <legend style="font-size:0.7rem; font-weight:800; padding:0 5px;">TARDE</legend>
+                        <input type="time" id="t-in-2" style="width:40%;"> <input type="time" id="t-out-2" style="width:40%;">
+                    </fieldset>
+                </div>
+                <textarea id="dayNotes" placeholder="Notas..." rows="2" style="width:100%; border-radius:10px; border:1px solid #cbd5e1; padding:10px; box-sizing:border-box;"></textarea>
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-secondary" style="flex:1" onclick="closeModal()">CANCELAR</button>
+                    <button class="btn-nav" style="flex:1; background:#10b981" onclick="saveDayData()">GUARDAR</button>
+                </div>
+                <button class="btn-secondary" style="background:#475569" onclick="clearDayFields()">BORRAR</button>
+            </div>
+        </div>
+    </div>
 
-  auth.signInWithEmailAndPassword(email,password)
-    .then(userCredential=>{
-      modalLogin.style.display='none';
-      mainContainer.style.display='block';
-      startApp();
-    })
-    .catch(err=>{
-      loginError.textContent = err.message;
-    });
-};
+    <div class="modal-overlay" id="extraReportOverlay">
+        <div class="modal" style="max-width:800px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h2 style="margin:0; color:var(--primary);">Compensación Horas Extras</h2>
+                <button class="btn-secondary" style="background:#ef4444" onclick="closeExtraReport()">CERRAR</button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="extra-table">
+                    <thead>
+                        <tr>
+                            <th>MES</th>
+                            <th>EXTRAS</th>
+                            <th>X1.75</th>
+                            <th>H. GENERADAS</th>
+                            <th>DIAS PERMISO HORAS</th>
+                            <th>SALDO</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 
-// ====================== LÓGICA DE LA APP ======================
-function startApp(){
-  // Aquí va TODO tu código original dentro de startApp:
-  // - Variables de calendario, modal, botones
-  // - Funciones init, renderCalendar, openModalForDay, btnSave, btnDelete, etc.
-  // - Exportar/Importar
-  // - Vista anual
-  // Solo reemplaza `localStorage` por `Firebase Realtime Database` si quieres sincronizar
-  // Pero puedes mantener localStorage si quieres compatibilidad offline
-  init(); // Inicializa el calendario
+    <script>
+        // --- CONFIGURACIÓN FIREBASE ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyDbsSut5HAbYWknU4Rr0iaMGtryeIp5HY8",
+            authDomain: "control-horario-jcos.firebaseapp.com",
+            databaseURL: "https://control-horario-jcos-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "control-horario-jcos",
+            storageBucket: "control-horario-jcos.firebasestorage.app",
+            messagingSenderId: "600016407629",
+            appId: "1:600016407629:web:dc1c8cdff6babf6bbc2004"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        const auth = firebase.auth();
+
+        let currentDate = new Date();
+        let db = {}; 
+        let userId = null;
+        let currentEditingKey = '';
+        const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+        const MIN_DAY = 7 * 60; 
+        const LIMIT_MORNING = 7 * 60 + 30; 
+        const LIMIT_EVENING = 18 * 60 + 30; 
+
+        // --- AUTH / INICIO CORREGIDO ---
+        window.onload = function() {
+            // 1. Rellenar desplegables primero para fijar la fecha seleccionada
+            populateSelects();
+            // 2. Ahora sí pintará el mes correctamente sin dar fallo
+            renderMonthly();
+
+            // 3. Escuchar Firebase en segundo plano
+            auth.onAuthStateChanged(user => {
+                if (user) {
+                    userId = user.uid;
+                    document.getElementById('login-container').classList.add('hidden');
+                    listenToData();
+                } else {
+    userId = null;
+    // Forzamos el borrado preventivo al mostrar el login
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-pass').value = '';
+    
+    document.getElementById('login-container').classList.remove('hidden');
+    document.getElementById('loading').style.display = 'none';
 }
-</script>
+            });
+        };
+
+        function login() {
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            auth.signInWithEmailAndPassword(email, pass).catch(err => {
+                const errEl = document.getElementById('login-error');
+                errEl.innerText = "Error: Datos incorrectos";
+                errEl.style.display = 'block';
+            });
+        }
+
+       // CÓDIGO NUEVO:
+function logout() { 
+    auth.signOut().then(() => {
+        // Limpia por completo los campos del formulario al salir
+        document.getElementById('login-email').value = '';
+        document.getElementById('login-pass').value = '';
+        const errEl = document.getElementById('login-error');
+        if (errEl) {
+            errEl.innerText = '';
+            errEl.style.display = 'none';
+        }
+    }).catch(error => {
+        console.error("Error al cerrar sesión: ", error);
+    });
+}
+
+        function listenToData() {
+            document.getElementById('loading').style.display = 'flex';
+            
+            // Intento de precarga rápida desde LocalStorage para que la app responda al instante
+            const copiaLocal = localStorage.getItem('backup_jornadas_' + userId);
+            if (copiaLocal) {
+                db = JSON.parse(copiaLocal);
+                renderMonthly();
+                if(!document.getElementById('view-annual').classList.contains('hidden')) renderAnnual();
+            }
+
+            database.ref('usuarios/' + userId + '/jornadas').on('value', snapshot => {
+                db = snapshot.val() || {};
+                
+                // OPCON 3: Guardamos automáticamente en el LocalStorage de este navegador
+                localStorage.setItem('backup_jornadas_' + userId, JSON.stringify(db));
+                
+                document.getElementById('loading').style.display = 'none';
+                renderMonthly();
+                if(!document.getElementById('view-annual').classList.contains('hidden')) renderAnnual();
+            }, error => {
+                console.error("Error en Firebase, usando copia de LocalStorage:", error);
+                document.getElementById('loading').style.display = 'none';
+                
+                // Si falla Firebase, nos aseguramos de que pinte lo que tenga en LocalStorage
+                const backupFallback = localStorage.getItem('backup_jornadas_' + userId);
+                if (backupFallback) {
+                    db = JSON.parse(backupFallback);
+                    renderMonthly();
+                } else {
+                    alert("Error al conectar con Firebase y no se encontró ninguna copia local en este navegador.");
+                }
+            });
+        }
+
+        function populateSelects() {
+            const mSel = document.getElementById('monthSelect'), ySel = document.getElementById('yearSelect');
+            mSel.innerHTML = ''; ySel.innerHTML = '';
+            months.forEach((m, i) => mSel.add(new Option(m, i)));
+            for(let i = 2024; i <= 2030; i++) ySel.add(new Option(i, i));
+            
+            mSel.value = currentDate.getMonth();
+            ySel.value = currentDate.getFullYear();
+        }
+
+        function renderMonthly() {
+            const mSel = document.getElementById('monthSelect'), ySel = document.getElementById('yearSelect');
+            if(!mSel || !ySel) return; // Salvaguarda preventiva
+
+            const y = parseInt(ySel.value), m = parseInt(mSel.value);
+            const grid = document.getElementById('calendar-body');
+            if(!grid) return;
+            
+            grid.innerHTML = '';
+            ["LUN", "MAR", "MIÉ", "JUE", "VIE", "SÁB", "DOM"].forEach(d => {
+                const div = document.createElement('div'); div.className='day-header-name'; div.innerText=d; grid.appendChild(div);
+            });
+
+            const firstDay = new Date(y, m, 1).getDay();
+            const offset = (firstDay === 0) ? 6 : firstDay - 1;
+            for(let i=0; i<offset; i++) grid.appendChild(document.createElement('div'));
+
+            let tWork = 0, tTarget = 0, tExtra = 0;
+            const daysInMonth = new Date(y, m+1, 0).getDate();
+
+            for(let d=1; d<=daysInMonth; d++) {
+                const k = `${y}-${m}-${d}`, dow = new Date(y,m,d).getDay();
+                
+                // NUEVA LÓGICA PARA ASIGNAR EL TIPO POR DEFECTO
+                let def = 'laborable';
+                if (dow === 0) {
+                    def = 'festivo';       // Domingo
+                } else if (dow === 6) {
+                    def = 'nolaborable';   // Sábado por defecto NO LABORABLE
+                }
+
+               // NUEVA LÓGICA ANUAL
+                    let defAnual = 'laborable';
+                    if (dow === 0) {
+                        defAnual = 'festivo';
+                    } else if (dow === 6) {
+                        defAnual = 'nolaborable';
+                    }
+                    
+                    const data = db[k] || { type: defAnual };
+                
+                if (data.type === 'laborable' || data.type === 'comision') tTarget += MIN_DAY;
+                const dMin = calcMin(data); tWork += dMin;
+                tExtra += calcSEx(data, dow);
+                
+                let colorClass = `bg-${data.type}`;
+                if (data.type === 'nolaborable') colorClass = (dow === 6) ? 'bg-nolaborable-sat' : 'bg-nolaborable-other';
+
+                const dayBox = document.createElement('div');
+                dayBox.className = `day-box ${colorClass}`;
+                // BLOQUE NUEVO:
+dayBox.innerHTML = `
+    <div class="day-top-bar">
+        <div class="day-number">${d}</div>
+        ${data.notes ? '💬' : ''}
+    </div>
+    <div class="day-info">
+        ${data.tIn1 ? `${data.tIn1}${data.tOut1 ? '-' + data.tOut1 : ''}` : ''}
+        ${data.tIn2 ? `<br> ${data.tIn2}${data.tOut2 ? '-' + data.tOut2 : ''}` : ''}
+    </div>
+    ${dMin>0 ? `<div class="day-total">${fmtH(dMin)}</div>` : ''}`;
+                dayBox.onclick = () => openModal(k, d);
+                grid.appendChild(dayBox);
+            }
+            document.getElementById('target-hours').innerText = `${Math.floor(tTarget / 60)}h`;
+            document.getElementById('worked-hours').innerText = fmtH(tWork);
+            document.getElementById('balance-extras').innerText = `${fmtH(tWork-tTarget)} / ${fmtH(tExtra)}`;
+        }
+
+        function saveDayData() {
+            const type = document.getElementById('dayType').value;
+            const tIn1 = document.getElementById('t-in-1').value, tOut1 = document.getElementById('t-out-1').value;
+            const tIn2 = document.getElementById('t-in-2').value, tOut2 = document.getElementById('t-out-2').value;
+            const notes = document.getElementById('dayNotes').value;
+
+            const mIn1 = tToM(tIn1), mOut1 = tToM(tOut1), mIn2 = tToM(tIn2), mOut2 = tToM(tOut2);
+            if (tIn1 && tOut1 && mOut1 <= mIn1) { alert("Error: Mañana incorrecta"); return; }
+            if (tIn2 && tOut2 && mOut2 <= mIn2) { alert("Error: Tarde incorrecta"); return; }
+            
+            const data = { type, tIn1, tOut1, tIn2, tOut2, notes };
+          // Enviamos los datos (Firebase se encarga de guardarlos en local y subirlos cuando haya red)
+database.ref('usuarios/' + userId + '/jornadas/' + currentEditingKey).set(data);
+
+// Cerramos el modal AL INSTANTE sin esperar a internet
+closeModal();
+
+// Forzamos el redibujado para que veas el cambio de color (ej. a Vacaciones) en el acto
+renderMonthly();
+if(!document.getElementById('view-annual').classList.contains('hidden')) renderAnnual();
+        }
+
+        function clearDayFields() {
+            if (!confirm("¿Borrar todo el día?")) return;
+            // Si tienes un botón de borrar, cámbialo también así:
+database.ref('usuarios/' + userId + '/jornadas/' + currentEditingKey).remove();
+closeModal();
+renderMonthly();
+if(!document.getElementById('view-annual').classList.contains('hidden')) renderAnnual();
+        }
+
+       
+function openExtraReport() {
+    const y = currentDate.getFullYear();
+    const body = document.getElementById('report-body'); 
+    body.innerHTML = '';
+    
+    // Variables para acumular los totales anuales
+    let totalAnualExtras = 0;
+    let totalAnualCoMinutos = 0;
+    let totalAnualGastadoMinutos = 0;
+
+    for(let m=0; m<12; m++) {
+        let mEx = 0, mDi = 0;
+        for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
+            const k = `${y}-${m}-${d}`, dow = new Date(y, m, d).getDay();
+            if(db[k]){ 
+                mEx += calcSEx(db[k], dow); 
+                if(db[k].type === 'extras') mDi += MIN_DAY; 
+            }
+        }
+        let mCo = Math.round(mEx * 1.75); // Minutos generados ya multiplicados por 1.75
+        
+        // Sumamos a los totales anuales
+        totalAnualExtras += mEx;
+        totalAnualCoMinutos += mCo;
+        totalAnualGastadoMinutos += mDi;
+        
+        // El saldo mensual arrastra el acumulado hasta ese mes (Generado - Gastado)
+        let saldoAcumuladoMes = totalAnualCoMinutos - totalAnualGastadoMinutos;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${months[m]}</td>
+            <td>${mEx === 0 ? '—' : fmtH(mEx)}</td>
+            <td>${mCo === 0 ? '—' : fmtH(mCo)}</td>
+            <td>${mCo === 0 ? '—' : fmtDiasHorasMin(mCo)}</td>
+            <td>${mDi === 0 ? '—' : fmtSoloDias(mDi)}</td>
+            <td style="color:${saldoAcumuladoMes < 0 ? 'red' : (saldoAcumuladoMes > 0 ? 'green' : 'inherit')}">
+                ${saldoAcumuladoMes === 0 ? '—' : fmtDiasHorasMin(saldoAcumuladoMes)}
+            </td>
+        `;
+        body.appendChild(tr);
+    }
+
+    // --- FILA DE TOTALES FINAL (TODO EN NEGRITA) ---
+    const saldoAnualFinal = totalAnualCoMinutos - totalAnualGastadoMinutos;
+    
+    const trTotal = document.createElement('tr');
+    trTotal.style.fontWeight = '900'; // 👈 Aplica negrita a toda la fila
+    trTotal.style.background = '#f1f5f9'; // Fondo grisáceo para resaltar
+    trTotal.style.borderTop = '2px solid #cbd5e1';
+    
+    trTotal.innerHTML = `
+        <td><strong>TOTAL ANUAL</strong></td>
+        <td><strong>${totalAnualExtras === 0 ? '—' : fmtH(totalAnualExtras)}</strong></td>
+        <td><strong>${totalAnualCoMinutos === 0 ? '—' : fmtH(totalAnualCoMinutos)}</strong></td>
+        <td><strong>${totalAnualCoMinutos === 0 ? '—' : fmtDiasHorasMin(totalAnualCoMinutos)}</strong></td>
+        <td><strong>${totalAnualGastadoMinutos === 0 ? '—' : fmtSoloDias(totalAnualGastadoMinutos)}</strong></td>
+        <td style="color:${saldoAnualFinal < 0 ? 'red' : (saldoAnualFinal > 0 ? 'green' : 'inherit')}">
+            <strong>${saldoAnualFinal === 0 ? '—' : fmtDiasHorasMin(saldoAnualFinal)}</strong>
+        </td>
+    `;
+    body.appendChild(trTotal);
+
+    document.getElementById('extraReportOverlay').style.display = 'flex';
+}
+
+
+
+
+function renderAnnual() {
+            const container = document.getElementById('annual-calendar-container'), y = currentDate.getFullYear();
+            container.innerHTML = ''; document.getElementById('annual-title-year').innerText = y;
+            let v=0, a=0, e=0;
+            for(let m=0; m<12; m++) {
+                const mDiv = document.createElement('div'); mDiv.className = 'mini-month';
+                mDiv.innerHTML = `<div class="mini-month-title">${months[m].toUpperCase()}</div>`;
+                const dDiv = document.createElement('div'); dDiv.className = 'mini-days';
+                const off = (new Date(y, m, 1).getDay() === 0) ? 6 : new Date(y, m, 1).getDay() - 1;
+                for(let i=0; i<off; i++) dDiv.appendChild(document.createElement('div'));
+                for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
+                    const k=`${y}-${m}-${d}`, dow=new Date(y,m,d).getDay();
+
+                    // LÍNEA NUEVA CORREGIDA:
+const data = db[k] || { type: (dow === 0 ? 'festivo' : (dow === 6 ? 'nolaborable' : 'laborable')) };
+                    
+                    if(data.type === 'vacaciones') v++; 
+                    if(data.type === 'asuntos') a++; 
+                    if(data.type === 'extras') e++;
+                    
+                    // Si el día es comisión, forzamos visualmente a que se pinte como un día laborable normal en el año
+                    let typeClass = data.type;
+                    if(typeClass === 'comision') {
+                        typeClass = 'laborable';
+                    }
+
+                    const dEl = document.createElement('div');
+                    dEl.className = `mini-day bg-${typeClass === 'nolaborable' ? (dow===6?'nolaborable-sat':'nolaborable-other') : typeClass}`;
+                    dEl.innerText = d; dDiv.appendChild(dEl);
+                }
+                mDiv.appendChild(dDiv); container.appendChild(mDiv);
+            }
+            document.getElementById('annual-vacations').innerText = v + " d";
+            document.getElementById('annual-asuntos').innerText = a + " d";
+            document.getElementById('annual-extras').innerText = e + " d";
+        }
+        // --- HELPERS ---
+        function fmtDiasHorasMin(totalMinutos) {
+    const a = Math.abs(totalMinutos);
+    const dias = Math.floor(a / MIN_DAY); // MIN_DAY son 420 minutos (7h)
+    const minutosRestantes = a % MIN_DAY;
+    const horas = Math.floor(minutosRestantes / 60);
+    const minutos = minutosRestantes % 60;
+    
+    return `${totalMinutos < 0 ? '-' : ''}${dias} d ${horas}h ${minutos}m`;
+}
+        function tToM(t) { if(!t) return 0; const [h, m] = t.split(':').map(Number); return h*60+m; }
+        function fmtH(m) { const a=Math.abs(m); return `${m<0?'-':''}${Math.floor(a/60)}h ${a%60}m`; }
+        function fmtDHM_Gen(total) { const a=Math.abs(total); const d=Math.floor(a/MIN_DAY); const h=Math.floor((a%MIN_DAY)/60); return `${total<0?'-':''}${d}d ${h}h`; }
+        function fmtSoloDias(total) { return Math.floor(Math.abs(total)/MIN_DAY) + " d"; }
+        function calcMin(d) { let m=0; if(d.tIn1 && d.tOut1) m+=(tToM(d.tOut1)-tToM(d.tIn1)); if(d.tIn2 && d.tOut2) m+=(tToM(d.tOut2)-tToM(d.tIn2)); return m; }
+        function calcSEx(d, dow) {
+            if (dow===6 || dow===0) return calcMin(d);
+            let ex=0; const rs=[];
+            if(d.tIn1 && d.tOut1) rs.push([tToM(d.tIn1), tToM(d.tOut1)]);
+            if(d.tIn2 && d.tOut2) rs.push([tToM(d.tIn2), tToM(d.tOut2)]);
+            rs.forEach(([s, e]) => {
+                if (s<LIMIT_MORNING) ex += Math.min(e, LIMIT_MORNING)-s;
+                if (e>LIMIT_EVENING) ex += e-Math.max(s, LIMIT_EVENING);
+            });
+            return ex;
+        }
+
+       
+// CÓDIGO NUEVO CORREGIDO:
+function openModal(k, d) { 
+    currentEditingKey = k; 
+    const data = db[k] || {}; 
+    
+    document.getElementById('modalDateTitle').innerText = `${d} de ${months[currentDate.getMonth()]}`;
+    
+    // Si el día NO tiene datos guardados en Firebase, calculamos su tipo real por defecto
+    if (!data.type) {
+        // Desglosamos la clave (ej: "2026-4-16") para crear una fecha nativa exacta
+        const [year, month, day] = k.split('-').map(Number);
+        const dow = new Date(year, month, day).getDay(); // 0 = Domingo, 6 = Sábado
+        
+        if (dow === 0) {
+            data.type = 'festivo';       // Domingo por defecto
+        } else if (dow === 6) {
+            data.type = 'nolaborable';   // Sábado por defecto NO LABORABLE ¡Arreglado!
+        } else {
+            data.type = 'laborable';     // Lunes a Viernes por defecto
+        }
+    }
+    
+    // Ahora el desplegable adoptará el tipo correcto de forma automática
+    document.getElementById('dayType').value = data.type;
+    
+    document.getElementById('t-in-1').value = data.tIn1||''; document.getElementById('t-out-1').value = data.tOut1||'';
+    document.getElementById('t-in-2').value = data.tIn2||''; document.getElementById('t-out-2').value = data.tOut2||'';
+    document.getElementById('dayNotes').value = data.notes||'';
+    document.getElementById('modalOverlay').style.display = 'flex'; 
+}
+
+
+        function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
+        function closeExtraReport() { document.getElementById('extraReportOverlay').style.display = 'none'; }
+        function changeMonth(s) { currentDate.setMonth(currentDate.getMonth()+s); populateSelects(); renderMonthly(); }
+        
+        function updateDateFromSelects() { 
+            const mSel = document.getElementById('monthSelect'), ySel = document.getElementById('yearSelect');
+            currentDate.setFullYear(ySel.value); 
+            currentDate.setMonth(mSel.value); 
+            renderMonthly(); 
+        }
+        
+        function toggleView() { 
+            document.getElementById('view-monthly').classList.toggle('hidden'); 
+            document.getElementById('view-annual').classList.toggle('hidden'); 
+            if(!document.getElementById('view-annual').classList.contains('hidden')) renderAnnual(); 
+        }
+
+// --- FUNCIONES DE COPIA DE SEGURIDAD (BACKUP) ---
+        
+        // Genera y descarga el archivo JSON en tu ordenador
+        function exportarBackup() {
+            if (!db || Object.keys(db).length === 0) {
+                alert("No hay datos disponibles para exportar.");
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+            const downloadAnchor = document.createElement('a');
+            const fecha = new Date().toISOString().slice(0,10);
+            
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `backup_horas_${fecha}.json`);
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        // Lee el archivo JSON de tu ordenador y lo sube a Firebase + LocalStorage
+        function importarBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!confirm("¿Estás seguro de que quieres importar esta copia? Se sobrescribirán los datos actuales.")) {
+                event.target.value = ''; // Limpia el input
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const datosImportados = JSON.parse(e.target.result);
+                    
+                    // Validación mínima para comprobar que es un formato correcto
+                    if (typeof datosImportados !== 'object') {
+                        throw new Error("Formato inválido");
+                    }
+
+                    document.getElementById('loading').style.display = 'flex';
+
+                    // 1. Guardar en Firebase
+                    database.ref('usuarios/' + userId + '/jornadas').set(datosImportados)
+                        .then(() => {
+                            // 2. Guardar en LocalStorage
+                            localStorage.setItem('backup_jornadas_' + userId, JSON.stringify(datosImportados));
+                            db = datosImportados;
+                            
+                            alert("¡Copia de seguridad restaurada e importada con éxito!");
+                            renderMonthly();
+                            if(!document.getElementById('view-annual').classList.contains('hidden')) renderAnnual();
+                            document.getElementById('loading').style.display = 'none';
+                        })
+                        .catch(err => {
+                            console.error(err);
+                            alert("Error al subir los datos a Firebase.");
+                            document.getElementById('loading').style.display = 'none';
+                        });
+
+                } catch (err) {
+                    alert("Error: El archivo seleccionado no es un archivo de copia válido.");
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Limpia el input al terminar
+        }
+
+        // --- DETECTOR DE CONEXIÓN ONLINE / OFFLINE ---
+        function actualizarEstadoConexion() {
+            const badge = document.getElementById('connection-status');
+            const text = document.getElementById('status-text');
+
+            if (navigator.onLine) {
+                badge.className = "status-badge online";
+                text.innerText = "Sincronizado";
+                
+                // Si vuelve internet y tenemos el ID del usuario, forzamos un reconexión con Firebase
+                if (typeof userId !== 'undefined' && userId) {
+                    database.goOnline(); 
+                }
+            } else {
+                badge.className = "status-badge offline";
+                text.innerText = "Modo Local (Sin Red)";
+                
+                // Avisamos a Firebase internamente de que no lo intente temporalmente
+                if (typeof database !== 'undefined') {
+                    database.goOffline();
+                }
+            }
+        }
+
+        // Escuchadores nativos del navegador (actúan al instante)
+        window.addEventListener('online', actualizarEstadoConexion);
+        window.addEventListener('offline', actualizarEstadoConexion);
+
+        // Comprobación inicial nada más cargar la página
+        document.addEventListener("DOMContentLoaded", actualizarEstadoConexion);
+
+    </script>
 </body>
 </html>
