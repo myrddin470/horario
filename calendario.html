@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calendario Laboral</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  background:
+    radial-gradient(circle at top left,#2563eb55,transparent 30%),
+    radial-gradient(circle at bottom right,#dc262655,transparent 30%),
+    linear-gradient(135deg,#020617,#0f172a);
+  color:white;
+  padding:30px;
+}
+
+.container{
+  max-width:1400px;
+  margin:auto;
+}
+
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  margin-bottom:25px;
+  flex-wrap:wrap;
+}
+
+.title h1{
+  font-size:2.4rem;
+  margin-bottom:6px;
+}
+
+.title p{
+  color:#94a3b8;
+}
+
+.controls{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  background:rgba(255,255,255,.08);
+  padding:14px;
+  border-radius:20px;
+  backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.08);
+}
+
+button,select{
+  font-family:inherit;
+}
+
+.nav-btn,
+.summary-btn{
+  border:none;
+  cursor:pointer;
+  transition:.2s;
+}
+
+.nav-btn{
+  width:45px;
+  height:45px;
+  border-radius:12px;
+  background:#1e293b;
+  color:white;
+  font-size:1.1rem;
+  flex-shrink:0;
+}
+
+.nav-btn:hover{
+  transform:translateY(-2px);
+  background:#334155;
+}
+
+.summary-btn{
+  background:linear-gradient(135deg,#2563eb,#1d4ed8);
+  color:white;
+  padding:12px 18px;
+  border-radius:12px;
+  font-weight:600;
+}
+
+.summary-btn:hover{
+  transform:translateY(-2px);
+}
+
+select{
+  background:white;
+  border:1px solid #cbd5e1;
+  color:#111827;
+  padding:12px 14px;
+  border-radius:12px;
+  cursor:pointer;
+}
+
+.calendar{
+  background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:28px;
+  padding:24px;
+  backdrop-filter:blur(10px);
+}
+
+.weekdays,
+.grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:14px;
+}
+
+.weekdays{
+  margin-bottom:14px;
+}
+
+.weekday{
+  text-align:center;
+  font-weight:700;
+  color:#cbd5e1;
+  letter-spacing:1px;
+}
+
+.day{
+  min-height:110px;
+  border-radius:22px;
+  padding:14px;
+  cursor:pointer;
+  transition:.2s;
+  position:relative;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  font-weight:700;
+  font-size:1.2rem;
+}
+
+.day:hover{
+  transform:translateY(-3px);
+}
+
+.empty{
+  visibility:hidden;
+}
+
+.laborable{
+  background:white;
+  color:#111827;
+}
+
+.vacaciones{
+  background:linear-gradient(135deg,#3b82f6,#1d4ed8);
+}
+
+.festivo{
+  background:linear-gradient(135deg,#ef4444,#b91c1c);
+}
+
+.otro{
+  background:linear-gradient(135deg,#94a3b8,#475569);
+}
+
+.note{
+  font-size:.9rem;
+}
+
+.legend{
+  display:flex;
+  gap:18px;
+  margin-top:24px;
+  flex-wrap:wrap;
+}
+
+.legend-item{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:#cbd5e1;
+}
+
+.legend-color{
+  width:18px;
+  height:18px;
+  border-radius:6px;
+}
+
+.modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:999;
+  padding:20px;
+}
+
+.modal.active{
+  display:flex;
+}
+
+.modal-box{
+  width:100%;
+  max-width:500px;
+  background:white;
+  color:#111827;
+  border-radius:24px;
+  padding:28px;
+  border:1px solid rgba(0,0,0,.08);
+}
+
+.modal-box h2{
+  margin-bottom:20px;
+}
+
+.form-group{
+  margin-bottom:20px;
+}
+
+.form-group label{
+  display:block;
+  margin-bottom:8px;
+  font-weight:600;
+}
+
+.form-group textarea,
+.form-group select{
+  width:100%;
+}
+
+textarea{
+  min-height:120px;
+  resize:vertical;
+  background:white;
+  border:1px solid #cbd5e1;
+  color:#111827;
+  border-radius:14px;
+  padding:14px;
+}
+
+.actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.actions button{
+  border:none;
+  padding:12px 18px;
+  border-radius:12px;
+  cursor:pointer;
+  font-weight:600;
+}
+
+.save{
+  background:#5227df;
+  color:white;
+}
+
+.delete{
+  background:#dc2626;
+  color:white;
+}
+
+.cancel{
+  background:#334155;
+  color:white;
+}
+
+.summary-page{
+  display:none;
+}
+
+.summary-page h2{
+  font-size:2rem;
+  margin-bottom:24px;
+}
+
+.year-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+  gap:20px;
+}
+
+.month-card{
+  background:rgba(255,255,255,.06);
+  border-radius:22px;
+  padding:18px;
+}
+
+.month-card h3{
+  text-align:center;
+  margin-bottom:12px;
+}
+
+.mini-grid{
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:5px;
+}
+
+.mini-day{
+  height:24px;
+  border-radius:6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:.7rem;
+  font-weight:700;
+}
+
+.mini-day.empty{
+  visibility:hidden;
+}
+
+.legend-wrapper{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:20px;
+  flex-wrap:wrap;
+  margin-top:24px;
+}
+
+.data-buttons{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+/* MEDIA QUERIES RESPONSIVAS MEJORADAS */
+@media(max-width:900px){
+  body{
+    padding:20px;
+  }
+  .title h1{
+    font-size:2rem;
+  }
+  .calendar{
+    padding:16px;
+    border-radius:20px;
+  }
+  .weekdays, .grid{
+    gap:8px;
+  }
+  .day{
+    min-height:80px;
+    padding:10px;
+    font-size:1rem;
+    border-radius:14px;
+  }
+}
+
+@media(max-width:680px){
+  .header{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .controls{
+    justify-content:space-between;
+    width:100%;
+  }
+  .controls select{
+    flex:1;
+    padding:10px;
+  }
+  .legend-wrapper{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .legend{
+    justify-content:center;
+    margin-top:10px;
+  }
+  .data-buttons{
+    justify-content:center;
+  }
+  .data-buttons button, #summaryBtn{
+    flex:1;
+    text-align:center;
+  }
+}
+
+@media(max-width:480px){
+  body{
+    padding:10px;
+  }
+  .title h1{
+    font-size:1.6rem;
+    text-align:center;
+  }
+  .title p{
+    text-align:center;
+    font-size:0.9rem;
+  }
+  .controls{
+    padding:8px;
+    border-radius:14px;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  #summaryBtn{
+    width:100%;
+    order:4;
+  }
+  .weekdays, .grid{
+    gap:4px;
+  }
+  .weekday{
+    font-size:0.8rem;
+  }
+  .day{
+    min-height:52px;
+    padding:6px;
+    font-size:0.85rem;
+    border-radius:8px;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+  }
+  .note{
+    font-size:0.75rem;
+  }
+  .modal-box{
+    padding:20px;
+    border-radius:18px;
+  }
+  .actions{
+    flex-direction:column;
+  }
+  .actions button{
+    width:100%;
+    text-align:center;
+  }
+  
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div id="mainPage">
+
+<div class="header">
+
+<div class="title">
+<h1>Control Laboral</h1>
+<p>Gestión visual de días laborables y vacaciones.JCOS</p>
+</div>
+
+<div class="controls">
+<button class="nav-btn" id="prev">◀</button>
+
+<select id="month"></select>
+<select id="year"></select>
+
+<button class="nav-btn" id="next">▶</button>
+
+<button class="summary-btn" id="summaryBtn">Resumen anual</button>
+</div>
+
+</div>
+
+<div class="calendar">
+
+<div class="weekdays">
+<div class="weekday">L</div>
+<div class="weekday">M</div>
+<div class="weekday">X</div>
+<div class="weekday">J</div>
+<div class="weekday">V</div>
+<div class="weekday">S</div>
+<div class="weekday">D</div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="legend-wrapper">
+
+  <div class="legend">
+
+    <div class="legend-item">
+      <div class="legend-color laborable"></div>
+      Laborable
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-color vacaciones"></div>
+      Vacaciones
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-color festivo"></div>
+      Festivo
+    </div>
+
+    <div class="legend-item">
+      <div class="legend-color otro"></div>
+      Otro
+    </div>
+
+  </div>
+
+  <div class="data-buttons">
+
+    <button class="summary-btn" id="exportBtn">
+      Exportar JSON
+    </button>
+
+    <button class="summary-btn" id="importBtn">
+      Importar JSON
+    </button>
+
+    <input type="file"
+           id="importFile"
+           accept=".json"
+           hidden>
+
+  </div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="summary-page" id="summaryPage">
+<button class="summary-btn" id="backBtn">← Volver</button>
+
+<div class="summary-header-wrapper" style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; margin-bottom:24px; flex-wrap:wrap; gap:15px;">
+  <h2 id="summaryTitle" style="margin-bottom:0;"></h2>
+  <div class="summary-counters" style="display:flex; gap:12px; flex-wrap:wrap;">
+    <div class="vacaciones" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+      Vacaciones: <span id="totalVacaciones">0</span> días
+    </div>
+    <div class="otro" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+      Otros: <span id="totalOtro">0</span> días
+    </div>
+  </div>
+</div>
+
+<div class="year-grid" id="yearGrid"></div>
+</div>
+
+</div>
+
+<div class="modal" id="modal">
+<div class="modal-box">
+<h2 id="modalTitle"></h2>
+
+<div class="form-group">
+<label>Tipo de día</label>
+<select id="type">
+<option value="laborable">Laborable</option>
+<option value="vacaciones">Vacaciones</option>
+<option value="festivo">Festivo</option>
+<option value="otro">Otro</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Nota</label>
+<textarea id="note" placeholder="Escribe una nota..."></textarea>
+</div>
+
+<div class="actions">
+<button class="delete" id="deleteBtn">Borrar</button>
+<button class="cancel" id="cancelBtn">Cancelar</button>
+<button class="save" id="saveBtn">Guardar</button>
+</div>
+
+</div>
+</div>
+
+<script>
+const months=[
+'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
+];
+
+const grid=document.getElementById('grid');
+const monthSelect=document.getElementById('month');
+const yearSelect=document.getElementById('year');
+
+const modal=document.getElementById('modal');
+const modalTitle=document.getElementById('modalTitle');
+const typeInput=document.getElementById('type');
+const noteInput=document.getElementById('note');
+
+const storage=JSON.parse(localStorage.getItem('calendarData')) || {};
+
+let current=new Date();
+let selectedKey='';
+
+months.forEach((m,i)=>{
+  const option=document.createElement('option');
+  option.value=i;
+  option.textContent=m;
+  monthSelect.appendChild(option);
+});
+
+for(let y=2020;y<=2035;y++){
+  const option=document.createElement('option');
+  option.value=y;
+  option.textContent=y;
+  yearSelect.appendChild(option);
+}
+
+// Asegurar que usemos año local correctamente al cargar inicialmente
+monthSelect.value=current.getMonth();
+yearSelect.value=current.getFullYear();
+
+function key(y,m,d){
+  return `${y}-${m}-${d}`;
+}
+
+function defaultType(date){
+  return date.getDay()===0 ? 'festivo' : 'laborable';
+}
+
+function getData(date){
+  const k=key(date.getFullYear(),date.getMonth(),date.getDate());
+
+  return storage[k] || {
+    type:defaultType(date),
+    note:''
+  };
+}
+
+function saveStorage(){
+  localStorage.setItem('calendarData',JSON.stringify(storage));
+}
+
+function render(){
+  grid.innerHTML='';
+
+  const year=current.getFullYear();
+  const month=current.getMonth();
+
+  monthSelect.value=month;
+  yearSelect.value=year;
+
+  const firstDate=new Date(year,month,1);
+  let firstDay=firstDate.getDay();
+
+  firstDay=firstDay===0 ? 6 : firstDay-1;
+
+  for(let i=0;i<firstDay;i++){
+    const empty=document.createElement('div');
+    empty.className='empty';
+    grid.appendChild(empty);
+  }
+
+  const totalDays=new Date(year,month+1,0).getDate();
+
+  for(let day=1;day<=totalDays;day++){
+
+    const date=new Date(year,month,day);
+
+    const data=getData(date);
+
+    const card=document.createElement('div');
+    card.className=`day ${data.type}`;
+
+    card.innerHTML=`
+      <span>${day}</span>
+      ${data.note ? '<span class="note">📝</span>' : ''}
+    `;
+
+    card.addEventListener('click',()=>openModal(date));
+
+    grid.appendChild(card);
+  }
+}
+
+function openModal(date){
+  const k=key(date.getFullYear(),date.getMonth(),date.getDate());
+
+  selectedKey=k;
+
+  const data=getData(date);
+
+  modalTitle.textContent=`${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
+
+  typeInput.value=data.type;
+  noteInput.value=data.note;
+
+  modal.classList.add('active');
+}
+
+function closeModal(){
+  modal.classList.remove('active');
+}
+
+document.getElementById('saveBtn').onclick=()=>{
+  storage[selectedKey]={
+    type:typeInput.value,
+    note:noteInput.value
+  };
+
+  saveStorage();
+  render();
+  renderSummary();
+  closeModal();
+};
+
+document.getElementById('deleteBtn').onclick=()=>{
+  delete storage[selectedKey];
+  saveStorage();
+  render();
+  renderSummary();
+  closeModal();
+};
+
+document.getElementById('cancelBtn').onclick=closeModal;
+
+modal.addEventListener('click',e=>{
+  if(e.target===modal) closeModal();
+});
+
+monthSelect.onchange=()=>{
+  current.setMonth(parseInt(monthSelect.value));
+  render();
+};
+
+yearSelect.onchange=()=>{
+  current.setFullYear(parseInt(yearSelect.value));
+  render();
+};
+
+document.getElementById('prev').onclick=()=>{
+  current.setMonth(current.getMonth()-1);
+  render();
+};
+
+document.getElementById('next').onclick=()=>{
+  current.setMonth(current.getMonth()+1);
+  render();
+};
+
+const mainPage=document.getElementById('mainPage');
+const summaryPage=document.getElementById('summaryPage');
+const yearGrid=document.getElementById('yearGrid');
+const summaryTitle=document.getElementById('summaryTitle');
+
+document.getElementById('summaryBtn').onclick=()=>{
+  mainPage.style.display='none';
+  summaryPage.style.display='block';
+  renderSummary();
+};
+
+document.getElementById('backBtn').onclick=()=>{
+  summaryPage.style.display='none';
+  mainPage.style.display='block';
+};
+
+function renderSummary(){
+
+  const year=current.getFullYear();
+
+  summaryTitle.textContent=`Resumen anual: ${year}`;
+
+  yearGrid.innerHTML='';
+
+  // NUEVO: Inicializar contadores anuales
+  let vacasTotales = 0;
+  let otrosTotales = 0;
+
+  for(let month=0;month<12;month++){
+
+    const card=document.createElement('div');
+
+    card.className='month-card';
+
+    let html=`
+      <h3>${months[month]}</h3>
+
+      <div class="mini-grid">
+    `;
+
+    // PRIMER DIA DEL MES
+    const firstDate=new Date(year,month,1);
+
+    let firstDay=firstDate.getDay();
+
+    // Convertimos domingo=0 a ultima columna
+    firstDay=firstDay===0 ? 6 : firstDay-1;
+
+    // INSERTAR HUECOS VACIOS
+    for(let i=0;i<firstDay;i++){
+
+      html+=`<div class="mini-day empty"></div>`;
+
+    }
+
+    // TOTAL DE DIAS DEL MES
+    const totalDays=new Date(year,month+1,0).getDate();
+
+    for(let day=1;day<=totalDays;day++){
+
+      const date=new Date(year,month,day);
+
+      const data=getData(date);
+
+      // NUEVO: Sumar al contador según el tipo de día que encuentre
+      if (data.type === 'vacaciones') vacasTotales++;
+      if (data.type === 'otro') otrosTotales++;
+
+      html+=`
+        <div class="mini-day ${data.type}">
+          ${day}
+        </div>
+      `;
+    }
+
+    html+='</div>';
+
+    card.innerHTML=html;
+
+    yearGrid.appendChild(card);
+  }
+
+  // NUEVO: Inyectar los totales calculados en las etiquetas de la cabecera
+  document.getElementById('totalVacaciones').textContent = vacasTotales;
+  document.getElementById('totalOtro').textContent = otrosTotales;
+}
+
+document.getElementById('exportBtn').onclick=()=>{
+
+  const dataStr=JSON.stringify(storage,null,2);
+
+  const blob=new Blob(
+    [dataStr],
+    {type:'application/json'}
+  );
+
+  const url=URL.createObjectURL(blob);
+
+  const a=document.createElement('a');
+
+  a.href=url;
+
+  a.download=`calendario-${current.getFullYear()}.json`;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+};
+
+document.getElementById('importBtn').onclick=()=>{
+
+  document.getElementById('importFile').click();
+
+};
+
+document.getElementById('importFile').addEventListener('change',(event)=>{
+
+  const file=event.target.files[0];
+
+  if(!file) return;
+
+  const reader=new FileReader();
+
+  reader.onload=(e)=>{
+
+    try{
+
+      const importedData=JSON.parse(e.target.result);
+
+      Object.keys(storage).forEach(key=>{
+        delete storage[key];
+      });
+
+      Object.assign(storage,importedData);
+
+      saveStorage();
+
+      render();
+
+      renderSummary();
+
+      alert('Datos importados correctamente');
+
+    }catch(error){
+
+      alert('El archivo JSON no es válido');
+
+    }
+
+  };
+
+  reader.readAsText(file);
+
+});
+
+render();
+</script>
+
+</body>
+</html>
