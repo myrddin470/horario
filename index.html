@@ -3,26 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Horario - Premium</title>
+    <title>Control Horario - Premium Dashboard</title>
     <style>
         :root {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
-            --bg: #f1f5f9;
+            --primary-light: rgba(79, 70, 229, 0.1);
+            --bg: #f8fafc;
             --card: #ffffff;
-            --text: #1e293b;
+            --text: #0f172a;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+            
+            /* Colores de Estado Estilizados */
             --c-laborable: #ffffff;
-            --c-nolaborable-sat: #ffffff; 
+            --c-nolaborable-sat: #ffffff;
             --c-nolaborable-other: #e2e8f0; 
-            --c-comision: #f0e2a7; 
+            --c-comision: #fef08a; 
             --c-vacaciones: #3b82f6; 
             --c-asuntos: #10b981; 
             --c-extras: #d946ef; 
-            --c-festivo: #ef4444; 
+            --c-festivo: #f87171; 
         }
 
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; }
-        .app-container { width: 100%; max-width: 1100px; }
+        * { box-sizing: border-box; }
+
+        body { 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            padding: 24px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Estructura Full-Width */
+        .app-container { 
+            width: 100%; 
+            max-width: 100%;
+            margin: 0 auto;
+        }
+        
         .hidden { display: none !important; }
 
         /* PANTALLA DE CARGA */
@@ -31,112 +56,189 @@
             flex-direction: column; justify-content: center; align-items: center; z-index: 2000;
         }
         .spinner {
-            width: 40px; height: 40px; border: 4px solid #cbd5e1;
+            width: 48px; height: 48px; border: 4px solid #e2e8f0;
             border-top-color: var(--primary); border-radius: 50%;
-            animation: spin 0.8s linear infinite; margin-bottom: 15px;
+            animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; margin-bottom: 20px;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { font-weight: 700; color: #64748b; font-size: 1rem; }
+        .loading-text { font-weight: 600; color: var(--text-secondary); font-size: 1.1rem; letter-spacing: -0.01em; }
 
         /* PANTALLA DE LOGIN */
         .login-container {
-            background: var(--card); padding: 40px; border-radius: 20px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 400px;
-            margin-top: 10vh; border: 1px solid #e2e8f0; text-align: center;
+            background: var(--card); padding: 40px; border-radius: 24px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 10px 10px -5px rgba(0,0,0,0.03); 
+            width: 100%; max-width: 420px;
+            margin-top: 10vh; border: 1px solid var(--border); text-align: center;
         }
-        .login-container h2 { margin: 0 0 10px 0; color: var(--primary); font-weight: 900; text-transform: uppercase; font-size: 1.4rem; letter-spacing: 2px; }
-        .login-container p { color: #64748b; font-size: 0.9rem; margin-bottom: 25px; font-weight: 500; }
-        .login-group { display: flex; flex-direction: column; text-align: left; gap: 6px; margin-bottom: 15px; }
-        .login-group label { font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; }
-        .login-group input { padding: 12px; border: 2px solid #f1f5f9; border-radius: 10px; font-size: 1rem; font-family: inherit; }
-        .login-group input:focus { outline: none; border-color: var(--primary); }
-        .btn-login { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: bold; font-size: 1rem; cursor: pointer; margin-top: 10px; transition: background 0.2s; }
+        .login-container h2 { margin: 0 0 8px 0; color: var(--primary); font-weight: 800; font-size: 1.6rem; letter-spacing: -0.02em; }
+        .login-container p { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 32px; font-weight: 500; }
+        .login-group { display: flex; flex-direction: column; text-align: left; gap: 8px; margin-bottom: 20px; }
+        .login-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+        .login-group input { 
+            padding: 14px; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; 
+            font-family: inherit; transition: all 0.2s; background: #f8fafc;
+        }
+        .login-group input:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px var(--primary-light); }
+        .btn-login { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 12px; transition: background 0.2s; }
         .btn-login:hover { background: var(--primary-hover); }
-        .login-error { color: #ef4444; font-size: 0.85rem; font-weight: 700; margin-top: 15px; }
+        .login-error { color: #ef4444; font-size: 0.85rem; font-weight: 600; margin-top: 16px; }
 
-        /* INTERFAZ PRINCIPAL */
+        /* INTERFAZ PRINCIPAL - DASHBOARD HEADER */
         .main-header-bar {
-            width: 100%; max-width: 1100px; background: var(--card); padding: 16px 0; border-radius: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 15px; text-align: center; border: 1px solid #e2e8f0;
-            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+            width: 100%; background: var(--card); padding: 20px 32px; border-radius: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 4px 6px -1px rgba(0,0,0,0.03); margin-bottom: 24px; border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
         }
-        .main-header-bar h1 { margin: 0; font-size: 1.1rem; letter-spacing: 3px; color: var(--primary); font-weight: 900; text-transform: uppercase; }
-        .copy-text { font-size: 0.9rem; color: #64748b; font-weight: 600; margin-left: 10px; }
-        .user-info-box { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-        .user-logged-text { font-size: 0.85rem; color: #64748b; font-weight: 700; text-transform: uppercase; background: #e2e8f0; padding: 4px 12px; border-radius: 20px; display: inline-block; }
-        .btn-logout { background: #ef4444; color: white; border: none; padding: 4px 12px; font-size: 0.75rem; font-weight: 700; border-radius: 20px; cursor: pointer; text-transform: uppercase; transition: background 0.2s; }
-        .btn-logout:hover { background: #dc2626; }
+        .main-header-bar h1 { margin: 0; font-size: 1.3rem; letter-spacing: 1px; color: var(--text); font-weight: 800; }
+        .copy-text { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; margin-left: 6px; opacity: 0.7; }
+        .user-info-box { display: flex; align-items: center; gap: 12px; }
+        .user-logged-text { font-size: 0.85rem; color: var(--text); font-weight: 600; background: #f1f5f9; padding: 8px 16px; border-radius: 9999px; display: inline-block; }
+        .btn-logout { background: #fee2e2; color: #ef4444; border: none; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; border-radius: 9999px; cursor: pointer; transition: all 0.2s; }
+        .btn-logout:hover { background: #fca5a5; color: #b91c1c; }
 
-        .header-nav { display: flex; justify-content: space-between; align-items: center; background: var(--card); padding: 15px 25px; border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); margin-bottom: 20px; gap: 10px; flex-wrap: wrap; }
-        .nav-controls { display: flex; align-items: center; gap: 10px; }
-        .btn-nav { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 6px; transition: background 0.2s; }
-        .btn-nav:hover { opacity: 0.9; }
-        select { padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 600; background: white; cursor: pointer; }
+        /* NAV CONTROLS */
+        .header-nav { 
+            display: flex; justify-content: space-between; align-items: center; background: var(--card); 
+            padding: 20px 32px; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); 
+            margin-bottom: 24px; gap: 16px; flex-wrap: wrap; border: 1px solid var(--border);
+        }
+        .nav-controls { display: flex; align-items: center; gap: 12px; }
+        .btn-nav { background: #ffffff; color: var(--text); border: 1px solid var(--border); padding: 10px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+        .btn-nav:hover { background: #f8fafc; border-color: #cbd5e1; }
+        select { padding: 10px 16px; border-radius: 10px; border: 1px solid var(--border); font-weight: 600; background: white; cursor: pointer; color: var(--text); }
+        select:focus { outline: none; border-color: var(--primary); }
 
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
-        .stat-card { background: var(--card); padding: 20px; border-radius: 16px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .stat-label { font-size: 0.75rem; color: #64748b; text-transform: uppercase; font-weight: 800; }
-        .stat-value { display: block; font-size: 1.4rem; font-weight: 800; margin-top: 8px; }
-        .btn-view-extras { margin-top: 10px; background: #6366f1; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 0.7rem; cursor: pointer; font-weight: 700; text-transform: uppercase; transition: background 0.2s; }
-        .btn-view-extras:hover { background: #4f46e5; }
+        /* KPI STATS CARDS */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 24px; }
+        .stat-card { background: var(--card); padding: 24px; border-radius: 20px; text-align: left; box-shadow: 0 1px 3px rgba(0,0,0,0.02); border: 1px solid var(--border); position: relative; overflow: hidden; }
+        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--border); }
+        .stat-card:nth-child(1)::before { background: var(--primary); }
+        .stat-card:nth-child(2)::before { background: #10b981; }
+        .stat-card:nth-child(3)::before { background: #d946ef; }
+        .stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
+        .stat-value { display: block; font-size: 1.8rem; font-weight: 800; margin-top: 6px; letter-spacing: -0.02em; }
+        .btn-view-extras { margin-top: 12px; background: var(--primary-light); color: var(--primary); border: none; padding: 8px 14px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; font-weight: 600; transition: all 0.2s; width: 100%; text-align: center; }
+        .btn-view-extras:hover { background: var(--primary); color: white; }
 
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
-        .day-header-name { text-align: center; font-weight: 800; color: #94a3b8; font-size: 0.8rem; padding: 10px 0; }
-        .day-box { background: var(--card); border-radius: 14px; min-height: 120px; padding: 12px; border: 1px solid #e2e8f0; cursor: pointer; position: relative; display: flex; flex-direction: column; transition: transform 0.15s, box-shadow 0.15s; }
-        .day-box:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .day-top-bar { display: flex; justify-content: space-between; align-items: center; }
-        .day-number { font-weight: 800; font-size: 1.2rem; }
-        .comment-indicator { font-size: 0.9rem; opacity: 0.8; cursor: help; }
-        .day-info { font-size: 0.95rem; font-weight: 700; margin-top: 6px; color: #475569; line-height: 1.3; }
-        .day-total { margin-top: auto; font-weight: 900; font-size: 0.95rem; text-align: right; color: var(--primary); background: rgba(79, 70, 229, 0.1); padding: 2px 6px; border-radius: 6px; align-self: flex-end; }
+        /* CALENDARIO MENSUAL */
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; width: 100%; }
+        .day-header-name { text-align: center; font-weight: 700; color: var(--text-secondary); font-size: 0.8rem; padding: 12px 0; text-transform: uppercase; letter-spacing: 0.05em; }
+        
+        .day-box { 
+            background: var(--card); border-radius: 16px; min-height: 140px; padding: 14px; 
+            border: 1px solid var(--border); cursor: pointer; position: relative; display: flex; 
+            flex-direction: column; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+        }
+        .day-box:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -8px rgba(0,0,0,0.08); border-color: #cbd5e1; }
+        .day-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;}
+        .day-number { font-weight: 700; font-size: 1.25rem; color: var(--text); }
+        .comment-indicator { font-size: 1.1rem; opacity: 0.9; cursor: help; }
+        .day-info { font-size: 0.85rem; font-weight: 600; color: #475569; line-height: 1.4; background: rgba(0,0,0,0.02); padding: 4px 8px; border-radius: 8px; inline-size: max-content; max-width: 100%; }
+        .day-total { margin-top: auto; font-weight: 700; font-size: 0.85rem; text-align: right; color: var(--primary); background: var(--primary-light); padding: 4px 8px; border-radius: 8px; align-self: flex-end; }
 
-        /* COLORES DINÁMICOS */
+        /* COLORES DINÁMICOS DE ESTADOS */
         .bg-laborable { background-color: var(--c-laborable); }
         .bg-nolaborable-sat { background-color: var(--c-nolaborable-sat); }
         .bg-nolaborable-other { background-color: var(--c-nolaborable-other); }
-        .bg-comision { background-color: var(--c-comision); }
-        .bg-vacaciones { background-color: var(--c-vacaciones); color: white; }
-        .bg-vacaciones .day-total { color: white; background: rgba(255,255,255,0.2); }
-        .bg-asuntos { background-color: var(--c-asuntos); color: white; }
-        .bg-asuntos .day-total { color: white; background: rgba(255,255,255,0.2); }
-        .bg-extras { background-color: var(--c-extras); color: white; }
-        .bg-extras .day-total { color: white; background: rgba(255,255,255,0.2); }
-        .bg-festivo { background-color: var(--c-festivo); color: white; }
-        .bg-festivo .day-total { color: white; background: rgba(255,255,255,0.2); }
-
-        .annual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; width: 100%; }
-        .mini-month { background: white; padding: 15px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e2e8f0; }
-        .mini-month-name { text-align: center; font-weight: 800; margin-bottom: 10px; color: var(--primary); text-transform: uppercase; font-size: 0.9rem; }
-        .mini-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
-        .mini-day { aspect-ratio: 1; border-radius: 4px; font-size: 0.65rem; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid #f1f5f9; }
+       
+       .bg-comision { background-color: rgba(217, 196, 154, 0.35); border-color: rgba(217, 196, 154, 0.7); color: #634819; }
+        .bg-comision .day-number { color: #634819; }
+        .bg-comision .day-total { color: #634819; background: rgba(217, 196, 154, 0.4); }
         
-        .annual-summary { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; }
-        .summary-item { padding: 15px; border-radius: 12px; color: white; text-align: center; font-weight: 800; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-
-        /* MODALES */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); display: none; justify-content: center; align-items: center; z-index: 1000; backdrop-filter: blur(4px); }
-        .modal { background: white; padding: 25px; border-radius: 20px; width: 95%; max-width: 950px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
-        .modal-day-edit, .modal-config-edit { max-width: 440px; }
+       .bg-vacaciones { background-color: rgba(59, 130, 246, 0.28); border-color: rgba(59, 130, 246, 0.6); color: #1e40af; }
+        .bg-vacaciones .day-number { color: #1e40af; }
+        .bg-vacaciones .day-total { color: #1e40af; background: rgba(59, 130, 246, 0.3); }
         
-        .extra-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 0.85rem; }
-        .extra-table th { background: #f8fafc; padding: 12px; text-align: left; border-bottom: 2px solid #e2e8f0; font-weight: 800; color: #64748b; }
-        .extra-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; color: #334155; }
-        .extra-table tr.total-row { background: #f1f5f9; font-weight: 900; color: var(--primary); }
-        .text-neg { color: #ef4444 !important; font-weight: bold; }
-        .text-pos { color: #10b981 !important; font-weight: bold; }
+        .bg-asuntos { background-color: rgba(16, 185, 129, 0.28); border-color: rgba(16, 185, 129, 0.6); color: #065f46; }
+        .bg-asuntos .day-number { color: #065f46; }
+        .bg-asuntos .day-total { color: #065f46; background: rgba(16, 185, 129, 0.3); }
+        
+        .bg-extras { background-color: rgba(217, 70, 239, 0.28); border-color: rgba(217, 70, 239, 0.6); color: #86198f; }
+        .bg-extras .day-number { color: #86198f; }
+        .bg-extras .day-total { color: #86198f; background: rgba(217, 70, 239, 0.3); }
+        
+       .bg-festivo { background-color: rgba(248, 113, 113, 0.28); border-color: rgba(248, 113, 113, 0.6); color: #991b1b; }
+        .bg-festivo .day-number { color: #991b1b; }
+        .bg-festivo .day-total { color: #991b1b; background: rgba(248, 113, 113, 0.3); }
 
-        .footer-tools { margin-top: 30px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding-bottom: 40px; }
-        .btn-tool { padding: 10px 18px; border-radius: 8px; border: 1px solid #cbd5e1; background: white; color: #475569; font-weight: 700; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.05); transition: background 0.2s; }
-        .btn-tool:hover { background: #f8fafc; }
+        /* VISTA ANUAL */
+        .annual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; width: 100%; }
+        .mini-month { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); border: 1px solid var(--border); }
+        .mini-month-name { text-align: center; font-weight: 700; margin-bottom: 14px; color: var(--text); text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.05em; }
+        .mini-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .mini-day { aspect-ratio: 1; border-radius: 6px; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; font-weight: 600; border: 1px solid #f1f5f9; }
+        
+        .annual-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
+        .summary-item { padding: 18px; border-radius: 16px; color: white; text-align: center; font-weight: 700; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
 
-        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-        .input-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
-        .input-group label { font-size: 0.7rem; font-weight: 800; color: #64748b; text-transform: uppercase; }
-        input, select, textarea { padding: 10px; border: 2px solid #f1f5f9; border-radius: 8px; font-size: 0.9rem; font-family: inherit; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+        /* MODALES MODERNOS */
+        .modal-overlay { 
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); 
+            display: none; justify-content: center; align-items: center; z-index: 1000; 
+            backdrop-filter: blur(8px); padding: 16px;
+        }
+        .modal { 
+            background: white; padding: 32px; border-radius: 24px; width: 100%; max-width: 950px; 
+            max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); 
+            border: 1px solid var(--border);
+        }
+        .modal-day-edit, .modal-config-edit { max-width: 480px; }
+        
+        /* TABLAS REPORTE */
+        .table-responsive-container { overflow-x: auto; width: 100%; border-radius: 12px; border: 1px solid var(--border); }
+        .extra-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: white; text-align: left; }
+        .extra-table th { background: #f8fafc; padding: 14px 16px; border-bottom: 2px solid var(--border); font-weight: 700; color: var(--text-secondary); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
+        .extra-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; color: var(--text); }
+        .extra-table tr.total-row { background: #f1f5f9; font-weight: 800; color: var(--primary); }
+        .text-neg { color: #ef4444 !important; }
+        .text-pos { color: #10b981 !important; }
 
-        .progress-bar-container { width: 100%; background-color: rgba(255,255,255,0.3); border-radius: 10px; height: 8px; margin-top: 6px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; border-radius: 10px; transition: width 0.3s ease; background-color: rgba(255, 255, 255, 0.85); }
+        /* HERRAMIENTAS INFERIORES */
+        .footer-tools { margin-top: 40px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; padding-bottom: 40px; width: 100%; }
+        .btn-tool { padding: 12px 20px; border-radius: 10px; border: 1px solid var(--border); background: white; color: #475569; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition: all 0.2s; font-size: 0.9rem; }
+        .btn-tool:hover { background: #f8fafc; border-color: #cbd5e1; color: var(--text); }
+
+        /* DETALLES FORMULARIOS */
+        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+        .input-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; width: 100%; }
+        .input-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
+        input, select, textarea { padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; font-family: inherit; background: #f8fafc; width: 100%; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px var(--primary-light); }
+
+        .progress-bar-container { width: 100%; background-color: rgba(255,255,255,0.25); border-radius: 9999px; height: 6px; margin-top: 8px; overflow: hidden; }
+        .progress-bar-fill { height: 100%; border-radius: 9999px; transition: width 0.3s ease; background-color: #ffffff; }
+
+        /* MEDIA QUERIES - RESPONSIVE DESIGN INTELIGENTE */
+        @media (max-width: 1024px) {
+            body { padding: 16px; }
+            .main-header-bar, .header-nav { padding: 16px 20px; }
+            .day-box { min-height: 120px; padding: 10px; }
+        }
+
+        @media (max-width: 768px) {
+            .main-header-bar { flex-direction: column; text-align: center; justify-content: center; }
+            .header-nav { flex-direction: column; align-items: stretch; }
+            .nav-controls { justify-content: center; }
+            .header-nav style { width: 100%; }
+            .header-nav button, .header-nav div { width: 100%; justify-content: center; }
+            .calendar-grid { gap: 6px; }
+            .day-box { min-height: 95px; padding: 8px; border-radius: 10px; }
+            .day-number { font-size: 1.1rem; }
+            .day-info { font-size: 0.7rem; padding: 2px 4px; border-radius: 4px; word-break: break-all; inline-size: auto;}
+            .day-total { font-size: 0.75rem; padding: 2px 4px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .modal { padding: 20px; border-radius: 16px; }
+        }
+
+        @media (max-width: 480px) {
+            .calendar-grid { gap: 4px; }
+            .day-header-name { font-size: 0.7rem; padding: 6px 0; }
+            .day-box { min-height: 80px; padding: 6px; }
+            .day-number { font-size: 0.95rem; }
+            .day-info { display: none; } /* Ocultar horas explícitas en pantallas ultra-pequeñas para evitar roturas visuales */
+            .day-total { font-size: 0.65rem; padding: 1px 3px; }
+            .modal-grid { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -180,9 +282,9 @@
                     <select id="yearSelect" onchange="updateDateFromSelects()"></select>
                     <button class="btn-nav" onclick="changeMonth(1)">❯</button>
                 </div>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn-nav" style="background: #4f46e5;" onclick="openConfigModal()">⚙️ Ajustes Horario</button>
-                    <button class="btn-nav" style="background: #4f46e5;" onclick="toggleView()">Vista Anual</button>
+                <div style="display:flex; gap:10px; flex-wrap: wrap;">
+                    <button class="btn-nav" style="background: var(--primary); color: white;" onclick="openConfigModal()">⚙️ Ajustes Horario</button>
+                    <button class="btn-nav" style="background: var(--primary); color: white;" onclick="toggleView()">Vista Anual</button>
                 </div>
             </header>
 
@@ -201,8 +303,8 @@
 
         <div class="app-container hidden" id="view-annual">
             <header class="header-nav">
-                <h2 id="annual-title" style="margin:0;">Resumen Anual <span id="annual-year-text" style="color: var(--primary);"></span></h2>
-                <button class="btn-nav" style="background: #4f46e5;" onclick="toggleView()">Volver al Mes</button>
+                <h2 id="annual-title" style="margin:0; font-weight: 800;">Resumen Anual <span id="annual-year-text" style="color: var(--primary);"></span></h2>
+                <button class="btn-nav" style="background: var(--primary); color: white;" onclick="toggleView()">Volver al Mes</button>
             </header>
 
             <div class="annual-summary">
@@ -218,7 +320,7 @@
                         <div id="bar-asun" class="progress-bar-fill" style="width: 0%"></div>
                     </div>
                 </div>
-                <div class="summary-item" style="background: var(--c-extras)">
+                <div class="summary-item" style="background: #c026d3">
                     H. Extras: <span id="count-extr">0</span>
                 </div>
             </div>
@@ -228,30 +330,32 @@
 
     <div class="modal-overlay" id="extraReportOverlay">
         <div class="modal">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                <h2 style="margin:0; color: var(--primary);">Informe de Compensación <span id="report-year"></span></h2>
-                <button class="btn-nav" style="background:#ef4444" onclick="closeExtraReport()">Cerrar</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; gap: 10px; flex-wrap: wrap;">
+                <h2 style="margin:0; color: var(--primary); font-weight: 800;">Informe de Compensación <span id="report-year"></span></h2>
+                <button class="btn-nav" style="background:#ef4444; color: white; border: none;" onclick="closeExtraReport()">Cerrar</button>
             </div>
-            <table class="extra-table">
-                <thead>
-                    <tr>
-                        <th>MES</th>
-                        <th>H. EXTRAS (100%)</th>
-                        <th>COMPENSACIÓN (1.75)</th>
-                        <th>DÍAS GENERADOS</th>
-                        <th>DÍAS DISFRUTADOS</th>
-                        <th>SALDO (D H M)</th>
-                    </tr>
-                </thead>
-                <tbody id="report-body"></tbody>
-                <tfoot id="report-footer"></tfoot>
-            </table>
+            <div class="table-responsive-container">
+                <table class="extra-table">
+                    <thead>
+                        <tr>
+                            <th>MES</th>
+                            <th>H. EXTRAS (100%)</th>
+                            <th>COMPENSACIÓN (1.75)</th>
+                            <th>DÍAS GENERADOS</th>
+                            <th>DÍAS DISFRUTADOS</th>
+                            <th>SALDO (D H M)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="report-body"></tbody>
+                    <tfoot id="report-footer"></tfoot>
+                </table>
+            </div>
         </div>
     </div>
 
     <div class="modal-overlay" id="modalOverlay">
         <div class="modal modal-day-edit">
-            <h3 id="modalDateTitle" style="margin-top:0">Editar Día</h3>
+            <h3 id="modalDateTitle" style="margin-top:0; font-weight: 800; font-size: 1.3rem;">Editar Día</h3>
             <div class="input-group">
                 <label>Tipo de Día</label>
                 <select id="dayType">
@@ -277,12 +381,11 @@
            
             <div style="display:flex; flex-direction:column; gap:8px; margin-top:20px;">
                 <div style="display:flex; gap:10px;">
-                    <button class="btn-nav" style="flex:2" onclick="saveDayData()">Guardar Datos</button>
-                    <button class="btn-nav" style="flex:1; background:#cbd5e1; color:#334155" onclick="closeModal()">Cancelar</button>
+                    <button class="btn-nav" style="flex:2; background: var(--primary); color: white; border: none; justify-content: center;" onclick="saveDayData()">Guardar Datos</button>
+                    <button class="btn-nav" style="flex:1; background:#cbd5e1; color:#334155; border: none; justify-content: center;" onclick="closeModal()">Cancelar</button>
                 </div>
                 <div style="display:flex; gap:10px;">
-                    
-                    <button class="btn-nav" style="flex:1; background:#475569; color:white; font-size:0.8rem;" onclick="clearDayData()">Eliminar Todo</button>
+                    <button class="btn-nav" style="flex:1; background:#475569; color:white; font-size:0.8rem; border: none; justify-content: center;" onclick="clearDayData()">Eliminar Todo</button>
                 </div>
             </div>
         </div>
@@ -290,7 +393,7 @@
 
     <div class="modal-overlay" id="configModalOverlay">
         <div class="modal modal-config-edit">
-            <h3 style="margin-top:0; color: var(--primary);">⚙️ Parámetros del Año <span id="configModalYearTitle"></span></h3>
+            <h3 style="margin-top:0; color: var(--primary); font-weight: 800;">⚙️ Parámetros del Año <span id="configModalYearTitle"></span></h3>
             
             <div class="modal-grid">
                 <div class="input-group">
@@ -320,8 +423,8 @@
             </div>
 
             <div style="display:flex; gap:10px; margin-top:25px;">
-                <button class="btn-nav" style="flex:2;" onclick="saveAnnualLimits()">Guardar Ajustes</button>
-                <button class="btn-nav" style="flex:1; background:#cbd5e1; color:#334155" onclick="closeConfigModal()">Cancelar</button>
+                <button class="btn-nav" style="flex:2; background: var(--primary); color: white; border: none; justify-content: center;" onclick="saveAnnualLimits()">Guardar Ajustes</button>
+                <button class="btn-nav" style="flex:1; background:#cbd5e1; color:#334155; border: none; justify-content: center;" onclick="closeConfigModal()">Cancelar</button>
             </div>
         </div>
     </div>
@@ -329,7 +432,7 @@
     <div class="footer-tools hidden" id="footer-tools-bar">
         <button class="btn-tool" onclick="exportData()">📥 Exportar JSON</button>
         <button class="btn-tool" onclick="document.getElementById('importInput').click()">📤 Importar JSON</button>
-        <button class="btn-tool" onclick="clearData()" style="color:red">🗑️ Borrar Todo</button>
+        <button class="btn-tool" onclick="clearData()" style="color:#ef4444; border-color: #fca5a5;">🗑️ Borrar Todo</button>
         <input type="file" id="importInput" class="hidden" accept=".json" onchange="importData(event)">
     </div>
 
@@ -673,63 +776,58 @@
         }
 
        function saveDayData() {
-    const newType = document.getElementById('dayType').value;
-    const [y, m, d] = currentEditingKey.split('-').map(Number);
-    const cfg = getConfig(y);
-    
-    // 1. CONTROL DE CAMPOS INCOMPLETOS O COHERENCIA DE HORAS
-    const in1 = document.getElementById('t-in-1').value;
-    const out1 = document.getElementById('t-out-1').value;
-    const in2 = document.getElementById('t-in-2').value;
-    const out2 = document.getElementById('t-out-2').value;
+            const newType = document.getElementById('dayType').value;
+            const [y, m, d] = currentEditingKey.split('-').map(Number);
+            const cfg = getConfig(y);
+            
+            const in1 = document.getElementById('t-in-1').value;
+            const out1 = document.getElementById('t-out-1').value;
+            const in2 = document.getElementById('t-in-2').value;
+            const out2 = document.getElementById('t-out-2').value;
 
-    // Validar tramo de la mañana
-    if ((in1 && !out1) || (!in1 && out1)) {
-        alert("⚠️ Error en Turno de Mañana:\nDebes rellenar tanto la hora de entrada como la de salida.");
-        return;
-    }
-    if (in1 && out1 && tToM(out1) <= tToM(in1)) {
-        alert("⚠️ Error en Turno de Mañana:\nLa hora de salida no puede ser igual o anterior a la hora de entrada.");
-        return;
-    }
-
-    // Validar tramo de la tarde
-    if ((in2 && !out2) || (!in2 && out2)) {
-        alert("⚠️ Error en Turno de Tarde:\nDebes rellenar tanto la hora de entrada como la de salida.");
-        return;
-    }
-    if (in2 && out2 && tToM(out2) <= tToM(in2)) {
-        alert("⚠️ Error en Turno de Tarde:\nLa hora de salida no puede ser igual o anterior a la hora de entrada.");
-        return;
-    }
-
-    // 2. CONTROL DE TOPES ANUALES (Vacaciones y Asuntos)
-    if (newType === 'vacaciones' || newType === 'asuntos') {
-        const maxAllowed = cfg[newType === 'vacaciones' ? 'maxVaca' : 'maxAsun'];
-        let count = 0;
-        for (let month = 0; month < 12; month++) {
-            for (let day = 1; day <= new Date(y, month + 1, 0).getDate(); day++) {
-                const k = `${y}-${month}-${day}`;
-                if (k !== currentEditingKey && db[k] && db[k].type === newType) count++;
+            if ((in1 && !out1) || (!in1 && out1)) {
+                alert("⚠️ Error en Turno de Mañana:\nDebes rellenar tanto la hora de entrada como la de salida.");
+                return;
             }
-        }
-        if (count + 1 > maxAllowed) {
-            const nombreFiltro = newType === 'vacaciones' ? 'VACACIONES' : 'ASUNTOS PROPIOS';
-            if (!confirm(`⚠️ ¡ADVERTENCIA DE TOPE!\n\nVas a superar el límite anual de ${nombreFiltro}.\nLímite máximo permitido: ${maxAllowed} días.\nCon este día acumularás: ${count + 1} días.\n\n¿Quieres guardarlo de todas formas?`)) return;
-        }
-    }
+            if (in1 && out1 && tToM(out1) <= tToM(in1)) {
+                alert("⚠️ Error en Turno de Mañana:\nLa hora de salida no puede ser igual o anterior a la hora de entrada.");
+                return;
+            }
 
-    // Si todo está correcto, se procede a guardar
-    db[currentEditingKey] = {
-        type: newType,
-        tIn1: in1, tOut1: out1,
-        tIn2: in2, tOut2: out2,
-        notes: document.getElementById('dayNotes').value
-    };
-    saveDataToCloud(); 
-    closeModal(); 
-    renderMonthly();
-}
+            if ((in2 && !out2) || (!in2 && out2)) {
+                alert("⚠️ Error en Turno de Tarde:\nDebes rellenar tanto la hora de entrada como la de salida.");
+                return;
+            }
+            if (in2 && out2 && tToM(out2) <= tToM(in2)) {
+                alert("⚠️ Error en Turno de Tarde:\nLa hora de salida no puede ser igual o anterior a la hora de entrada.");
+                return;
+            }
+
+            if (newType === 'vacaciones' || newType === 'asuntos') {
+                const maxAllowed = cfg[newType === 'vacaciones' ? 'maxVaca' : 'maxAsun'];
+                let count = 0;
+                for (let month = 0; month < 12; month++) {
+                    for (let day = 1; day <= new Date(y, month + 1, 0).getDate(); day++) {
+                        const k = `${y}-${month}-${day}`;
+                        if (k !== currentEditingKey && db[k] && db[k].type === newType) count++;
+                    }
+                }
+                if (count + 1 > maxAllowed) {
+                    const nombreFiltro = newType === 'vacaciones' ? 'VACACIONES' : 'ASUNTOS PROPIOS';
+                    if (!confirm(`⚠️ ¡ADVERTENCIA DE TOPE!\n\nVas a superar el límite anual de ${nombreFiltro}.\nLímite máximo permitido: ${maxAllowed} días.\nCon este día acumularás: ${count + 1} días.\n\n¿Quieres guardarlo de todas formas?`)) return;
+                }
+            }
+
+            db[currentEditingKey] = {
+                type: newType,
+                tIn1: in1, tOut1: out1,
+                tIn2: in2, tOut2: out2,
+                notes: document.getElementById('dayNotes').value
+            };
+            saveDataToCloud(); 
+            closeModal(); 
+            renderMonthly();
+        }
 
         function clearDayData() {
             if(confirm("¿Seguro que quieres eliminar por completo todos los registros e historial de este día?")) { delete db[currentEditingKey]; saveDataToCloud(); closeModal(); renderMonthly(); }
