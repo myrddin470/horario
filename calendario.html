@@ -9,10 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
 <link rel="icon" type="image/png" href="favicon2.png" sizes="32x32">
-    
-    <link rel="icon" type="image/png" href="icon-desktop2.png" sizes="192x192">
-    
-    <link rel="apple-touch-icon" href="icon-desktop2.png">
+<link rel="icon" type="image/png" href="icon-desktop2.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-desktop2.png">
 
 <style>
 *{
@@ -452,7 +450,6 @@ textarea{
     width:100%;
     text-align:center;
   }
-  
 }
 </style>
 </head>
@@ -593,7 +590,23 @@ textarea{
 </div>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCTFp7zjHBe_j-yEUy_PWKIAwVZinDpu08",
+  authDomain: "controlhoras-efa56.firebaseapp.com",
+  databaseURL: "https://controlhoras-efa56-default-rtdb.firebaseio.com",
+  projectId: "controlhoras-efa56",
+  storageBucket: "controlhoras-efa56.firebasestorage.app",
+  messagingSenderId: "671137982005",
+  appId: "1:671137982005:web:900a144dd5135a46c4337c"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
 const months=[
 'Enero','Febrero','Marzo','Abril','Mayo','Junio',
 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
@@ -608,11 +621,11 @@ const modalTitle=document.getElementById('modalTitle');
 const typeInput=document.getElementById('type');
 const noteInput=document.getElementById('note');
 
-const storage=JSON.parse(localStorage.getItem('calendarData')) || {};
+let storage = {};
+let current = new Date();
+let selectedKey = '';
 
-let current=new Date();
-let selectedKey='';
-
+// Rellenar selectores
 months.forEach((m,i)=>{
   const option=document.createElement('option');
   option.value=i;
@@ -627,7 +640,6 @@ for(let y=2020;y<=2035;y++){
   yearSelect.appendChild(option);
 }
 
-// Asegurar que usemos año local correctamente al cargar inicialmente
 monthSelect.value=current.getMonth();
 yearSelect.value=current.getFullYear();
 
@@ -641,15 +653,10 @@ function defaultType(date){
 
 function getData(date){
   const k=key(date.getFullYear(),date.getMonth(),date.getDate());
-
   return storage[k] || {
     type:defaultType(date),
     note:''
   };
-}
-
-function saveStorage(){
-  localStorage.setItem('calendarData',JSON.stringify(storage));
 }
 
 function render(){
@@ -663,7 +670,6 @@ function render(){
 
   const firstDate=new Date(year,month,1);
   let firstDay=firstDate.getDay();
-
   firstDay=firstDay===0 ? 6 : firstDay-1;
 
   for(let i=0;i<firstDay;i++){
@@ -675,9 +681,7 @@ function render(){
   const totalDays=new Date(year,month+1,0).getDate();
 
   for(let day=1;day<=totalDays;day++){
-
     const date=new Date(year,month,day);
-
     const data=getData(date);
 
     const card=document.createElement('div');
@@ -689,20 +693,28 @@ function render(){
     `;
 
     card.addEventListener('click',()=>openModal(date));
-
     grid.appendChild(card);
   }
 }
 
+// ESCUCHAR EN TIEMPO REAL DESDE FIREBASE
+const calendarRef = ref(db, 'calendarData');
+onValue(calendarRef, (snapshot) => {
+  const data = snapshot.val();
+  storage = data || {};
+  // Renderizamos SOLO cuando Firebase ya nos dio la información
+  render();
+  if(summaryPage.style.display === 'block') {
+    renderSummary();
+  }
+});
+
 function openModal(date){
   const k=key(date.getFullYear(),date.getMonth(),date.getDate());
-
   selectedKey=k;
-
   const data=getData(date);
 
   modalTitle.textContent=`${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
-
   typeInput.value=data.type;
   noteInput.value=data.note;
 
@@ -714,23 +726,20 @@ function closeModal(){
 }
 
 document.getElementById('saveBtn').onclick=()=>{
-  storage[selectedKey]={
-    type:typeInput.value,
-    note:noteInput.value
-  };
-
-  saveStorage();
-  render();
-  renderSummary();
-  closeModal();
+  const dayRef = ref(db, `calendarData/${selectedKey}`);
+  set(dayRef, {
+    type: typeInput.value,
+    note: noteInput.value
+  }).then(() => {
+    closeModal();
+  }).catch(err => alert("Error en Firebase: " + err.message));
 };
 
 document.getElementById('deleteBtn').onclick=()=>{
-  delete storage[selectedKey];
-  saveStorage();
-  render();
-  renderSummary();
-  closeModal();
+  const dayRef = ref(db, `calendarData/${selectedKey}`);
+  remove(dayRef).then(() => {
+    closeModal();
+  }).catch(err => alert("Error en Firebase: " + err.message));
 };
 
 document.getElementById('cancelBtn').onclick=closeModal;
@@ -776,54 +785,36 @@ document.getElementById('backBtn').onclick=()=>{
 };
 
 function renderSummary(){
-
   const year=current.getFullYear();
-
   summaryTitle.textContent=`Resumen anual: ${year}`;
-
   yearGrid.innerHTML='';
 
-  // NUEVO: Inicializar contadores anuales
   let vacasTotales = 0;
   let otrosTotales = 0;
 
   for(let month=0;month<12;month++){
-
     const card=document.createElement('div');
-
     card.className='month-card';
 
     let html=`
       <h3>${months[month]}</h3>
-
       <div class="mini-grid">
     `;
 
-    // PRIMER DIA DEL MES
     const firstDate=new Date(year,month,1);
-
     let firstDay=firstDate.getDay();
-
-    // Convertimos domingo=0 a ultima columna
     firstDay=firstDay===0 ? 6 : firstDay-1;
 
-    // INSERTAR HUECOS VACIOS
     for(let i=0;i<firstDay;i++){
-
       html+=`<div class="mini-day empty"></div>`;
-
     }
 
-    // TOTAL DE DIAS DEL MES
     const totalDays=new Date(year,month+1,0).getDate();
 
     for(let day=1;day<=totalDays;day++){
-
       const date=new Date(year,month,day);
-
       const data=getData(date);
 
-      // NUEVO: Sumar al contador según el tipo de día que encuentre
       if (data.type === 'vacaciones') vacasTotales++;
       if (data.type === 'otro') otrosTotales++;
 
@@ -835,86 +826,46 @@ function renderSummary(){
     }
 
     html+='</div>';
-
     card.innerHTML=html;
-
     yearGrid.appendChild(card);
   }
 
-  // NUEVO: Inyectar los totales calculados en las etiquetas de la cabecera
   document.getElementById('totalVacaciones').textContent = vacasTotales;
   document.getElementById('totalOtro').textContent = otrosTotales;
 }
 
 document.getElementById('exportBtn').onclick=()=>{
-
   const dataStr=JSON.stringify(storage,null,2);
-
-  const blob=new Blob(
-    [dataStr],
-    {type:'application/json'}
-  );
-
+  const blob=new Blob([dataStr],{type:'application/json'});
   const url=URL.createObjectURL(blob);
-
   const a=document.createElement('a');
-
   a.href=url;
-
   a.download=`calendario-${current.getFullYear()}.json`;
-
   a.click();
-
   URL.revokeObjectURL(url);
 };
 
 document.getElementById('importBtn').onclick=()=>{
-
   document.getElementById('importFile').click();
-
 };
 
 document.getElementById('importFile').addEventListener('change',(event)=>{
-
   const file=event.target.files[0];
-
   if(!file) return;
 
   const reader=new FileReader();
-
   reader.onload=(e)=>{
-
     try{
-
       const importedData=JSON.parse(e.target.result);
-
-      Object.keys(storage).forEach(key=>{
-        delete storage[key];
-      });
-
-      Object.assign(storage,importedData);
-
-      saveStorage();
-
-      render();
-
-      renderSummary();
-
-      alert('Datos importados correctamente');
-
+      set(calendarRef, importedData)
+        .then(() => alert('Datos importados correctamente en Firebase'))
+        .catch(err => alert('Error: ' + err.message));
     }catch(error){
-
       alert('El archivo JSON no es válido');
-
     }
-
   };
-
   reader.readAsText(file);
-
 });
-
-render();
 </script>
 
 </body>
