@@ -5,15 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Control Horario - JCOS</title>
    
-  
-    
     <link rel="icon" type="image/png" href="favicon.png" sizes="32x32">
-    
     <link rel="icon" type="image/png" href="icon-desktop.png" sizes="192x192">
-    
     <link rel="apple-touch-icon" href="icon-desktop.png">
-   
-   
    
    <style>
         :root {
@@ -219,7 +213,7 @@
         .progress-bar-container { width: 100%; background-color: rgba(255,255,255,0.25); border-radius: 9999px; height: 6px; margin-top: 8px; overflow: hidden; }
         .progress-bar-fill { height: 100%; border-radius: 9999px; transition: width 0.3s ease; background-color: #ffffff; }
 
-        /* MEDIA QUERIES - RESPONSIVE DESIGN INTELIGENTE */
+        /* MEDIA QUERIES */
         @media (max-width: 1024px) {
             body { padding: 16px; }
             .main-header-bar, .header-nav { padding: 16px 20px; }
@@ -246,11 +240,15 @@
             .day-header-name { font-size: 0.7rem; padding: 6px 0; }
             .day-box { min-height: 80px; padding: 6px; }
             .day-number { font-size: 0.95rem; }
-            .day-info { display: none; } /* Ocultar horas explícitas en pantallas ultra-pequeñas para evitar roturas visuales */
+            .day-info { display: none; }
             .day-total { font-size: 0.65rem; padding: 1px 3px; }
             .modal-grid { grid-template-columns: 1fr; }
         }
     </style>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -264,12 +262,12 @@
         <p>Área del empleado • Multiusuario</p>
         
         <div class="login-group">
-            <label>Usuario</label>
-            <input type="text" id="login-user" placeholder="Ej: juan">
+            <label>Usuario / Email</label>
+            <input type="text" id="login-user" placeholder="ejemplo o ejemplo@correo.com">
         </div>
         <div class="login-group">
             <label>Contraseña</label>
-            <input type="password" id="login-pass" placeholder="••••">
+            <input type="password" id="login-pass" >
         </div>
         
         <button class="btn-login" onclick="execLogin()">Iniciar Sesión</button>
@@ -332,7 +330,7 @@
                     </div>
                 </div>
                 <div class="summary-item" style="background: #c026d3">
-                    H. Extras: <span id="count-extr">0</span>
+                    H. Extras: <span id="count-extr">0
                 </div>
             </div>
             <div class="annual-grid" id="annual-calendar-container"></div>
@@ -448,12 +446,25 @@
     </div>
 
     <script>
-        const CLOUD_URL = "https://script.google.com/macros/s/AKfycbzEazD0IDAA5f08ZWn5nWGLLhxudi66WByn_eIJHMbzJiLKFjakHihPEsuFj75kBFhPhw/exec";
+        // CONFIGURACIÓN OFICIAL DE TU PROYECTO FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyD0AQaJyAuIzF1odZk9X47QuS6z77JzjPg",
+            authDomain: "gestionhoras-f5042.firebaseapp.com",
+            databaseURL: "https://gestionhoras-f5042-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "gestionhoras-f5042",
+            storageBucket: "gestionhoras-f5042.firebasestorage.app",
+            messagingSenderId: "368157771470",
+            appId: "1:368157771470:web:3a53d36d716e8a7583b29f"
+        };
+
+        // Inicializamos Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const rtdb = firebase.database();
 
         let currentDate = new Date();
         let db = {}; 
-        let loggedUser = "";
-        let loggedPass = "";
+        let currentUserUid = ""; 
 
         const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
         const dayNames = ["LU", "MA", "MI", "JU", "VI", "SA", "DO"];
@@ -482,50 +493,39 @@
             return `${m<0?'-':''}<strong>${dd}d ${hh}h ${mm}m</strong>`; 
         }
 
-        window.onload = async function() {
-            const savedUser = localStorage.getItem('sesion_usuario');
-            const savedPass = localStorage.getItem('sesion_password');
-
-            if (savedUser && savedPass) {
-                document.getElementById("loading-status-text").innerText = "Cargando copia local...";
-                loggedUser = savedUser;
-                loggedPass = savedPass;
-
-                const cacheLocal = localStorage.getItem(`cache_calendar_${loggedUser}`);
-                if (cacheLocal) db = JSON.parse(cacheLocal);
+        // CONTROLADOR DE ESTADO DE SESIÓN NATIVO DE FIREBASE
+        auth.onAuthStateChanged(function(user) {
+            if (user) {
+                // Usuario autenticado correctamente
+                currentUserUid = user.uid;
+                document.getElementById("loading-status-text").innerText = "Sincronizando con Firebase...";
                 
-                populateSelects();
-                renderMonthly();
-                
-                document.getElementById("app-loading-screen").classList.add("hidden");
-                document.getElementById("main-app-content").classList.remove("hidden");
-                document.getElementById("footer-tools-bar").classList.remove("hidden");
-                document.getElementById("label-logged-user").innerText = `Usuario: ${loggedUser}`;
-
-                try {
-                    const response = await fetch(CLOUD_URL, {
-                        method: 'POST',
-                        mode: 'cors',
-                        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                        body: `action=read&user=${encodeURIComponent(loggedUser)}&pass=${encodeURIComponent(loggedPass)}`
-                    });
-                    const resultado = await response.json();
-                    if (resultado.status === "success" && resultado.data) {
-                        db = typeof resultado.data === 'string' ? JSON.parse(resultado.data) : resultado.data;
-                        localStorage.setItem(`cache_calendar_${loggedUser}`, JSON.stringify(db));
-                        renderMonthly();
-                    }
-                } catch (e) {
-                    console.warn("Trabajando offline.");
-                }
+                // Leemos los datos en tiempo real de Firebase
+                rtdb.ref('usuarios/' + currentUserUid + '/calendario').on('value', function(snapshot) {
+                    db = snapshot.val() || {};
+                    
+                    // Renderizamos la interfaz
+                    populateSelects();
+                    renderMonthly();
+                    
+                    document.getElementById("app-loading-screen").classList.add("hidden");
+                    document.getElementById("login-screen").classList.add("hidden");
+                    document.getElementById("main-app-content").classList.remove("hidden");
+                    document.getElementById("footer-tools-bar").classList.remove("hidden");
+                    document.getElementById("label-logged-user").innerText = `Usuario: ${user.email.split('@')[0]}`;
+                });
             } else {
+                // No hay sesión activa
+                document.getElementById("main-app-content").classList.add("hidden");
+                document.getElementById("footer-tools-bar").classList.add("hidden");
                 document.getElementById("app-loading-screen").classList.add("hidden");
                 document.getElementById("login-screen").classList.remove("hidden");
             }
-        };
+        });
 
-        async function execLogin() {
-            const userField = document.getElementById("login-user").value.trim().toLowerCase();
+        // INICIO DE SESIÓN SEGURO CON FIREBASE AUTH
+        function execLogin() {
+            let userField = document.getElementById("login-user").value.trim().toLowerCase();
             const passField = document.getElementById("login-pass").value;
             const errorMsg = document.getElementById("login-error-msg");
 
@@ -535,77 +535,45 @@
                 return;
             }
 
+            // Comodidad multiusuario: Si el usuario no escribe el correo completo, le añadimos tu dominio por defecto de pruebas
+            if (!userField.includes('@')) {
+                userField += '@correo.com';
+            }
+
             errorMsg.classList.add("hidden");
             document.getElementById("login-screen").classList.add("hidden");
             document.getElementById("app-loading-screen").classList.remove("hidden");
-            document.getElementById("loading-status-text").innerText = "Validando credenciales en Drive...";
+            document.getElementById("loading-status-text").innerText = "Verificando credenciales...";
 
-            try {
-                const response = await fetch(CLOUD_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `action=read&user=${encodeURIComponent(userField)}&pass=${encodeURIComponent(passField)}`
-                });
-                const resultado = await response.json();
-
-                if (resultado.status === "success") {
-                    loggedUser = userField;
-                    loggedPass = passField;
-                    localStorage.setItem('sesion_usuario', loggedUser);
-                    localStorage.setItem('sesion_password', loggedPass);
-
-                    db = resultado.data && resultado.data !== "{}" ? (typeof resultado.data === 'string' ? JSON.parse(resultado.data) : resultado.data) : {};
-                    localStorage.setItem(`cache_calendar_${loggedUser}`, JSON.stringify(db));
-
-                    document.getElementById("app-loading-screen").classList.add("hidden");
-                    document.getElementById("main-app-content").classList.remove("hidden");
-                    document.getElementById("footer-tools-bar").classList.remove("hidden");
-                    document.getElementById("label-logged-user").innerText = `Usuario: ${loggedUser}`;
-
-                    populateSelects();
-                    renderMonthly();
-                } else {
+            auth.signInWithEmailAndPassword(userField, passField)
+                .catch(function(error) {
                     document.getElementById("app-loading-screen").classList.add("hidden");
                     document.getElementById("login-screen").classList.remove("hidden");
-                    errorMsg.innerText = resultado.message || "Usuario o contraseña incorrectos.";
+                    errorMsg.innerText = "Usuario o contraseña incorrectos.";
                     errorMsg.classList.remove("hidden");
-                }
-            } catch (error) {
-                document.getElementById("app-loading-screen").classList.add("hidden");
-                document.getElementById("login-screen").classList.remove("hidden");
-                errorMsg.innerText = "Error de conexión con el servidor de Google.";
-                errorMsg.classList.remove("hidden");
-            }
+                });
         }
 
-        async function saveDataToCloud() {
-            if (!loggedUser) return;
-            try {
-                const datosFormateados = JSON.stringify(db);
-                localStorage.setItem(`cache_calendar_${loggedUser}`, datosFormateados);
-                await fetch(CLOUD_URL, {
-                    method: 'POST',
-                    mode: 'cors',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `action=save&user=${encodeURIComponent(loggedUser)}&pass=${encodeURIComponent(loggedPass)}&data=${encodeURIComponent(datosFormateados)}`
+        // GUARDADO AUTOMÁTICO EN LA NUBE NATIVA DE FIREBASE
+        function saveDataToCloud() {
+            if (!currentUserUid) return;
+            rtdb.ref('usuarios/' + currentUserUid + '/calendario').set(db)
+                .catch(function(error) {
+                    console.error("Error al guardar en Firebase:", error);
                 });
-            } catch (error) {
-                console.error("Guardado en local:", error);
-            }
         }
 
         function cerrarSesion() {
             if(confirm("¿Quieres cerrar sesión?")) {
-                localStorage.removeItem('sesion_usuario');
-                localStorage.removeItem('sesion_password');
-                localStorage.removeItem(`cache_calendar_${loggedUser}`);
-                location.reload();
+                auth.signOut().then(function() {
+                    location.reload();
+                });
             }
         }
 
         function populateSelects() {
             const mSel = document.getElementById('monthSelect'), ySel = document.getElementById('yearSelect');
+            if (mSel.options.length > 0) return; // Ya inicializados
             mSel.innerHTML = ""; ySel.innerHTML = "";
             months.forEach((m, i) => mSel.add(new Option(m, i)));
             const curY = new Date().getFullYear();
@@ -745,11 +713,6 @@
         function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
         function closeExtraReport() { document.getElementById('extraReportOverlay').style.display = 'none'; }
 
-        function clearTimeInputs() {
-            document.getElementById('t-in-1').value = ''; document.getElementById('t-out-1').value = '';
-            document.getElementById('t-in-2').value = ''; document.getElementById('t-out-2').value = '';
-        }
-
         function openConfigModal() {
             const y = currentDate.getFullYear();
             const cfg = getConfig(y);
@@ -764,6 +727,7 @@
             document.getElementById('configModalOverlay').style.display = 'flex';
         }
 
+        // Cierra modales de configuración
         function closeConfigModal() { document.getElementById('configModalOverlay').style.display = 'none'; }
 
         function saveAnnualLimits() {
@@ -892,7 +856,7 @@
 
         function changeMonth(s) { currentDate.setMonth(currentDate.getMonth()+s); renderMonthly(); }
         function updateDateFromSelects() { currentDate.setFullYear(document.getElementById('yearSelect').value); currentDate.setMonth(document.getElementById('monthSelect').value); renderMonthly(); }
-        function exportData() { const blob = new Blob([JSON.stringify(db)], {type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`control_horario_${loggedUser}.json`; a.click(); }
+        function exportData() { const blob = new Blob([JSON.stringify(db)], {type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`control_horario_backup.json`; a.click(); }
         function importData(e) { const r = new FileReader(); r.onload = (ev) => { db = JSON.parse(ev.target.result); renderMonthly(); saveDataToCloud(); }; r.readAsText(e.target.files[0]); }
         function clearData() { if(confirm("¿Seguro que quieres borrar TODOS los datos guardados? Esto vaciará tu base de datos.")) { db = {}; renderMonthly(); saveDataToCloud(); } }
     </script>
