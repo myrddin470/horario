@@ -141,6 +141,18 @@
         .day-info { font-size: 0.85rem; font-weight: 600; color: #475569; line-height: 1.4; background: rgba(0,0,0,0.02); padding: 4px 8px; border-radius: 8px; inline-size: max-content; max-width: 100%; }
         .day-total { margin-top: auto; font-weight: 700; font-size: 0.85rem; text-align: right; color: var(--primary); background: var(--primary-light); padding: 4px 8px; border-radius: 8px; align-self: flex-end; }
 
+        /* DESTACAR EL DÍA ACTUAL (HOY) */
+        .day-today {
+            outline: 3px solid var(--primary);
+            outline-offset: -3px;
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.25), 0 4px 6px -4px rgba(79, 70, 229, 0.25) !important;
+            animation: pulse-today 2s infinite alternate;
+        }
+        @keyframes pulse-today {
+            0% { outline-color: var(--primary); }
+            100% { outline-color: #818cf8; }
+        }
+
         /* COLORES DINÁMICOS DE ESTADOS */
         .bg-laborable { background-color: var(--c-laborable); }
         .bg-nolaborable-sat { background-color: var(--c-nolaborable-sat); }
@@ -595,6 +607,13 @@
             for(let i=0; i<offset; i++) grid.appendChild(document.createElement('div'));
 
             let tWork = 0, tTarget = 0, tExtra = 0;
+            
+            // Obtenemos la fecha real del sistema para comparar con precisión
+            const hoy = new Date();
+            const hoyD = hoy.getDate();
+            const hoyM = hoy.getMonth();
+            const hoyY = hoy.getFullYear();
+
             for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
                 const k = `${y}-${m}-${d}`, dow = new Date(y,m,d).getDay();
                 let defaultType = 'laborable';
@@ -610,8 +629,11 @@
                 let colorClass = `bg-${data.type}`;
                 if (data.type === 'nolaborable') colorClass = (dow === 6) ? 'bg-nolaborable-sat' : 'bg-nolaborable-other';
 
+                // Verificamos si este casillero coincide exactamente con el día de hoy
+                const esHoy = (d === hoyD && m === hoyM && y === hoyY) ? 'day-today' : '';
+
                 const dayBox = document.createElement('div');
-                dayBox.className = `day-box ${colorClass}`;
+                dayBox.className = `day-box ${colorClass} ${esHoy}`;
                 dayBox.innerHTML = `<div class="day-top-bar"><div class="day-number">${d}</div>${data.notes?'<div class="comment-indicator" title="Tiene anotaciones">💬</div>':''}</div>
                     <div class="day-info">${data.tIn1?`${data.tIn1}-${data.tOut1}`:''}${data.tIn2?` ${data.tIn2}-${data.tOut2}`:''}</div>
                     ${dMin>0?`<div class="day-total">${fmtH(dMin)}</div>`:''}`;
