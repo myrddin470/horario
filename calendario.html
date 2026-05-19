@@ -155,6 +155,13 @@ select{
   transform:translateY(-3px);
 }
 
+.day.selected {
+  outline: 4px solid #10b981;
+  outline-offset: -4px;
+  transform: scale(0.96);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+}
+
 .empty{
   visibility:hidden;
 }
@@ -164,12 +171,17 @@ select{
   color:#111827;
 }
 
+.festivo{
+  background:linear-gradient(135deg,#ef4444,#b91c1c);
+}
+
 .vacaciones{
   background:linear-gradient(135deg,#3b82f6,#1d4ed8);
 }
 
-.festivo{
-  background:linear-gradient(135deg,#ef4444,#b91c1c);
+.teletrabajo{
+  background:linear-gradient(135deg,#bbf7d0,#86efac);
+  color:#111827;
 }
 
 .otro{
@@ -324,10 +336,24 @@ textarea{
   justify-content:center;
   font-size:.7rem;
   font-weight:700;
+  position:relative; /* Necesario para posicionar el punto del comentario */
 }
 
 .mini-day.empty{
   visibility:hidden;
+}
+
+/* Punto indicador de comentario en el resumen anual */
+.mini-note-dot{
+  position:absolute;
+  bottom:2px;
+  left:50%;
+  transform:translateX(-50%);
+  width:4px;
+  height:4px;
+  background-color:#f59e0b; /* Color naranja/ámbar muy visible */
+  border-radius:50%;
+  box-shadow:0 0 2px rgba(0,0,0,0.6); /* Sombra para que resalte sobre fondos claros y oscuros */
 }
 
 .legend-wrapper{
@@ -388,6 +414,10 @@ textarea{
   .legend{
     justify-content:center;
     margin-top:10px;
+  }
+  .right-controls-container {
+    align-items: stretch !important;
+    width: 100%;
   }
   .data-buttons{
     justify-content:center;
@@ -496,43 +526,58 @@ textarea{
 <div class="legend-wrapper">
 
   <div class="legend">
-
     <div class="legend-item">
       <div class="legend-color laborable"></div>
       Laborable
     </div>
-
-    <div class="legend-item">
-      <div class="legend-color vacaciones"></div>
-      Vacaciones
-    </div>
-
     <div class="legend-item">
       <div class="legend-color festivo"></div>
       Festivo
     </div>
-
+    <div class="legend-item">
+      <div class="legend-color vacaciones"></div>
+      Vacaciones
+    </div>
+    <div class="legend-item">
+      <div class="legend-color teletrabajo"></div>
+      Teletrabajo
+    </div>
     <div class="legend-item">
       <div class="legend-color otro"></div>
       Otro
     </div>
-
   </div>
 
-  <div class="data-buttons">
+  <div class="right-controls-container" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
+    
+    <div id="batchActions" style="display:none; background:rgba(255,255,255,.08); padding:16px; border-radius:18px; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; border:1px solid rgba(255,255,255,.1); backdrop-filter:blur(10px); width: 100%;">
+      <span id="selectedCount" style="font-weight:600; color:#cbd5e1;">0 días seleccionados</span>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <select id="batchType" style="padding:10px 14px; border-radius:12px;">
+          <option value="laborable">Laborable</option>
+          <option value="festivo">Festivo</option>
+          <option value="vacaciones">Vacaciones</option>
+          <option value="teletrabajo">Teletrabajo</option>
+          <option value="otro">Otro</option>
+        </select>
+        <input type="text" id="batchNote" placeholder="Nota común (opcional)..." style="padding:10px 14px; border-radius:12px; border:1px solid #cbd5e1; color:#111827; font-size:0.9rem;">
+        <button id="batchSaveBtn" style="border:none; padding:12px 18px; border-radius:12px; cursor:pointer; font-weight:600; background:#10b981; color:white; transition: 0.2s;">Guardar días</button>
+        <button id="batchCancelBtn" style="border:none; padding:12px 18px; border-radius:12px; cursor:pointer; font-weight:600; background:#334155; color:white; transition: 0.2s;">Cancelar</button>
+      </div>
+    </div>
 
-    <button class="summary-btn" id="exportBtn">
-      Exportar JSON
-    </button>
-
-    <button class="summary-btn" id="importBtn">
-      Importar JSON
-    </button>
-
-    <input type="file"
-           id="importFile"
-           accept=".json"
-           hidden>
+    <div class="data-buttons">
+      <button class="summary-btn" id="multiSelectBtn" style="background: linear-gradient(135deg, #10b981, #059669);">
+        Selección Múltiple
+      </button>
+      <button class="summary-btn" id="exportBtn">
+        Exportar JSON
+      </button>
+      <button class="summary-btn" id="importBtn">
+        Importar JSON
+      </button>
+      <input type="file" id="importFile" accept=".json" hidden>
+    </div>
 
   </div>
 
@@ -550,6 +595,9 @@ textarea{
   <div class="summary-counters" style="display:flex; gap:12px; flex-wrap:wrap;">
     <div class="vacaciones" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
       Vacaciones: <span id="totalVacaciones">0</span> días
+    </div>
+    <div class="teletrabajo" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); background: linear-gradient(135deg,#bbf7d0,#86efac); color:#111827;">
+      Teletrabajo: <span id="totalTeletrabajo">0</span> días
     </div>
     <div class="otro" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
       Otros: <span id="totalOtro">0</span> días
@@ -570,8 +618,9 @@ textarea{
 <label>Tipo de día</label>
 <select id="type">
 <option value="laborable">Laborable</option>
-<option value="vacaciones">Vacaciones</option>
 <option value="festivo">Festivo</option>
+<option value="vacaciones">Vacaciones</option>
+<option value="teletrabajo">Teletrabajo</option>
 <option value="otro">Otro</option>
 </select>
 </div>
@@ -592,7 +641,7 @@ textarea{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getDatabase, ref, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getDatabase, ref, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCTFp7zjHBe_j-yEUy_PWKIAwVZinDpu08",
@@ -621,11 +670,19 @@ const modalTitle=document.getElementById('modalTitle');
 const typeInput=document.getElementById('type');
 const noteInput=document.getElementById('note');
 
+let isSelectionMode = false;
+const selectedDays = new Set();
+
+const multiSelectBtn = document.getElementById('multiSelectBtn');
+const batchActions = document.getElementById('batchActions');
+const selectedCount = document.getElementById('selectedCount');
+const batchType = document.getElementById('batchType');
+const batchNote = document.getElementById('batchNote');
+
 let storage = {};
 let current = new Date();
 let selectedKey = '';
 
-// Rellenar selectores
 months.forEach((m,i)=>{
   const option=document.createElement('option');
   option.value=i;
@@ -683,26 +740,40 @@ function render(){
   for(let day=1;day<=totalDays;day++){
     const date=new Date(year,month,day);
     const data=getData(date);
+    const k=key(year,month,day);
 
     const card=document.createElement('div');
-    card.className=`day ${data.type}`;
+    
+    const isSelectedClass = (isSelectionMode && selectedDays.has(k)) ? 'selected' : '';
+    card.className=`day ${data.type} ${isSelectedClass}`;
 
     card.innerHTML=`
       <span>${day}</span>
       ${data.note ? '<span class="note">📝</span>' : ''}
     `;
 
-    card.addEventListener('click',()=>openModal(date));
+    card.addEventListener('click',()=> {
+      if (isSelectionMode) {
+        if (selectedDays.has(k)) {
+          selectedDays.delete(k);
+          card.classList.remove('selected');
+        } else {
+          selectedDays.add(k);
+          card.classList.add('selected');
+        }
+        selectedCount.textContent = `${selectedDays.size} días seleccionados`;
+      } else {
+        openModal(date);
+      }
+    });
     grid.appendChild(card);
   }
 }
 
-// ESCUCHAR EN TIEMPO REAL DESDE FIREBASE
 const calendarRef = ref(db, 'calendarData');
 onValue(calendarRef, (snapshot) => {
   const data = snapshot.val();
   storage = data || {};
-  // Renderizamos SOLO cuando Firebase ya nos dio la información
   render();
   if(summaryPage.style.display === 'block') {
     renderSummary();
@@ -790,6 +861,7 @@ function renderSummary(){
   yearGrid.innerHTML='';
 
   let vacasTotales = 0;
+  let teletrabajoTotales = 0;
   let otrosTotales = 0;
 
   for(let month=0;month<12;month++){
@@ -816,11 +888,14 @@ function renderSummary(){
       const data=getData(date);
 
       if (data.type === 'vacaciones') vacasTotales++;
+      if (data.type === 'teletrabajo') teletrabajoTotales++;
       if (data.type === 'otro') otrosTotales++;
 
+      // Se inyecta el span del punto (.mini-note-dot) solo si el día cuenta con una nota guardada
       html+=`
         <div class="mini-day ${data.type}">
           ${day}
+          ${data.note ? '<span class="mini-note-dot"></span>' : ''}
         </div>
       `;
     }
@@ -831,6 +906,7 @@ function renderSummary(){
   }
 
   document.getElementById('totalVacaciones').textContent = vacasTotales;
+  document.getElementById('totalTeletrabajo').textContent = teletrabajoTotales;
   document.getElementById('totalOtro').textContent = otrosTotales;
 }
 
@@ -866,6 +942,53 @@ document.getElementById('importFile').addEventListener('change',(event)=>{
   };
   reader.readAsText(file);
 });
+
+// LOGICA PARA MANEJO DE SELECCIÓN MÚLTIPLE
+multiSelectBtn.onclick = () => {
+  isSelectionMode = !isSelectionMode;
+  if (isSelectionMode) {
+    multiSelectBtn.textContent = 'Cancelar Selección';
+    multiSelectBtn.style.background = 'linear-gradient(135deg, #ef4444, #b91c1c)';
+    batchActions.style.display = 'flex';
+    selectedCount.textContent = '0 días seleccionados';
+  } else {
+    resetMultiSelect();
+  }
+};
+
+function resetMultiSelect() {
+  isSelectionMode = false;
+  selectedDays.clear();
+  multiSelectBtn.textContent = 'Selección Múltiple';
+  multiSelectBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+  batchActions.style.display = 'none';
+  batchNote.value = '';
+  render();
+}
+
+document.getElementById('batchCancelBtn').onclick = resetMultiSelect;
+
+document.getElementById('batchSaveBtn').onclick = () => {
+  if (selectedDays.size === 0) {
+    alert('Por favor, selecciona al menos un día haciendo clic sobre el calendario.');
+    return;
+  }
+
+  const updates = {};
+  selectedDays.forEach(k => {
+    updates[`calendarData/${k}`] = {
+      type: batchType.value,
+      note: batchNote.value
+    };
+  });
+
+  const dbRef = ref(db);
+  update(dbRef, updates)
+    .then(() => {
+      resetMultiSelect();
+    })
+    .catch(err => alert("Error al guardar en Firebase: " + err.message));
+};
 </script>
 
 </body>
