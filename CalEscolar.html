@@ -10,7 +10,7 @@
 
 <link rel="icon" type="image/png" href="favicon3.png" sizes="32x32">
 <link rel="icon" type="image/png" href="icon-desktop3.png" sizes="192x192">
-<link rel="apple-touch-icon" href="icon-desktop3.png">
+<link rel="apple-touch-icon" href="icon-desktop2.png">
 
 <style>
 :root {
@@ -765,7 +765,10 @@ function key(y,m,d){
 }
 
 function defaultType(date){
-  return (date.getDay() === 0 || date.getDay() === 6) ? 'no_lectivo' : 'lectivo';
+  const day = date.getDay();
+  if (day === 0) return 'festivo';     // Domingos por defecto Festivos
+  if (day === 6) return 'no_lectivo';  // Sábados por defecto No Lectivos
+  return 'lectivo';                    // Lunes a Viernes Lectivos
 }
 
 function getData(date){
