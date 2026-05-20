@@ -40,6 +40,9 @@
   --secondary-hover: #475569;
   --success: #10b981;
   --success-hover: #059669;
+
+  /* Color para el día actual */
+  --clr-today-border: #6366f1; /* Un tono índigo suave pero perceptible */
 }
 
 *{
@@ -213,6 +216,18 @@ select:focus{
   outline: 3px solid var(--success);
   outline-offset: -3px;
   box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+}
+
+/* ESTILO DEL DÍA ACTUAL DE CORTE SUAVE Y PASTEL */
+.day.today {
+  border: 2px solid var(--clr-today-border);
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.15);
+}
+
+/* Asegurar que si está seleccionado mantenga el foco principal */
+.day.today.selected {
+  outline: 3px solid var(--success);
+  outline-offset: -3px;
 }
 
 .empty{
@@ -572,7 +587,7 @@ textarea:focus{
 
 <div class="header">
 <div class="title">
-<h1>Calendario escolar </h1>
+<h1>Calendario escolar</h1>
 <p>Gestión calendario escolar. © JCOS</p>
 </div>
 
@@ -702,7 +717,7 @@ textarea:focus{
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
-// TU NUEVA CONFIGURACIÓN DE FIREBASE (PROYECTO: calescolar-4d347)
+// TU CONFIGURACIÓN DE FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyBatYG7fgtozpxnI3UhI35NPLizXpAIhhw",
   authDomain: "calescolar-4d347.firebaseapp.com",
@@ -764,11 +779,12 @@ function key(y,m,d){
   return `${y}-${m}-${d}`;
 }
 
+// LOGICA DE DÍA POR DEFECTO: Domingos por defecto Festivos
 function defaultType(date){
   const day = date.getDay();
-  if (day === 0) return 'festivo';     // Domingos por defecto Festivos
-  if (day === 6) return 'no_lectivo';  // Sábados por defecto No Lectivos
-  return 'lectivo';                    // Lunes a Viernes Lectivos
+  if (day === 0) return 'festivo';
+  if (day === 6) return 'no_lectivo';
+  return 'lectivo';
 }
 
 function getData(date){
@@ -800,6 +816,12 @@ function render(){
 
   const totalDays=new Date(year,month+1,0).getDate();
 
+  // Obtener la fecha exacta de hoy para comparar
+  const today = new Date();
+  const todayDay = today.getDate();
+  const todayMonth = today.getMonth();
+  const todayYear = today.getFullYear();
+
   for(let day=1;day<=totalDays;day++){
     const date=new Date(year,month,day);
     const data=getData(date);
@@ -807,8 +829,11 @@ function render(){
 
     const card=document.createElement('div');
     
+    // Comprobar si esta celda coincide con la fecha de hoy
+    const isToday = (day === todayDay && month === todayMonth && year === todayYear) ? 'today' : '';
     const isSelectedClass = (isSelectionMode && selectedDays.has(k)) ? 'selected' : '';
-    card.className=`day ${data.type} ${isSelectedClass}`;
+    
+    card.className=`day ${data.type} ${isToday} ${isSelectedClass}`;
 
     card.innerHTML=`
       <span class="day-number">${day}</span>
