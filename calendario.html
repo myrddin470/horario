@@ -30,9 +30,91 @@ body{
   padding:30px;
 }
 
+/* Pantalla de Login */
+.login-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+
+.login-box {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  padding: 35px;
+  width: 100%;
+  max-width: 400px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
+}
+
+.login-box h2 {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.login-box p {
+  color: #94a3b8;
+  text-align: center;
+  margin-bottom: 24px;
+  font-size: 0.95rem;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #cbd5e1;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0, 0, 0, 0.2);
+  color: white;
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+.input-group input:focus {
+  outline: 2px solid #2563eb;
+  border-color: transparent;
+}
+
+.login-btn {
+  width: 100%;
+  background: linear-gradient(135deg,#2563eb,#1d4ed8);
+  color: white;
+  padding: 14px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
 .container{
   max-width:1400px;
   margin:auto;
+}
+
+/* Ocultar la app principal inicialmente */
+.main-content {
+  display: none;
 }
 
 .header{
@@ -100,6 +182,22 @@ button,select{
 
 .summary-btn:hover{
   transform:translateY(-2px);
+}
+
+.logout-btn {
+  background: #334155;
+  color: #f1f5f9;
+  padding: 12px 18px;
+  border-radius: 12px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: .2s;
+}
+
+.logout-btn:hover {
+  background: #cbd5e1;
+  color: #0f172a;
 }
 
 select{
@@ -336,14 +434,13 @@ textarea{
   justify-content:center;
   font-size:.7rem;
   font-weight:700;
-  position:relative; /* Necesario para posicionar el punto del comentario */
+  position:relative;
 }
 
 .mini-day.empty{
   visibility:hidden;
 }
 
-/* Punto indicador de comentario en el resumen anual */
 .mini-note-dot{
   position:absolute;
   bottom:2px;
@@ -351,9 +448,9 @@ textarea{
   transform:translateX(-50%);
   width:4px;
   height:4px;
-  background-color:#f59e0b; /* Color naranja/ámbar muy visible */
+  background-color:#f59e0b;
   border-radius:50%;
-  box-shadow:0 0 2px rgba(0,0,0,0.6); /* Sombra para que resalte sobre fondos claros y oscuros */
+  box-shadow:0 0 2px rgba(0,0,0,0.6);
 }
 
 .legend-wrapper{
@@ -371,7 +468,7 @@ textarea{
   flex-wrap:wrap;
 }
 
-/* MEDIA QUERIES RESPONSIVAS MEJORADAS */
+/* MEDIA QUERIES RESPONSIVAS */
 @media(max-width:900px){
   body{
     padding:20px;
@@ -487,161 +584,138 @@ textarea{
 
 <div class="container">
 
-<div id="mainPage">
-
-<div class="header">
-
-<div class="title">
-<h1>Control Laboral</h1>
-<p>Gestión visual de días laborables y vacaciones.© JCOS</p>
-</div>
-
-<div class="controls">
-<button class="nav-btn" id="prev">◀</button>
-
-<select id="month"></select>
-<select id="year"></select>
-
-<button class="nav-btn" id="next">▶</button>
-
-<button class="summary-btn" id="summaryBtn">Resumen anual</button>
-</div>
-
-</div>
-
-<div class="calendar">
-
-<div class="weekdays">
-<div class="weekday">L</div>
-<div class="weekday">M</div>
-<div class="weekday">X</div>
-<div class="weekday">J</div>
-<div class="weekday">V</div>
-<div class="weekday">S</div>
-<div class="weekday">D</div>
-</div>
-
-<div class="grid" id="grid"></div>
-
-<div class="legend-wrapper">
-
-  <div class="legend">
-    <div class="legend-item">
-      <div class="legend-color laborable"></div>
-      Laborable
-    </div>
-    <div class="legend-item">
-      <div class="legend-color festivo"></div>
-      Festivo
-    </div>
-    <div class="legend-item">
-      <div class="legend-color vacaciones"></div>
-      Vacaciones
-    </div>
-    <div class="legend-item">
-      <div class="legend-color teletrabajo"></div>
-      Teletrabajo
-    </div>
-    <div class="legend-item">
-      <div class="legend-color otro"></div>
-      Otro
+  <div id="loginPage" class="login-page">
+    <div class="login-box">
+      <h2>Iniciar Sesión</h2>
+      <p>Introduce tus credenciales para acceder al calendario</p>
+      <form id="loginForm">
+        <div class="input-group">
+          <label for="loginEmail">Correo Electrónico</label>
+          <input type="email" id="loginEmail" placeholder="ejemplo@correo.com" required>
+        </div>
+        <div class="input-group">
+          <label for="loginPassword">Contraseña</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="login-btn">Entrar</button>
+      </form>
     </div>
   </div>
 
-  <div class="right-controls-container" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
-    
-    <div id="batchActions" style="display:none; background:rgba(255,255,255,.08); padding:16px; border-radius:18px; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; border:1px solid rgba(255,255,255,.1); backdrop-filter:blur(10px); width: 100%;">
-      <span id="selectedCount" style="font-weight:600; color:#cbd5e1;">0 días seleccionados</span>
-      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-        <select id="batchType" style="padding:10px 14px; border-radius:12px;">
-          <option value="laborable">Laborable</option>
-          <option value="festivo">Festivo</option>
-          <option value="vacaciones">Vacaciones</option>
-          <option value="teletrabajo">Teletrabajo</option>
-          <option value="otro">Otro</option>
-        </select>
-        <input type="text" id="batchNote" placeholder="Nota común (opcional)..." style="padding:10px 14px; border-radius:12px; border:1px solid #cbd5e1; color:#111827; font-size:0.9rem;">
-        <button id="batchSaveBtn" style="border:none; padding:12px 18px; border-radius:12px; cursor:pointer; font-weight:600; background:#10b981; color:white; transition: 0.2s;">Guardar días</button>
-        <button id="batchCancelBtn" style="border:none; padding:12px 18px; border-radius:12px; cursor:pointer; font-weight:600; background:#334155; color:white; transition: 0.2s;">Cancelar</button>
+  <div id="mainContent" class="main-content">
+
+    <div id="mainPage">
+      <div class="header">
+        <div class="title">
+          <h1>Control Laboral</h1>
+          <p>Gestión visual de días laborables y vacaciones.© JCOS</p>
+        </div>
+
+        <div class="controls">
+          <button class="nav-btn" id="prev">◀</button>
+          <select id="month"></select>
+          <select id="year"></select>
+          <button class="nav-btn" id="next">▶</button>
+          <button class="summary-btn" id="summaryBtn">Resumen anual</button>
+          <button class="logout-btn" id="logoutBtn">Cerrar Sesión</button>
+        </div>
+      </div>
+
+      <div class="calendar">
+        <div class="weekdays">
+          <div class="weekday">L</div>
+          <div class="weekday">M</div>
+          <div class="weekday">X</div>
+          <div class="weekday">J</div>
+          <div class="weekday">V</div>
+          <div class="weekday">S</div>
+          <div class="weekday">D</div>
+        </div>
+
+        <div class="grid" id="grid"></div>
+
+        <div class="legend-wrapper">
+          <div class="legend">
+            <div class="legend-item"><div class="legend-color laborable"></div>Laborable</div>
+            <div class="legend-item"><div class="legend-color festivo"></div>Festivo</div>
+            <div class="legend-item"><div class="legend-color vacaciones"></div>Vacaciones</div>
+            <div class="legend-item"><div class="legend-color teletrabajo"></div>Teletrabajo</div>
+            <div class="legend-item"><div class="legend-color otro"></div>Otro</div>
+          </div>
+
+          <div class="right-controls-container" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
+            <div id="batchActions" style="display:none; background:rgba(255,255,255,.08); padding:16px; border-radius:18px; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; border:1px solid rgba(255,255,255,.1); backdrop-filter:blur(10px); width: 100%;">
+              <span id="selectedCount" style="font-weight:600; color:#cbd5e1;">0 días seleccionados</span>
+              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <select id="batchType" style="padding:10px 14px; border-radius:12px;">
+                  <option value="laborable">Laborable</option>
+                  <option value="festivo">Festivo</option>
+                  <option value="vacaciones">Vacaciones</option>
+                  <option value="teletrabajo">Teletrabajo</option>
+                  <option value="otro">Otro</option>
+                </select>
+                <input type="text" id="batchNote" placeholder="Nota común (opcional)..." style="padding:10px 14px; border-radius:12px; border:1px solid #cbd5e1; color:#111827; font-size:0.9rem;">
+                <button id="batchSaveBtn" style="border:none; padding:12px 18px; border-radius:12px; cursor:pointer; font-weight:600; background:#10b981; color:white; transition: 0.2s;">Guardar días</button>
+                <button id="batchCancelBtn" style="border:none; padding:12px 18px; border-radius:12px; cursor:pointer; font-weight:600; background:#334155; color:white; transition: 0.2s;">Cancelar</button>
+              </div>
+            </div>
+
+            <div class="data-buttons">
+              <button class="summary-btn" id="multiSelectBtn" style="background: linear-gradient(135deg, #10b981, #059669);">Selección Múltiple</button>
+              <button class="summary-btn" id="exportBtn">Exportar JSON</button>
+              <button class="summary-btn" id="importBtn">Importar JSON</button>
+              <input type="file" id="importFile" accept=".json" hidden>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="data-buttons">
-      <button class="summary-btn" id="multiSelectBtn" style="background: linear-gradient(135deg, #10b981, #059669);">
-        Selección Múltiple
-      </button>
-      <button class="summary-btn" id="exportBtn">
-        Exportar JSON
-      </button>
-      <button class="summary-btn" id="importBtn">
-        Importar JSON
-      </button>
-      <input type="file" id="importFile" accept=".json" hidden>
+    <div class="summary-page" id="summaryPage">
+      <button class="summary-btn" id="backBtn">← Volver</button>
+      <div class="summary-header-wrapper" style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; margin-bottom:24px; flex-wrap:wrap; gap:15px;">
+        <h2 id="summaryTitle" style="margin-bottom:0;"></h2>
+        <div class="summary-counters" style="display:flex; gap:12px; flex-wrap:wrap;">
+          <div class="vacaciones" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">Vacaciones: <span id="totalVacaciones">0</span> días</div>
+          <div class="teletrabajo" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); background: linear-gradient(135deg,#bbf7d0,#86efac); color:#111827;">Teletrabajo: <span id="totalTeletrabajo">0</span> días</div>
+          <div class="otro" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">Otros: <span id="totalOtro">0</span> días</div>
+        </div>
+      </div>
+      <div class="year-grid" id="yearGrid"></div>
     </div>
 
   </div>
-
-</div>
-
-</div>
-
-</div>
-
-<div class="summary-page" id="summaryPage">
-<button class="summary-btn" id="backBtn">← Volver</button>
-
-<div class="summary-header-wrapper" style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; margin-bottom:24px; flex-wrap:wrap; gap:15px;">
-  <h2 id="summaryTitle" style="margin-bottom:0;"></h2>
-  <div class="summary-counters" style="display:flex; gap:12px; flex-wrap:wrap;">
-    <div class="vacaciones" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-      Vacaciones: <span id="totalVacaciones">0</span> días
-    </div>
-    <div class="teletrabajo" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); background: linear-gradient(135deg,#bbf7d0,#86efac); color:#111827;">
-      Teletrabajo: <span id="totalTeletrabajo">0</span> días
-    </div>
-    <div class="otro" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-      Otros: <span id="totalOtro">0</span> días
-    </div>
-  </div>
-</div>
-
-<div class="year-grid" id="yearGrid"></div>
-</div>
-
 </div>
 
 <div class="modal" id="modal">
-<div class="modal-box">
-<h2 id="modalTitle"></h2>
-
-<div class="form-group">
-<label>Tipo de día</label>
-<select id="type">
-<option value="laborable">Laborable</option>
-<option value="festivo">Festivo</option>
-<option value="vacaciones">Vacaciones</option>
-<option value="teletrabajo">Teletrabajo</option>
-<option value="otro">Otro</option>
-</select>
-</div>
-
-<div class="form-group">
-<label>Nota</label>
-<textarea id="note" placeholder="Escribe una nota..."></textarea>
-</div>
-
-<div class="actions">
-<button class="delete" id="deleteBtn">Borrar</button>
-<button class="cancel" id="cancelBtn">Cancelar</button>
-<button class="save" id="saveBtn">Guardar</button>
-</div>
-
-</div>
+  <div class="modal-box">
+    <h2 id="modalTitle"></h2>
+    <div class="form-group">
+      <label>Tipo de día</label>
+      <select id="type">
+        <option value="laborable">Laborable</option>
+        <option value="festivo">Festivo</option>
+        <option value="vacaciones">Vacaciones</option>
+        <option value="teletrabajo">Teletrabajo</option>
+        <option value="otro">Otro</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Nota</label>
+      <textarea id="note" placeholder="Escribe una nota..."></textarea>
+    </div>
+    <div class="actions">
+      <button class="delete" id="deleteBtn">Borrar</button>
+      <button class="cancel" id="cancelBtn">Cancelar</button>
+      <button class="save" id="saveBtn">Guardar</button>
+    </div>
+  </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCTFp7zjHBe_j-yEUy_PWKIAwVZinDpu08",
@@ -655,6 +729,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
 
 const months=[
 'Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -682,6 +757,8 @@ const batchNote = document.getElementById('batchNote');
 let storage = {};
 let current = new Date();
 let selectedKey = '';
+let currentUserUid = '';
+let calendarListener = null;
 
 months.forEach((m,i)=>{
   const option=document.createElement('option');
@@ -770,15 +847,53 @@ function render(){
   }
 }
 
-const calendarRef = ref(db, 'calendarData');
-onValue(calendarRef, (snapshot) => {
-  const data = snapshot.val();
-  storage = data || {};
-  render();
-  if(summaryPage.style.display === 'block') {
-    renderSummary();
+// CONTROLADOR DE ESTADO DE AUTENTICACIÓN (Comprueba si ya estabas logeado)
+onAuthStateChanged(auth, (user) => {
+  const loginPage = document.getElementById('loginPage');
+  const mainContent = document.getElementById('mainContent');
+
+  if (user) {
+    // Si hay usuario activo, saltamos el login y cargamos sus datos específicos
+    currentUserUid = user.uid;
+    loginPage.style.display = 'none';
+    mainContent.style.display = 'block';
+
+    const calendarRef = ref(db, `calendarData/${currentUserUid}`);
+    calendarListener = onValue(calendarRef, (snapshot) => {
+      const data = snapshot.val();
+      storage = data || {};
+      render();
+      if(summaryPage.style.display === 'block') {
+        renderSummary();
+      }
+    });
+  } else {
+    // Si no está logeado, mostramos el formulario de login limpio
+    currentUserUid = '';
+    storage = {};
+    mainContent.style.display = 'none';
+    loginPage.style.display = 'flex';
   }
 });
+
+// ACCIÓN DEL FORMULARIO DE LOGUEO
+document.getElementById('loginForm').onsubmit = (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value;
+  const password = document.getElementById('loginPassword').value;
+
+  signInWithEmailAndPassword(auth, email, password)
+    .catch(err => {
+      alert("Error al iniciar sesión: " + err.message);
+    });
+};
+
+// BOTÓN CERRAR SESIÓN
+document.getElementById('logoutBtn').onclick = () => {
+  signOut(auth).then(() => {
+    window.location.reload();
+  });
+};
 
 function openModal(date){
   const k=key(date.getFullYear(),date.getMonth(),date.getDate());
@@ -797,7 +912,7 @@ function closeModal(){
 }
 
 document.getElementById('saveBtn').onclick=()=>{
-  const dayRef = ref(db, `calendarData/${selectedKey}`);
+  const dayRef = ref(db, `calendarData/${currentUserUid}/${selectedKey}`);
   set(dayRef, {
     type: typeInput.value,
     note: noteInput.value
@@ -807,7 +922,7 @@ document.getElementById('saveBtn').onclick=()=>{
 };
 
 document.getElementById('deleteBtn').onclick=()=>{
-  const dayRef = ref(db, `calendarData/${selectedKey}`);
+  const dayRef = ref(db, `calendarData/${currentUserUid}/${selectedKey}`);
   remove(dayRef).then(() => {
     closeModal();
   }).catch(err => alert("Error en Firebase: " + err.message));
@@ -891,7 +1006,6 @@ function renderSummary(){
       if (data.type === 'teletrabajo') teletrabajoTotales++;
       if (data.type === 'otro') otrosTotales++;
 
-      // Se inyecta el span del punto (.mini-note-dot) solo si el día cuenta con una nota guardada
       html+=`
         <div class="mini-day ${data.type}">
           ${day}
@@ -933,6 +1047,7 @@ document.getElementById('importFile').addEventListener('change',(event)=>{
   reader.onload=(e)=>{
     try{
       const importedData=JSON.parse(e.target.result);
+      const calendarRef = ref(db, `calendarData/${currentUserUid}`);
       set(calendarRef, importedData)
         .then(() => alert('Datos importados correctamente en Firebase'))
         .catch(err => alert('Error: ' + err.message));
@@ -943,7 +1058,6 @@ document.getElementById('importFile').addEventListener('change',(event)=>{
   reader.readAsText(file);
 });
 
-// LOGICA PARA MANEJO DE SELECCIÓN MÚLTIPLE
 multiSelectBtn.onclick = () => {
   isSelectionMode = !isSelectionMode;
   if (isSelectionMode) {
@@ -976,7 +1090,7 @@ document.getElementById('batchSaveBtn').onclick = () => {
 
   const updates = {};
   selectedDays.forEach(k => {
-    updates[`calendarData/${k}`] = {
+    updates[`calendarData/${currentUserUid}/${k}`] = {
       type: batchType.value,
       note: batchNote.value
     };
