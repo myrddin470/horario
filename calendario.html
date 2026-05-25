@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Calendario Laboral</title>
+<title>Control Laboral - SaaS</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,88 +23,11 @@ body{
   font-family:'Inter',sans-serif;
   min-height:100vh;
   background:
-    radial-gradient(circle at top left,#2563eb55,transparent 30%),
-    radial-gradient(circle at bottom right,#dc262655,transparent 30%),
+    radial-gradient(circle at top left,#2563eb33,transparent 40%),
+    radial-gradient(circle at bottom right,#dc262622,transparent 40%),
     linear-gradient(135deg,#020617,#0f172a);
   color:white;
   padding:30px;
-}
-
-/* Pantalla de Login */
-.login-page {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 80vh;
-}
-
-.login-box {
-  background: rgba(255, 255, 255, 0.07);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 24px;
-  padding: 35px;
-  width: 100%;
-  max-width: 400px;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.3);
-}
-
-.login-box h2 {
-  font-size: 1.8rem;
-  margin-bottom: 8px;
-  text-align: center;
-}
-
-.login-box p {
-  color: #94a3b8;
-  text-align: center;
-  margin-bottom: 24px;
-  font-size: 0.95rem;
-}
-
-.input-group {
-  margin-bottom: 20px;
-}
-
-.input-group label {
-  display: block;
-  margin-bottom: 8px;
-  font-weight: 500;
-  color: #cbd5e1;
-}
-
-.input-group input {
-  width: 100%;
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.1);
-  background: rgba(0, 0, 0, 0.2);
-  color: white;
-  font-family: inherit;
-  font-size: 1rem;
-}
-
-.input-group input:focus {
-  outline: 2px solid #2563eb;
-  border-color: transparent;
-}
-
-.login-btn {
-  width: 100%;
-  background: linear-gradient(135deg,#2563eb,#1d4ed8);
-  color: white;
-  padding: 14px;
-  border: none;
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: .2s;
-}
-
-.login-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .container{
@@ -112,8 +35,108 @@ body{
   margin:auto;
 }
 
-/* Ocultar la app principal inicialmente */
-.main-content {
+/* PANTALLA DE LOGIN TIPO SAAS */
+.auth-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+
+.auth-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(16px);
+  padding: 40px;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+
+.auth-card h2 {
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+  font-weight: 700;
+  background: linear-gradient(to right, #fff, #94a3b8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.auth-card p {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  margin-bottom: 24px;
+}
+
+.auth-form-group {
+  margin-bottom: 20px;
+}
+
+.auth-form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #cbd5e1;
+}
+
+.auth-form-group input {
+  width: 100%;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 12px 16px;
+  border-radius: 12px;
+  color: white;
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: 0.2s;
+}
+
+.auth-form-group input:focus {
+  outline: none;
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+.auth-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.2s;
+  margin-top: 10px;
+}
+
+.auth-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+}
+
+.logout-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #cbd5e1;
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor:pointer;
+  font-weight: 600;
+  transition: 0.2s;
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* SECCIONES PRINCIPALES */
+.app-section {
   display: none;
 }
 
@@ -182,22 +205,6 @@ button,select{
 
 .summary-btn:hover{
   transform:translateY(-2px);
-}
-
-.logout-btn {
-  background: #334155;
-  color: #f1f5f9;
-  padding: 12px 18px;
-  border-radius: 12px;
-  font-weight: 600;
-  border: none;
-  cursor: pointer;
-  transition: .2s;
-}
-
-.logout-btn:hover {
-  background: #cbd5e1;
-  color: #0f172a;
 }
 
 select{
@@ -468,115 +475,37 @@ textarea{
   flex-wrap:wrap;
 }
 
-/* MEDIA QUERIES RESPONSIVAS */
+/* RESPONSIVE */
 @media(max-width:900px){
-  body{
-    padding:20px;
-  }
-  .title h1{
-    font-size:2rem;
-  }
-  .calendar{
-    padding:16px;
-    border-radius:20px;
-  }
-  .weekdays, .grid{
-    gap:8px;
-  }
-  .day{
-    min-height:80px;
-    padding:10px;
-    font-size:1rem;
-    border-radius:14px;
-  }
+  body{ padding:20px; }
+  .title h1{ font-size:2rem; }
+  .calendar{ padding:16px; border-radius:20px; }
+  .weekdays, .grid{ gap:8px; }
+  .day{ min-height:80px; padding:10px; font-size:1rem; border-radius:14px; }
 }
-
 @media(max-width:680px){
-  .header{
-    flex-direction:column;
-    align-items:stretch;
-  }
-  .controls{
-    justify-content:space-between;
-    width:100%;
-  }
-  .controls select{
-    flex:1;
-    padding:10px;
-  }
-  .legend-wrapper{
-    flex-direction:column;
-    align-items:stretch;
-  }
-  .legend{
-    justify-content:center;
-    margin-top:10px;
-  }
-  .right-controls-container {
-    align-items: stretch !important;
-    width: 100%;
-  }
-  .data-buttons{
-    justify-content:center;
-  }
-  .data-buttons button, #summaryBtn{
-    flex:1;
-    text-align:center;
-  }
+  .header{ flex-direction:column; align-items:stretch; }
+  .controls{ justify-content:space-between; width:100%; }
+  .controls select{ flex:1; padding:10px; }
+  .legend-wrapper{ flex-direction:column; align-items:stretch; }
+  .legend{ justify-content:center; margin-top:10px; }
+  .right-controls-container { align-items: stretch !important; width: 100%; }
+  .data-buttons{ justify-content:center; }
+  .data-buttons button, #summaryBtn{ flex:1; text-align:center; }
 }
-
 @media(max-width:480px){
-  body{
-    padding:10px;
-  }
-  .title h1{
-    font-size:1.6rem;
-    text-align:center;
-  }
-  .title p{
-    text-align:center;
-    font-size:0.9rem;
-  }
-  .controls{
-    padding:8px;
-    border-radius:14px;
-    flex-wrap:wrap;
-    gap:8px;
-  }
-  #summaryBtn{
-    width:100%;
-    order:4;
-  }
-  .weekdays, .grid{
-    gap:4px;
-  }
-  .weekday{
-    font-size:0.8rem;
-  }
-  .day{
-    min-height:52px;
-    padding:6px;
-    font-size:0.85rem;
-    border-radius:8px;
-    flex-direction:column;
-    align-items:center;
-    justify-content:center;
-    gap:4px;
-  }
-  .note{
-    font-size:0.75rem;
-  }
-  .modal-box{
-    padding:20px;
-    border-radius:18px;
-  }
-  .actions{
-    flex-direction:column;
-  }
-  .actions button{
-    width:100%;
-    text-align:center;
-  }
+  body{ padding:10px; }
+  .title h1{ font-size:1.6rem; text-align:center; }
+  .title p{ text-align:center; font-size:0.9rem; }
+  .controls{ padding:8px; border-radius:14px; flex-wrap:wrap; gap:8px; }
+  #summaryBtn{ width:100%; order:4; }
+  .weekdays, .grid{ gap:4px; }
+  .weekday{ font-size:0.8rem; }
+  .day{ min-height:52px; padding:6px; font-size:0.85rem; border-radius:8px; flex-direction:column; align-items:center; justify-content:center; gap:4px; }
+  .note{ font-size:0.75rem; }
+  .modal-box{ padding:20px; border-radius:18px; }
+  .actions{ flex-direction:column; }
+  .actions button{ width:100%; text-align:center; }
 }
 </style>
 </head>
@@ -584,107 +513,117 @@ textarea{
 
 <div class="container">
 
-  <div id="loginPage" class="login-page">
-    <div class="login-box">
-      <h2>Iniciar Sesión</h2>
-      <p>Introduce tus credenciales para acceder al calendario</p>
+  <div id="authPage" class="auth-wrapper" style="display: flex;">
+    <div class="auth-card">
+      <h2>Control Laboral</h2>
+      <p>Inicia sesión en tu cuenta para continuar</p>
       <form id="loginForm">
-        <div class="input-group">
+        <div class="auth-form-group">
           <label for="loginEmail">Correo Electrónico</label>
-          <input type="email" id="loginEmail" placeholder="ejemplo@correo.com" required>
+          <input type="email" id="loginEmail" placeholder="tu@ejemplo.com" required>
         </div>
-        <div class="input-group">
+        <div class="auth-form-group">
           <label for="loginPassword">Contraseña</label>
           <input type="password" id="loginPassword" placeholder="••••••••" required>
         </div>
-        <button type="submit" class="login-btn">Entrar</button>
+        <button type="submit" class="auth-btn">Entrar</button>
       </form>
     </div>
   </div>
 
-  <div id="mainContent" class="main-content">
+  <div id="mainPage" class="app-section">
 
-    <div id="mainPage">
-      <div class="header">
-        <div class="title">
-          <h1>Control Laboral</h1>
-          <p>Gestión visual de días laborables y vacaciones.© JCOS</p>
-        </div>
+    <div class="header">
+      <div class="title">
+        <h1>Control Laboral</h1>
+        <p>Gestión visual de días laborables y vacaciones. © JCOS</p>
+      </div>
 
+      <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
+        <span id="userDisplay" style="color: #94a3b8; font-size: 0.9rem; font-weight: 500;"></span>
         <div class="controls">
           <button class="nav-btn" id="prev">◀</button>
           <select id="month"></select>
           <select id="year"></select>
           <button class="nav-btn" id="next">▶</button>
           <button class="summary-btn" id="summaryBtn">Resumen anual</button>
-          <button class="logout-btn" id="logoutBtn">Cerrar Sesión</button>
-        </div>
-      </div>
-
-      <div class="calendar">
-        <div class="weekdays">
-          <div class="weekday">L</div>
-          <div class="weekday">M</div>
-          <div class="weekday">X</div>
-          <div class="weekday">J</div>
-          <div class="weekday">V</div>
-          <div class="weekday">S</div>
-          <div class="weekday">D</div>
-        </div>
-
-        <div class="grid" id="grid"></div>
-
-        <div class="legend-wrapper">
-          <div class="legend">
-            <div class="legend-item"><div class="legend-color laborable"></div>Laborable</div>
-            <div class="legend-item"><div class="legend-color festivo"></div>Festivo</div>
-            <div class="legend-item"><div class="legend-color vacaciones"></div>Vacaciones</div>
-            <div class="legend-item"><div class="legend-color teletrabajo"></div>Teletrabajo</div>
-            <div class="legend-item"><div class="legend-color otro"></div>Otro</div>
-          </div>
-
-          <div class="right-controls-container" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
-            <div id="batchActions" style="display:none; background:rgba(255,255,255,.08); padding:16px; border-radius:18px; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; border:1px solid rgba(255,255,255,.1); backdrop-filter:blur(10px); width: 100%;">
-              <span id="selectedCount" style="font-weight:600; color:#cbd5e1;">0 días seleccionados</span>
-              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                <select id="batchType" style="padding:10px 14px; border-radius:12px;">
-                  <option value="laborable">Laborable</option>
-                  <option value="festivo">Festivo</option>
-                  <option value="vacaciones">Vacaciones</option>
-                  <option value="teletrabajo">Teletrabajo</option>
-                  <option value="otro">Otro</option>
-                </select>
-                <input type="text" id="batchNote" placeholder="Nota común (opcional)..." style="padding:10px 14px; border-radius:12px; border:1px solid #cbd5e1; color:#111827; font-size:0.9rem;">
-                <button id="batchSaveBtn" style="border:none; padding:12px 18px; border-radius:12px; cursor:pointer; font-weight:600; background:#10b981; color:white; transition: 0.2s;">Guardar días</button>
-                <button id="batchCancelBtn" style="border:none; padding:12px 18px; border-radius:12px; cursor:pointer; font-weight:600; background:#334155; color:white; transition: 0.2s;">Cancelar</button>
-              </div>
-            </div>
-
-            <div class="data-buttons">
-              <button class="summary-btn" id="multiSelectBtn" style="background: linear-gradient(135deg, #10b981, #059669);">Selección Múltiple</button>
-              <button class="summary-btn" id="exportBtn">Exportar JSON</button>
-              <button class="summary-btn" id="importBtn">Importar JSON</button>
-              <input type="file" id="importFile" accept=".json" hidden>
-            </div>
-          </div>
+          <button class="logout-btn" id="logoutBtn">Salir</button>
         </div>
       </div>
     </div>
 
-    <div class="summary-page" id="summaryPage">
-      <button class="summary-btn" id="backBtn">← Volver</button>
-      <div class="summary-header-wrapper" style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; margin-bottom:24px; flex-wrap:wrap; gap:15px;">
-        <h2 id="summaryTitle" style="margin-bottom:0;"></h2>
-        <div class="summary-counters" style="display:flex; gap:12px; flex-wrap:wrap;">
-          <div class="vacaciones" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">Vacaciones: <span id="totalVacaciones">0</span> días</div>
-          <div class="teletrabajo" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); background: linear-gradient(135deg,#bbf7d0,#86efac); color:#111827;">Teletrabajo: <span id="totalTeletrabajo">0</span> días</div>
-          <div class="otro" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">Otros: <span id="totalOtro">0</span> días</div>
+    <div class="calendar">
+      <div class="weekdays">
+        <div class="weekday">L</div>
+        <div class="weekday">M</div>
+        <div class="weekday">X</div>
+        <div class="weekday">J</div>
+        <div class="weekday">V</div>
+        <div class="weekday">S</div>
+        <div class="weekday">D</div>
+      </div>
+
+      <div class="grid" id="grid"></div>
+
+      <div class="legend-wrapper">
+        <div class="legend">
+          <div class="legend-item"><div class="legend-color laborable"></div>Laborable</div>
+          <div class="legend-item"><div class="legend-color festivo"></div>Festivo</div>
+          <div class="legend-item"><div class="legend-color vacaciones"></div>Vacaciones</div>
+          <div class="legend-item"><div class="legend-color teletrabajo"></div>Teletrabajo</div>
+          <div class="legend-item"><div class="legend-color otro"></div>Otro</div>
+        </div>
+
+        <div class="right-controls-container" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end; width: 100%;">
+          <div id="batchActions" style="display:none; background:rgba(255,255,255,.08); padding:16px; border-radius:18px; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; border:1px solid rgba(255,255,255,.1); backdrop-filter:blur(10px); width: 100%;">
+            <span id="selectedCount" style="font-weight:600; color:#cbd5e1;">0 días seleccionados</span>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+              <select id="batchType" style="padding:10px 14px; border-radius:12px;">
+                <option value="laborable">Laborable</option>
+                <option value="festivo">Festivo</option>
+                <option value="vacaciones">Vacaciones</option>
+                <option value="teletrabajo">Teletrabajo</option>
+                <option value="otro">Otro</option>
+              </select>
+              <input type="text" id="batchNote" placeholder="Nota común (opcional)..." style="padding:10px 14px; border-radius:12px; border:1px solid #cbd5e1; color:#111827; font-size:0.9rem;">
+              <button id="batchSaveBtn" style="border:none; padding:12px 18px; border-radius:12px; cursor:pointer; font-weight:600; background:#10b981; color:white; transition: 0.2s;">Guardar días</button>
+              <button id="batchCancelBtn" style="border:none; padding:12px 18px; border-radius:12px; cursor:pointer; font-weight:600; background:#334155; color:white; transition: 0.2s;">Cancelar</button>
+            </div>
+          </div>
+
+          <div class="data-buttons">
+            <button class="summary-btn" id="multiSelectBtn" style="background: linear-gradient(135deg, #10b981, #059669);">Selección Múltiple</button>
+            <button class="summary-btn" id="exportBtn">Exportar JSON</button>
+            <button class="summary-btn" id="importBtn">Importar JSON</button>
+            <input type="file" id="importFile" accept=".json" hidden>
+          </div>
         </div>
       </div>
-      <div class="year-grid" id="yearGrid"></div>
     </div>
 
   </div>
+
+  <div class="summary-page" id="summaryPage">
+    <button class="summary-btn" id="backBtn">← Volver</button>
+
+    <div class="summary-header-wrapper" style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; margin-bottom:24px; flex-wrap:wrap; gap:15px;">
+      <h2 id="summaryTitle" style="margin-bottom:0;"></h2>
+      <div class="summary-counters" style="display:flex; gap:12px; flex-wrap:wrap;">
+        <div class="vacaciones" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+          Vacaciones: <span id="totalVacaciones">0</span> días
+        </div>
+        <div class="teletrabajo" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); background: linear-gradient(135deg,#bbf7d0,#86efac); color:#111827;">
+          Teletrabajo: <span id="totalTeletrabajo">0</span> días
+        </div>
+        <div class="otro" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
+          Otros: <span id="totalOtro">0</span> días
+        </div>
+      </div>
+    </div>
+
+    <div class="year-grid" id="yearGrid"></div>
+  </div>
+
 </div>
 
 <div class="modal" id="modal">
@@ -717,6 +656,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getDatabase, ref, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
+// Tu objeto de configuración proporcionado
 const firebaseConfig = {
   apiKey: "AIzaSyCTFp7zjHBe_j-yEUy_PWKIAwVZinDpu08",
   authDomain: "controlhoras-efa56.firebaseapp.com",
@@ -731,6 +671,9 @@ const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const auth = getAuth(app);
 
+let calendarRef = null;
+let currentUser = null;
+
 const months=[
 'Enero','Febrero','Marzo','Abril','Mayo','Junio',
 'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
@@ -739,7 +682,6 @@ const months=[
 const grid=document.getElementById('grid');
 const monthSelect=document.getElementById('month');
 const yearSelect=document.getElementById('year');
-
 const modal=document.getElementById('modal');
 const modalTitle=document.getElementById('modalTitle');
 const typeInput=document.getElementById('type');
@@ -757,8 +699,62 @@ const batchNote = document.getElementById('batchNote');
 let storage = {};
 let current = new Date();
 let selectedKey = '';
-let currentUserUid = '';
-let calendarListener = null;
+
+const authPage = document.getElementById('authPage');
+const mainPage = document.getElementById('mainPage');
+const summaryPage = document.getElementById('summaryPage');
+const loginForm = document.getElementById('loginForm');
+const userDisplay = document.getElementById('userDisplay');
+const logoutBtn = document.getElementById('logoutBtn');
+
+// CONTROL DE ESTADO DE AUTENTICACIÓN
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    currentUser = user;
+    // Vinculamos la lectura al nodo seguro del usuario
+    calendarRef = ref(db, `users/${user.uid}/calendarData`);
+    userDisplay.textContent = `Usuario: ${user.email}`;
+    
+    authPage.style.display = 'none';
+    mainPage.style.display = 'block';
+
+    onValue(calendarRef, (snapshot) => {
+      const data = snapshot.val();
+      storage = data || {};
+      render();
+      if(summaryPage.style.display === 'block') {
+        renderSummary();
+      }
+    }, (error) => {
+      alert("Error de permisos en Base de Datos: " + error.message);
+    });
+  } else {
+    currentUser = null;
+    calendarRef = null;
+    storage = {};
+    authPage.style.display = 'flex';
+    mainPage.style.display = 'none';
+    summaryPage.style.display = 'none';
+  }
+});
+
+// LOGIN
+loginForm.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value;
+  const pass = document.getElementById('loginPassword').value;
+
+  signInWithEmailAndPassword(auth, email, pass)
+    .catch(err => {
+      console.error("Detalle Error Firebase:", err);
+      alert("Error al acceder: " + err.message);
+    });
+});
+
+// LOGOUT
+logoutBtn.onclick = () => {
+  signOut(auth).catch(err => alert("Error: " + err.message));
+};
 
 months.forEach((m,i)=>{
   const option=document.createElement('option');
@@ -795,7 +791,6 @@ function getData(date){
 
 function render(){
   grid.innerHTML='';
-
   const year=current.getFullYear();
   const month=current.getMonth();
 
@@ -820,7 +815,6 @@ function render(){
     const k=key(year,month,day);
 
     const card=document.createElement('div');
-    
     const isSelectedClass = (isSelectionMode && selectedDays.has(k)) ? 'selected' : '';
     card.className=`day ${data.type} ${isSelectedClass}`;
 
@@ -847,54 +841,6 @@ function render(){
   }
 }
 
-// CONTROLADOR DE ESTADO DE AUTENTICACIÓN (Comprueba si ya estabas logeado)
-onAuthStateChanged(auth, (user) => {
-  const loginPage = document.getElementById('loginPage');
-  const mainContent = document.getElementById('mainContent');
-
-  if (user) {
-    // Si hay usuario activo, saltamos el login y cargamos sus datos específicos
-    currentUserUid = user.uid;
-    loginPage.style.display = 'none';
-    mainContent.style.display = 'block';
-
-    const calendarRef = ref(db, `calendarData/${currentUserUid}`);
-    calendarListener = onValue(calendarRef, (snapshot) => {
-      const data = snapshot.val();
-      storage = data || {};
-      render();
-      if(summaryPage.style.display === 'block') {
-        renderSummary();
-      }
-    });
-  } else {
-    // Si no está logeado, mostramos el formulario de login limpio
-    currentUserUid = '';
-    storage = {};
-    mainContent.style.display = 'none';
-    loginPage.style.display = 'flex';
-  }
-});
-
-// ACCIÓN DEL FORMULARIO DE LOGUEO
-document.getElementById('loginForm').onsubmit = (e) => {
-  e.preventDefault();
-  const email = document.getElementById('loginEmail').value;
-  const password = document.getElementById('loginPassword').value;
-
-  signInWithEmailAndPassword(auth, email, password)
-    .catch(err => {
-      alert("Error al iniciar sesión: " + err.message);
-    });
-};
-
-// BOTÓN CERRAR SESIÓN
-document.getElementById('logoutBtn').onclick = () => {
-  signOut(auth).then(() => {
-    window.location.reload();
-  });
-};
-
 function openModal(date){
   const k=key(date.getFullYear(),date.getMonth(),date.getDate());
   selectedKey=k;
@@ -912,20 +858,22 @@ function closeModal(){
 }
 
 document.getElementById('saveBtn').onclick=()=>{
-  const dayRef = ref(db, `calendarData/${currentUserUid}/${selectedKey}`);
+  if(!currentUser) return;
+  const dayRef = ref(db, `users/${currentUser.uid}/calendarData/${selectedKey}`);
   set(dayRef, {
     type: typeInput.value,
     note: noteInput.value
   }).then(() => {
     closeModal();
-  }).catch(err => alert("Error en Firebase: " + err.message));
+  }).catch(err => alert("Error al guardar: " + err.message));
 };
 
 document.getElementById('deleteBtn').onclick=()=>{
-  const dayRef = ref(db, `calendarData/${currentUserUid}/${selectedKey}`);
+  if(!currentUser) return;
+  const dayRef = ref(db, `users/${currentUser.uid}/calendarData/${selectedKey}`);
   remove(dayRef).then(() => {
     closeModal();
-  }).catch(err => alert("Error en Firebase: " + err.message));
+  }).catch(err => alert("Error al borrar: " + err.message));
 };
 
 document.getElementById('cancelBtn').onclick=closeModal;
@@ -954,8 +902,6 @@ document.getElementById('next').onclick=()=>{
   render();
 };
 
-const mainPage=document.getElementById('mainPage');
-const summaryPage=document.getElementById('summaryPage');
 const yearGrid=document.getElementById('yearGrid');
 const summaryTitle=document.getElementById('summaryTitle');
 
@@ -1041,15 +987,14 @@ document.getElementById('importBtn').onclick=()=>{
 
 document.getElementById('importFile').addEventListener('change',(event)=>{
   const file=event.target.files[0];
-  if(!file) return;
+  if(!file || !currentUser) return;
 
   const reader=new FileReader();
   reader.onload=(e)=>{
     try{
       const importedData=JSON.parse(e.target.result);
-      const calendarRef = ref(db, `calendarData/${currentUserUid}`);
       set(calendarRef, importedData)
-        .then(() => alert('Datos importados correctamente en Firebase'))
+        .then(() => alert('Datos importados correctamente.'))
         .catch(err => alert('Error: ' + err.message));
     }catch(error){
       alert('El archivo JSON no es válido');
@@ -1058,6 +1003,7 @@ document.getElementById('importFile').addEventListener('change',(event)=>{
   reader.readAsText(file);
 });
 
+// SELECCIÓN MÚLTIPLE MULTI-DÍA
 multiSelectBtn.onclick = () => {
   isSelectionMode = !isSelectionMode;
   if (isSelectionMode) {
@@ -1084,13 +1030,14 @@ document.getElementById('batchCancelBtn').onclick = resetMultiSelect;
 
 document.getElementById('batchSaveBtn').onclick = () => {
   if (selectedDays.size === 0) {
-    alert('Por favor, selecciona al menos un día haciendo clic sobre el calendario.');
+    alert('Selecciona al menos un día haciendo clic sobre el calendario.');
     return;
   }
+  if (!currentUser) return;
 
   const updates = {};
   selectedDays.forEach(k => {
-    updates[`calendarData/${currentUserUid}/${k}`] = {
+    updates[`users/${currentUser.uid}/calendarData/${k}`] = {
       type: batchType.value,
       note: batchNote.value
     };
@@ -1101,7 +1048,7 @@ document.getElementById('batchSaveBtn').onclick = () => {
     .then(() => {
       resetMultiSelect();
     })
-    .catch(err => alert("Error al guardar en Firebase: " + err.message));
+    .catch(err => alert("Error al actualizar los días: " + err.message));
 };
 </script>
 
