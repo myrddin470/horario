@@ -341,8 +341,11 @@
                         <div id="bar-asun" class="progress-bar-fill" style="width: 0%"></div>
                     </div>
                 </div>
-                <div class="summary-item" style="background: #c026d3">
-                    H. Extras: <span id="count-extr">0
+                <div class="summary-item" style="background: #c026d3; display: flex; flex-direction: column; gap: 5px;">
+                    <div>H. Extras: <span id="count-extr">0</span></div>
+                    <div class="progress-bar-container">
+                        <div id="bar-extr" class="progress-bar-fill" style="width: 0%"></div>
+                    </div>
                 </div>
             </div>
             <div class="annual-grid" id="annual-calendar-container"></div>
@@ -842,7 +845,7 @@
             document.getElementById('annual-year-text').innerText = y;
             const cfg = getConfig(y);
             
-            container.innerHTML = ''; let v=0, a=0, e=0;
+            container.innerHTML = ''; let v=0, a=0, e=0, totalExMinutes=0;
             for(let m=0; m<12; m++) {
                 const mDiv = document.createElement('div'); mDiv.className = 'mini-month';
                 mDiv.innerHTML = `<div class="mini-month-name">${months[m]}</div>`;
@@ -853,7 +856,15 @@
                     const k=`${y}-${m}-${d}`, dow=new Date(y,m,d).getDay();
                     let def = (dow === 0)?'festivo':(dow===6?'nolaborable':'laborable');
                     const data = db[k] || { type: def };
-                    if(db[k]) { if(data.type==='vacaciones') v++; if(data.type==='asuntos') a++; if(data.type==='extras') e++; }
+                    
+                    // Acumulamos minutos de horas extras hechos (para saber los días totales que se generan)
+                    if(db[k]) {
+                        totalExMinutes += calcSEx(data, k);
+                        if(data.type==='vacaciones') v++; 
+                        if(data.type==='asuntos') a++; 
+                        if(data.type==='extras') e++;
+                    }
+                    
                     const dEl = document.createElement('div');
                     let typeClass = data.type;
                     if(data.type === 'comision') typeClass = 'laborable';
@@ -863,17 +874,26 @@
                 mDiv.appendChild(dDiv); container.appendChild(mDiv);
             }
             
+            // Cálculo de los días totales generados por Horas Extras (Factor 1.75)
+            const totalCompensatedMinutes = Math.round(totalExMinutes * 1.75);
+            const totalGeneratedDays = Math.floor(totalCompensatedMinutes / cfg.minDay);
+            
             document.getElementById('count-vaca').innerText = `${v} / ${cfg.maxVaca}`;
             document.getElementById('count-asun').innerText = `${a} / ${cfg.maxAsun}`;
-            document.getElementById('count-extr').innerText = e;
+            document.getElementById('count-extr').innerText = `${e} / ${totalGeneratedDays}d`;
             
             const pctVaca = cfg.maxVaca > 0 ? Math.min((v / cfg.maxVaca) * 100, 100) : 0;
             const pctAsun = cfg.maxAsun > 0 ? Math.min((a / cfg.maxAsun) * 100, 100) : 0;
+            const pctExtr = totalGeneratedDays > 0 ? Math.min((e / totalGeneratedDays) * 100, 100) : 0;
             
-            const barVacaEl = document.getElementById('bar-vaca'), barAsunEl = document.getElementById('bar-asun');
-            barVacaEl.style.width = pctVaca + '%'; barAsunEl.style.width = pctAsun + '%';
+            const barVacaEl = document.getElementById('bar-vaca'), 
+                  barAsunEl = document.getElementById('bar-asun'),
+                  barExtrEl = document.getElementById('bar-extr');
+                  
+            barVacaEl.style.width = pctVaca + '%'; barAsunEl.style.width = pctAsun + '%'; barExtrEl.style.width = pctExtr + '%';
             barVacaEl.style.backgroundColor = v > cfg.maxVaca ? '#ef4444' : '';
             barAsunEl.style.backgroundColor = a > cfg.maxAsun ? '#ef4444' : '';
+            barExtrEl.style.backgroundColor = e > totalGeneratedDays ? '#ef4444' : '';
         }
 
         function changeMonth(s) { currentDate.setMonth(currentDate.getMonth()+s); renderMonthly(); }
