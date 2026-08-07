@@ -290,7 +290,7 @@ select{
 }
 
 .otro{
-  background:linear-gradient(135deg,#94a3b8,#475569);
+  background: linear-gradient(135deg, #db2777, #f472b6);
 }
 
 .note{
@@ -570,8 +570,8 @@ textarea{
           <div class="legend-item"><div class="legend-color laborable"></div>Laborable</div>
           <div class="legend-item"><div class="legend-color festivo"></div>Festivo</div>
           <div class="legend-item"><div class="legend-color vacaciones"></div>Vacaciones</div>
-          <div class="legend-item"><div class="legend-color teletrabajo"></div>Teletrabajo</div>
-          <div class="legend-item"><div class="legend-color otro"></div>Otro</div>
+          <div class="legend-item"><div class="legend-color teletrabajo"></div>Permiso</div>
+          <div class="legend-item"><div class="legend-color otro"></div>Festivo trabajado</div>
         </div>
 
         <div class="right-controls-container" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end; width: 100%;">
@@ -582,8 +582,8 @@ textarea{
                 <option value="laborable">Laborable</option>
                 <option value="festivo">Festivo</option>
                 <option value="vacaciones">Vacaciones</option>
-                <option value="teletrabajo">Teletrabajo</option>
-                <option value="otro">Otro</option>
+                <option value="teletrabajo">Permiso</option>
+                <option value="otro">Festivo trabajado</option>
               </select>
               <input type="text" id="batchNote" placeholder="Nota común (opcional)..." style="padding:10px 14px; border-radius:12px; border:1px solid #cbd5e1; color:#111827; font-size:0.9rem;">
               <button id="batchSaveBtn" style="border:none; padding:12px 18px; border-radius:12px; cursor:pointer; font-weight:600; background:#10b981; color:white; transition: 0.2s;">Guardar días</button>
@@ -613,10 +613,10 @@ textarea{
           Vacaciones: <span id="totalVacaciones">0</span> días
         </div>
         <div class="teletrabajo" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); background: linear-gradient(135deg,#bbf7d0,#86efac); color:#111827;">
-          Teletrabajo: <span id="totalTeletrabajo">0</span> días
+          Permisos: <span id="totalTeletrabajo">0</span> días
         </div>
-        <div class="otro" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);">
-          Otros: <span id="totalOtro">0</span> días
+        <div class="otro" style="padding:10px 16px; border-radius:12px; font-weight:600; font-size:0.95rem; box-shadow: 0 4px 6px -1px rgba(216, 20, 173, 0.1);">
+          Festivos trabajados: <span id="totalOtro">0</span> días
         </div>
       </div>
     </div>
@@ -635,8 +635,8 @@ textarea{
         <option value="laborable">Laborable</option>
         <option value="festivo">Festivo</option>
         <option value="vacaciones">Vacaciones</option>
-        <option value="teletrabajo">Teletrabajo</option>
-        <option value="otro">Otro</option>
+        <option value="teletrabajo">Permisos</option>
+        <option value="otro">Festivo trabajado</option>
       </select>
     </div>
     <div class="form-group">
