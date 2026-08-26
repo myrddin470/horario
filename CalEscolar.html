@@ -699,6 +699,10 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+
+
+
+
 const messaging = getMessaging(app);
 const vapidKey = 'BHzkdXrBIeaQO_BNheiX0m9ZA0ySp-_BKXguNA-UcBsnFJVjVtokM2nR696PPALcBKl80hRYLW3ENkXwc3Np8EY';
 
@@ -718,6 +722,29 @@ async function solicitarPermisoNotificaciones() {
 }
 
 solicitarPermisoNotificaciones();
+
+async function registrarNotificaciones() {
+  try {
+    const token = await getToken(messaging, {
+      vapidKey: vapidKey
+    });
+
+    if (token) {
+      console.log('TOKEN FCM:', token);
+      alert('Notificaciones activadas correctamente');
+    } else {
+      console.log('No se ha obtenido token FCM');
+    }
+
+  } catch (error) {
+    console.error('Error obteniendo token FCM:', error);
+    alert('Error activando las notificaciones: ' + error.message);
+  }
+}
+
+if (Notification.permission === 'granted') {
+  registrarNotificaciones();
+}
 
 
 
