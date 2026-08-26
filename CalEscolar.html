@@ -731,9 +731,9 @@ async function registrarNotificaciones() {
     });
 
     if (token) {
-      console.log('TOKEN FCM:', token);
-      alert('Notificaciones activadas correctamente');
-    } else {
+        console.log('TOKEN FCM:', token);
+        alert('TOKEN FCM:\\n\\n' + token);
+      } else {
       console.log('No se ha obtenido token FCM');
     }
 
@@ -760,6 +760,8 @@ if (Notification.permission === 'granted') {
     }
   });
 }
+
+
 
 
 
