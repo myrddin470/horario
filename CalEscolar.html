@@ -726,7 +726,8 @@ solicitarPermisoNotificaciones();
 async function registrarNotificaciones() {
   try {
     const token = await getToken(messaging, {
-      vapidKey: vapidKey
+       vapidKey: vapidKey,
+      serviceWorkerRegistration: messagingServiceWorkerRegistration
     });
 
     if (token) {
@@ -743,7 +744,21 @@ async function registrarNotificaciones() {
 }
 
 if (Notification.permission === 'granted') {
-  registrarNotificaciones();
+  window.addEventListener('load', async () => {
+    let intentos = 0;
+
+    while (!messagingServiceWorkerRegistration && intentos < 20) {
+      await new Promise(resolve => setTimeout(resolve, 250));
+      intentos++;
+    }
+
+    if (messagingServiceWorkerRegistration) {
+      registrarNotificaciones();
+    } else {
+      console.error('No se pudo registrar el Service Worker.');
+      alert('No se pudo preparar el sistema de notificaciones.');
+    }
+  });
 }
 
 
@@ -755,11 +770,19 @@ if (Notification.permission === 'granted') {
 
 
 // Registrar Service Worker para notificaciones
+let messagingServiceWorkerRegistration = null;
+
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
     try {
-      const registration = await navigator.serviceWorker.register('./firebase-messaging-sw.js');
-      console.log('Service Worker registrado:', registration);
+      messagingServiceWorkerRegistration =
+        await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+
+      console.log(
+        'Service Worker registrado correctamente:',
+        messagingServiceWorkerRegistration.scope
+      );
+
     } catch (error) {
       console.error('Error registrando Service Worker:', error);
     }
