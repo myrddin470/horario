@@ -702,6 +702,31 @@ const db = getDatabase(app);
 const messaging = getMessaging(app);
 const vapidKey = 'BHzkdXrBIeaQO_BNheiX0m9ZA0ySp-_BKXguNA-UcBsnFJVjVtokM2nR696PPALcBKl80hRYLW3ENkXwc3Np8EY';
 
+async function solicitarPermisoNotificaciones() {
+  try {
+    const permiso = await Notification.requestPermission();
+
+    if (permiso === 'granted') {
+      console.log('Permiso de notificaciones concedido');
+    } else {
+      console.log('Permiso de notificaciones:', permiso);
+    }
+
+  } catch (error) {
+    console.error('Error solicitando permiso:', error);
+  }
+}
+
+solicitarPermisoNotificaciones();
+
+
+
+
+
+
+
+
+
 // Registrar Service Worker para notificaciones
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
