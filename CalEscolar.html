@@ -577,10 +577,83 @@ textarea:focus{
     -webkit-line-clamp: 2;
   }
 }
+
+/* Pantalla de acceso Firebase */
+.auth-screen{
+  position:fixed;
+  inset:0;
+  z-index:2000;
+  background:var(--bg-main);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+}
+.auth-box{
+  width:100%;
+  max-width:420px;
+  background:var(--bg-card);
+  border:1px solid var(--border-color);
+  border-radius:16px;
+  padding:28px;
+  box-shadow:0 20px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04);
+}
+.auth-box h2{margin-bottom:8px;font-size:1.5rem;}
+.auth-box p{color:var(--text-muted);font-size:.9rem;margin-bottom:20px;}
+.auth-box label{display:block;margin-bottom:6px;font-weight:600;font-size:.85rem;color:var(--text-muted);}
+.auth-box input{
+  width:100%;
+  padding:11px 12px;
+  border:1px solid var(--border-color);
+  border-radius:10px;
+  margin-bottom:14px;
+  font:inherit;
+  color:var(--text-main);
+  background:white;
+  outline:none;
+}
+.auth-box input:focus{border-color:var(--primary);}
+.auth-btn{
+  width:100%;
+  border:none;
+  border-radius:10px;
+  padding:11px 16px;
+  background:var(--primary);
+  color:white;
+  font:600 .9rem inherit;
+  cursor:pointer;
+}
+.auth-error{
+  margin-top:12px;
+  color:var(--danger);
+  font-size:.85rem;
+  min-height:1.2em;
+}
+#appContent{display:none;}
+
 </style>
 </head>
 <body>
 
+
+<div class="auth-screen" id="authScreen">
+  <div class="auth-box">
+    <h2>Calendario escolar</h2>
+    <p>Inicia sesión para acceder al calendario.</p>
+    <form id="loginForm">
+      <label for="loginEmail">Correo electrónico</label>
+      <input type="email" id="loginEmail" autocomplete="username" required>
+
+      <label for="loginPassword">Contraseña</label>
+      <input type="password" id="loginPassword" autocomplete="current-password" required>
+
+      <button class="auth-btn" type="submit">Entrar</button>
+      <div class="auth-error" id="authError"></div>
+    </form>
+  </div>
+</div>
+
+<div id="appContent">
 <div class="container">
 
 <div id="mainPage">
@@ -683,6 +756,7 @@ textarea:focus{
 </div>
 
 </div>
+</div>
 
 <div class="modal" id="modal">
 <div class="modal-box">
@@ -716,6 +790,7 @@ textarea:focus{
 // IMPORTACIONES CORREGIDAS PARA EL NAVEGADOR (WEB SDK)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // TU CONFIGURACIÓN DE FIREBASE
 const firebaseConfig = {
@@ -730,6 +805,40 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
+
+const authScreen = document.getElementById('authScreen');
+const appContent = document.getElementById('appContent');
+const loginForm = document.getElementById('loginForm');
+const loginEmail = document.getElementById('loginEmail');
+const loginPassword = document.getElementById('loginPassword');
+const authError = document.getElementById('authError');
+
+loginForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  authError.textContent = '';
+
+  try {
+    await signInWithEmailAndPassword(
+      auth,
+      loginEmail.value.trim(),
+      loginPassword.value
+    );
+  } catch (error) {
+    console.error('Error de autenticación:', error);
+    authError.textContent = 'No se pudo iniciar sesión. Comprueba correo y contraseña.';
+  }
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (user) {
+    authScreen.style.display = 'none';
+    appContent.style.display = 'block';
+  } else {
+    authScreen.style.display = 'flex';
+    appContent.style.display = 'none';
+  }
+});
 
 const months=[
 'Enero','Febrero','Marzo','Abril','Mayo','Junio',
@@ -859,13 +968,27 @@ function render(){
 }
 
 const calendarRef = ref(db, 'calendarData');
-onValue(calendarRef, (snapshot) => {
-  const data = snapshot.val();
-  storage = data || {};
-  render();
-  if(summaryPage.style.display === 'block') {
-    renderSummary();
+let unsubscribeCalendar = null;
+
+onAuthStateChanged(auth, (user) => {
+  if (unsubscribeCalendar) {
+    unsubscribeCalendar();
+    unsubscribeCalendar = null;
   }
+
+  if (!user) return;
+
+  unsubscribeCalendar = onValue(calendarRef, (snapshot) => {
+    const data = snapshot.val();
+    storage = data || {};
+    render();
+    if(summaryPage.style.display === 'block') {
+      renderSummary();
+    }
+  }, (error) => {
+    console.error('Error leyendo calendarData:', error);
+    alert('Error leyendo los datos de Firebase: ' + error.message);
+  });
 });
 
 function openModal(date){
