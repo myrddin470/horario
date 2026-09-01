@@ -16,16 +16,16 @@
 :root {
   --bg-main: #f8fafc;
   --bg-card: #ffffff;
-  --border-color: #a9aaac;
+  --border-color: #e2e8f0;
   --text-main: #0f172a;
   --text-muted: #64748b;
   
   /* Colores Pastel para los tipos de día */
   --clr-lectivo: #ffffff;
-  --clr-no-lectivo: #b8babb;
-  --clr-festivo: #fecdd3;
-  --clr-vacaciones: #bfdbfe;
-  --clr-otro: #bbf7d0;
+  --clr-no-lectivo: #f1f5f9;
+  --clr-festivo: #fecdd3; /* Rojo pastel */
+  --clr-vacaciones: #bfdbfe; /* Azul pastel */
+  --clr-otro: #bbf7d0; /* Verde pastel */
   
   --text-festivo: #9f1239;
   --text-vacaciones: #1e3a8a;
@@ -41,7 +41,8 @@
   --success: #10b981;
   --success-hover: #059669;
 
-  --clr-today-border: #6366f1;
+  /* Color para el día actual */
+  --clr-today-border: #6366f1; /* Un tono índigo suave pero perceptible */
 }
 
 *{
@@ -63,87 +64,6 @@ body{
   margin:auto;
 }
 
-/* Pantalla de Login */
-.auth-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 80vh;
-}
-
-.auth-card {
-  background: var(--bg-card);
-  padding: 32px;
-  border-radius: 16px;
-  border: 1px solid var(--border-color);
-  box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);
-  width: 100%;
-  max-width: 400px;
-}
-
-.auth-card h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 8px;
-  text-align: center;
-}
-
-.auth-card p {
-  color: var(--text-muted);
-  font-size: 0.9rem;
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.input-group {
-  margin-bottom: 16px;
-}
-
-.input-group label {
-  display: block;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-muted);
-  margin-bottom: 6px;
-}
-
-.input-group input {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: 1px solid var(--border-color);
-  font-family: inherit;
-  font-size: 0.9rem;
-  outline: none;
-}
-
-.input-group input:focus {
-  border-color: var(--primary);
-}
-
-.auth-btn {
-  width: 100%;
-  padding: 12px;
-  background: var(--primary);
-  color: white;
-  border: none;
-  border-radius: 10px;
-  font-weight: 600;
-  font-size: 0.95rem;
-  cursor: pointer;
-  transition: background 0.2s;
-  margin-top: 8px;
-}
-
-.auth-btn:hover {
-  background: var(--primary-hover);
-}
-
-/* Aplicación Principal (oculta por defecto) */
-#appContent {
-  display: none;
-}
-
 .header{
   display:flex;
   justify-content:space-between;
@@ -155,7 +75,7 @@ body{
   padding: 24px;
   border-radius: 16px;
   border: 1px solid var(--border-color);
-  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05), 0 1px 2px -1px rgba(0,0,0,0.05);
 }
 
 .title h1{
@@ -241,7 +161,7 @@ select:focus{
   border:1px solid var(--border-color);
   border-radius:16px;
   padding:24px;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
 }
 
 .weekdays,
@@ -295,13 +215,16 @@ select:focus{
 .day.selected {
   outline: 3px solid var(--success);
   outline-offset: -3px;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
 }
 
+/* ESTILO DEL DÍA ACTUAL DE CORTE SUAVE Y PASTEL */
 .day.today {
   border: 2px solid var(--clr-today-border);
   box-shadow: 0 0 8px rgba(99, 102, 241, 0.15);
 }
 
+/* Asegurar que si está seleccionado mantenga el foco principal */
 .day.today.selected {
   outline: 3px solid var(--success);
   outline-offset: -3px;
@@ -311,12 +234,33 @@ select:focus{
   visibility:hidden;
 }
 
-.lectivo{ background-color: var(--clr-lectivo); color: var(--text-main); }
-.no_lectivo{ background-color: var(--clr-no-lectivo); color: var(--text-no-lectivo); }
-.festivo{ background-color: var(--clr-festivo); color: var(--text-festivo); }
-.vacaciones{ background-color: var(--clr-vacaciones); color: var(--text-vacaciones); }
-.otro{ background-color: var(--clr-otro); color: var(--text-otro); }
+/* Clases de los estados de día actualizados */
+.lectivo{
+  background-color: var(--clr-lectivo);
+  color: var(--text-main);
+}
 
+.no_lectivo{
+  background-color: var(--clr-no-lectivo);
+  color: var(--text-no-lectivo);
+}
+
+.festivo{
+  background-color: var(--clr-festivo);
+  color: var(--text-festivo);
+}
+
+.vacaciones{
+  background-color: var(--clr-vacaciones);
+  color: var(--text-vacaciones);
+}
+
+.otro{
+  background-color: var(--clr-otro);
+  color: var(--text-otro);
+}
+
+/* Estilos de la Nota en el día principal con truncado multilínea */
 .day-note {
   font-size: 0.75rem;
   font-weight: 400;
@@ -395,6 +339,7 @@ select:focus{
   border-radius:16px;
   padding:24px;
   border:1px solid var(--border-color);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
 }
 
 .modal-box h2{
@@ -454,12 +399,32 @@ textarea:focus{
   transition: all 0.2s;
 }
 
-.save{ background: var(--primary); color:white; }
-.save:hover{ background: var(--primary-hover); }
-.delete{ background: var(--danger); color:white; }
-.delete:hover{ background: var(--danger-hover); }
-.cancel{ background: var(--secondary); color:white; }
-.cancel:hover{ background: var(--secondary-hover); }
+.save{
+  background: var(--primary);
+  color:white;
+}
+
+.save:hover{
+  background: var(--primary-hover);
+}
+
+.delete{
+  background: var(--danger);
+  color:white;
+}
+
+.delete:hover{
+  background: var(--danger-hover);
+}
+
+.cancel{
+  background: var(--secondary);
+  color:white;
+}
+
+.cancel:hover{
+  background: var(--secondary-hover);
+}
 
 .summary-page{
   display:none;
@@ -467,6 +432,7 @@ textarea:focus{
   border:1px solid var(--border-color);
   border-radius:16px;
   padding:24px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 
 .summary-page h2{
@@ -519,38 +485,97 @@ textarea:focus{
   border: none;
 }
 
-/* RESPONSIVO */
+/* MEDIA QUERIES RESPONSIVAS */
 @media(max-width:900px){
-  body{ padding:16px; }
-  .title h1{ font-size:1.6rem; }
-  .calendar, .summary-page{ padding:16px; }
-  .weekdays, .grid{ gap:8px; }
-  .day{ height:95px; padding:8px; }
-  .day-note { -webkit-line-clamp: 3; }
+  body{
+    padding:16px;
+  }
+  .title h1{
+    font-size:1.6rem;
+  }
+  .calendar, .summary-page{
+    padding:16px;
+  }
+  .weekdays, .grid{
+    gap:8px;
+  }
+  .day{
+    height:95px;
+    padding:8px;
+  }
+  .day-note {
+    -webkit-line-clamp: 3;
+  }
 }
 
 @media(max-width:680px){
-  .header{ flex-direction:column; align-items:stretch; }
-  .controls{ justify-content:space-between; width:100%; }
-  .controls select{ flex:1; }
-  .legend-wrapper{ flex-direction:column; align-items:stretch; }
-  .legend{ justify-content:center; }
-  .right-controls-container { align-items: stretch !important; width: 100%; }
-  .data-buttons{ justify-content:center; }
-  .data-buttons button, #summaryBtn{ flex:1; }
+  .header{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .controls{
+    justify-content:space-between;
+    width:100%;
+  }
+  .controls select{
+    flex:1;
+  }
+  .legend-wrapper{
+    flex-direction:column;
+    align-items:stretch;
+  }
+  .legend{
+    justify-content:center;
+  }
+  .right-controls-container {
+    align-items: stretch !important;
+    width: 100%;
+  }
+  .data-buttons{
+    justify-content:center;
+  }
+  .data-buttons button, #summaryBtn{
+    flex:1;
+  }
 }
 
 @media(max-width:480px){
-  body{ padding:10px; }
-  .title h1{ font-size:1.4rem; text-align:center; }
-  .title p{ text-align:center; font-size:0.85rem; }
-  .controls{ flex-wrap:wrap; gap:8px; }
-  #summaryBtn{ width:100%; }
-  .weekdays, .grid{ gap:4px; }
-  .weekday{ font-size:0.75rem; }
-  .day{ height:70px; padding:4px; gap:2px; }
-  .day .day-number { font-size: 0.9rem; }
-  .day-note { font-size: 0.65rem; -webkit-line-clamp: 2; }
+  body{
+    padding:10px;
+  }
+  .title h1{
+    font-size:1.4rem;
+    text-align:center;
+  }
+  .title p{
+    text-align:center;
+    font-size:0.85rem;
+  }
+  .controls{
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  #summaryBtn{
+    width:100%;
+  }
+  .weekdays, .grid{
+    gap:4px;
+  }
+  .weekday{
+    font-size:0.75rem;
+  }
+  .day{
+    height:70px;
+    padding:4px;
+    gap:2px;
+  }
+  .day .day-number {
+    font-size: 0.9rem;
+  }
+  .day-note {
+    font-size: 0.65rem;
+    -webkit-line-clamp: 2;
+  }
 }
 </style>
 </head>
@@ -558,133 +583,139 @@ textarea:focus{
 
 <div class="container">
 
-  <div id="authPage" class="auth-container">
-    <div class="auth-card">
-      <h2>Acceso al Sistema</h2>
-      <p>Introduce tus credenciales para gestionar el calendario</p>
-      <div class="input-group">
-        <label>Correo Electrónico</label>
-        <input type="email" id="loginEmail" placeholder="ejemplo@correo.com">
-      </div>
-      <div class="input-group">
-        <label>Contraseña</label>
-        <input type="password" id="loginPassword" placeholder="••••••••">
-      </div>
-      <button class="auth-btn" id="loginSubmitBtn">Iniciar Sesión</button>
+<div id="mainPage">
+
+<div class="header">
+<div class="title">
+<h1>Calendario escolar</h1>
+<p>Gestión calendario escolar. © JCOS</p>
+</div>
+
+<div class="controls">
+<button class="nav-btn" id="prev">◀</button>
+<select id="month"></select>
+<select id="year"></select>
+<button class="nav-btn" id="next">▶</button>
+<button class="summary-btn" id="summaryBtn">Resumen anual</button>
+</div>
+</div>
+
+<div class="calendar">
+
+<div class="weekdays">
+<div class="weekday">L</div>
+<div class="weekday">M</div>
+<div class="weekday">X</div>
+<div class="weekday">J</div>
+<div class="weekday">V</div>
+<div class="weekday">S</div>
+<div class="weekday">D</div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="legend-wrapper">
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-color lectivo"></div>
+      Lectivo
+    </div>
+    <div class="legend-item">
+      <div class="legend-color no_lectivo"></div>
+      No Lectivo
+    </div>
+    <div class="legend-item">
+      <div class="legend-color festivo"></div>
+      Festivo
+    </div>
+    <div class="legend-item">
+      <div class="legend-color vacaciones"></div>
+      Vacaciones
+    </div>
+    <div class="legend-item">
+      <div class="legend-color otro"></div>
+      Otros
     </div>
   </div>
 
-  <div id="appContent">
-
-    <div id="mainPage">
-      <div class="header">
-        <div class="title">
-          <h1>Calendario escolar</h1>
-          <p>Gestión calendario escolar. © JCOS</p>
-        </div>
-
-        <div class="controls">
-          <button class="nav-btn" id="prev">◀</button>
-          <select id="month"></select>
-          <select id="year"></select>
-          <button class="nav-btn" id="next">▶</button>
-          <button class="summary-btn" id="summaryBtn">Resumen anual</button>
-          <button class="nav-btn" id="logoutBtn" title="Cerrar Sesión" style="background: var(--bg-main); color: var(--danger); border-color: var(--clr-festivo);">❌</button>
-        </div>
-      </div>
-
-      <div class="calendar">
-        <div class="weekdays">
-          <div class="weekday">L</div>
-          <div class="weekday">M</div>
-          <div class="weekday">X</div>
-          <div class="weekday">J</div>
-          <div class="weekday">V</div>
-          <div class="weekday">S</div>
-          <div class="weekday">D</div>
-        </div>
-
-        <div class="grid" id="grid"></div>
-
-        <div class="legend-wrapper">
-          <div class="legend">
-            <div class="legend-item"><div class="legend-color lectivo"></div>Lectivo</div>
-            <div class="legend-item"><div class="legend-color no_lectivo"></div>No Lectivo</div>
-            <div class="legend-item"><div class="legend-color festivo"></div>Festivo</div>
-            <div class="legend-item"><div class="legend-color vacaciones"></div>Vacaciones</div>
-            <div class="legend-item"><div class="legend-color otro"></div>Otros</div>
-          </div>
-
-          <div class="right-controls-container" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
-            <div id="batchActions" style="display:none; background: var(--bg-main); padding:16px; border-radius:12px; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; border:1px solid var(--border-color); width: 100%;">
-              <span id="selectedCount" style="font-weight:600; color: var(--text-main); font-size: 0.9rem;">0 días seleccionados</span>
-              <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
-                <select id="batchType">
-                  <option value="lectivo">Lectivo</option>
-                  <option value="no_lectivo">No Lectivo</option>
-                  <option value="festivo">Festivo</option>
-                  <option value="vacaciones">Vacaciones</option>
-                  <option value="otro">Otros</option>
-                </select>
-                <input type="text" id="batchNote" placeholder="Nota común..." style="padding:10px 14px; border-radius:10px; border:1px solid var(--border-color); color: var(--text-main); font-size:0.9rem; outline: none;">
-                <button id="batchSaveBtn" style="border:none; padding:10px 16px; border-radius:10px; cursor:pointer; font-weight:600; background: var(--success); color:white; font-size:0.9rem;">Guardar días</button>
-                <button id="batchCancelBtn" style="border:none; padding:10px 16px; border-radius:10px; cursor:pointer; font-weight:600; background: var(--secondary); color:white; font-size:0.9rem;">Cancelar</button>
-              </div>
-            </div>
-
-            <div class="data-buttons">
-              <button class="summary-btn" id="multiSelectBtn" style="background: var(--success);">Selección Múltiple</button>
-              <button class="summary-btn" id="exportBtn" style="background: var(--secondary);">Exportar JSON</button>
-              <button class="summary-btn" id="importBtn" style="background: var(--secondary);">Importar JSON</button>
-              <input type="file" id="importFile" accept=".json" hidden>
-            </div>
-          </div>
-        </div>
+  <div class="right-controls-container" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
+    
+    <div id="batchActions" style="display:none; background: var(--bg-main); padding:16px; border-radius:12px; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; border:1px solid var(--border-color); width: 100%;">
+      <span id="selectedCount" style="font-weight:600; color: var(--text-main); font-size: 0.9rem;">0 días seleccionados</span>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <select id="batchType">
+          <option value="lectivo">Lectivo</option>
+          <option value="no_lectivo">No Lectivo</option>
+          <option value="festivo">Festivo</option>
+          <option value="vacaciones">Vacaciones</option>
+          <option value="otro">Otros</option>
+        </select>
+        <input type="text" id="batchNote" placeholder="Nota común (opcional)..." style="padding:10px 14px; border-radius:10px; border:1px solid var(--border-color); color: var(--text-main); font-size:0.9rem; outline: none;">
+        <button id="batchSaveBtn" style="border:none; padding:10px 16px; border-radius:10px; cursor:pointer; font-weight:600; background: var(--success); color:white; font-size:0.9rem;">Guardar días</button>
+        <button id="batchCancelBtn" style="border:none; padding:10px 16px; border-radius:10px; cursor:pointer; font-weight:600; background: var(--secondary); color:white; font-size:0.9rem;">Cancelar</button>
       </div>
     </div>
 
-    <div class="summary-page" id="summaryPage">
-      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
-        <h2 id="summaryTitle">Resumen anual</h2>
-        <button class="summary-btn" id="backBtn" style="background: var(--secondary);">← Volver al calendario</button>
-      </div>
-      <div class="year-grid" id="yearGrid"></div>
+    <div class="data-buttons">
+      <button class="summary-btn" id="multiSelectBtn" style="background: var(--success);">
+        Selección Múltiple
+      </button>
+      <button class="summary-btn" id="exportBtn" style="background: var(--secondary);">
+        Exportar JSON
+      </button>
+      <button class="summary-btn" id="importBtn" style="background: var(--secondary);">
+        Importar JSON
+      </button>
+      <input type="file" id="importFile" accept=".json" hidden>
     </div>
-
   </div>
+</div>
+
+</div>
+</div>
+
+<div class="summary-page" id="summaryPage">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+    <h2 id="summaryTitle">Resumen anual</h2>
+    <button class="summary-btn" id="backBtn" style="background: var(--secondary);">← Volver al calendario</button>
+  </div>
+  <div class="year-grid" id="yearGrid"></div>
+</div>
+
 </div>
 
 <div class="modal" id="modal">
-  <div class="modal-box">
-    <h2 id="modalTitle">Configurar Día</h2>
-    <div class="form-group">
-      <label>Tipo de día</label>
-      <select id="type">
-        <option value="lectivo">Lectivo</option>
-        <option value="no_lectivo">No Lectivo</option>
-        <option value="festivo">Festivo</option>
-        <option value="vacaciones">Vacaciones</option>
-        <option value="otro">Otros</option>
-      </select>
-    </div>
-    <div class="form-group">
-      <label>Nota / Comentario</label>
-      <textarea id="note" placeholder="Escribe una nota para este día..."></textarea>
-    </div>
-    <div class="actions">
-      <button class="delete" id="deleteBtn">Borrar datos</button>
-      <button class="cancel" id="cancelBtn">Cancelar</button>
-      <button class="save" id="saveBtn">Guardar</button>
-    </div>
-  </div>
+<div class="modal-box">
+<h2 id="modalTitle">Configurar Día</h2>
+
+<div class="form-group">
+<label>Tipo de día</label>
+<select id="type">
+<option value="lectivo">Lectivo</option>
+<option value="no_lectivo">No Lectivo</option>
+<option value="festivo">Festivo</option>
+<option value="vacaciones">Vacaciones</option>
+<option value="otro">Otros</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Nota / Comentario</label>
+<textarea id="note" placeholder="Escribe una nota para este día..."></textarea>
+</div>
+
+<div class="actions">
+<button class="delete" id="deleteBtn">Borrar datos</button>
+<button class="cancel" id="cancelBtn">Cancelar</button>
+<button class="save" id="saveBtn">Guardar</button>
+</div>
+</div>
 </div>
 
 <script type="module">
+// IMPORTACIONES CORREGIDAS PARA EL NAVEGADOR (WEB SDK)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-messaging.js";
-// IMPORTACIONES DE AUTENTICACIÓN
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, setPersistence, browserLocalPersistence, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // TU CONFIGURACIÓN DE FIREBASE
 const firebaseConfig = {
@@ -700,119 +731,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-
-
-
-const messaging = getMessaging(app);
-const vapidKey = 'BHzkdXrBIeaQO_BNheiX0m9ZA0ySp-_BKXguNA-UcBsnFJVjVtokM2nR696PPALcBKl80hRYLW3ENkXwc3Np8EY';
-
-async function solicitarPermisoNotificaciones() {
-  try {
-    const permiso = await Notification.requestPermission();
-
-    if (permiso === 'granted') {
-      console.log('Permiso de notificaciones concedido');
-    } else {
-      console.log('Permiso de notificaciones:', permiso);
-    }
-
-  } catch (error) {
-    console.error('Error solicitando permiso:', error);
-  }
-}
-
-solicitarPermisoNotificaciones();
-
-async function registrarNotificaciones() {
-  try {
-    const token = await getToken(messaging, {
-       vapidKey: vapidKey,
-      serviceWorkerRegistration: messagingServiceWorkerRegistration
-    });
-
-    if (token) {
-        console.log('TOKEN FCM:', token);
-        alert('TOKEN FCM:\\n\\n' + token);
-      } else {
-      console.log('No se ha obtenido token FCM');
-    }
-
-  } catch (error) {
-    console.error('Error obteniendo token FCM:', error);
-    alert('Error activando las notificaciones: ' + error.message);
-  }
-}
-
-if (Notification.permission === 'granted') {
-  window.addEventListener('load', async () => {
-    let intentos = 0;
-
-    while (!messagingServiceWorkerRegistration && intentos < 20) {
-      await new Promise(resolve => setTimeout(resolve, 250));
-      intentos++;
-    }
-
-    if (messagingServiceWorkerRegistration) {
-      registrarNotificaciones();
-    } else {
-      console.error('No se pudo registrar el Service Worker.');
-      alert('No se pudo preparar el sistema de notificaciones.');
-    }
-  });
-}
-
-
-
-
-
-
-
-
-
-
-
-// Registrar Service Worker para notificaciones
-let messagingServiceWorkerRegistration = null;
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', async () => {
-    try {
-      messagingServiceWorkerRegistration =
-        await navigator.serviceWorker.register('./firebase-messaging-sw.js');
-
-      console.log(
-        'Service Worker registrado correctamente:',
-        messagingServiceWorkerRegistration.scope
-      );
-
-    } catch (error) {
-      console.error('Error registrando Service Worker:', error);
-    }
-  });
-}
-
-
-const auth = getAuth(app);
-
-// CONFIGURAR PERSISTENCIA PERMANENTE (Pide el usuario una sola vez por navegador)
-setPersistence(auth, browserLocalPersistence)
-  .then(() => {
-    console.log("Persistencia local activada de forma permanente.");
-  })
-  .catch((error) => {
-    console.error("Error al configurar la persistencia:", error);
-  });
-
-const authPage = document.getElementById('authPage');
-const appContent = document.getElementById('appContent');
-const loginEmailInput = document.getElementById('loginEmail');
-const loginPasswordInput = document.getElementById('loginPassword');
-const loginSubmitBtn = document.getElementById('loginSubmitBtn');
-const logoutBtn = document.getElementById('logoutBtn');
+const months=[
+'Enero','Febrero','Marzo','Abril','Mayo','Junio',
+'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'
+];
 
 const grid=document.getElementById('grid');
 const monthSelect=document.getElementById('month');
 const yearSelect=document.getElementById('year');
+
 const modal=document.getElementById('modal');
 const modalTitle=document.getElementById('modalTitle');
 const typeInput=document.getElementById('type');
@@ -820,6 +747,7 @@ const noteInput=document.getElementById('note');
 
 let isSelectionMode = false;
 const selectedDays = new Set();
+
 const multiSelectBtn = document.getElementById('multiSelectBtn');
 const batchActions = document.getElementById('batchActions');
 const selectedCount = document.getElementById('selectedCount');
@@ -829,9 +757,6 @@ const batchNote = document.getElementById('batchNote');
 let storage = {};
 let current = new Date();
 let selectedKey = '';
-let dbUnsubscribe = null; // Guardar referencia al escucha de datos activa
-
-const months=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
 months.forEach((m,i)=>{
   const option=document.createElement('option');
@@ -850,7 +775,11 @@ for(let y=2020;y<=2035;y++){
 monthSelect.value=current.getMonth();
 yearSelect.value=current.getFullYear();
 
-function key(y,m,d){ return `${y}-${m}-${d}`; }
+function key(y,m,d){
+  return `${y}-${m}-${d}`;
+}
+
+// LOGICA DE DÍA POR DEFECTO: Domingos por defecto Festivos
 function defaultType(date){
   const day = date.getDay();
   if (day === 0) return 'festivo';
@@ -860,13 +789,18 @@ function defaultType(date){
 
 function getData(date){
   const k=key(date.getFullYear(),date.getMonth(),date.getDate());
-  return storage[k] || { type:defaultType(date), note:'' };
+  return storage[k] || {
+    type:defaultType(date),
+    note:''
+  };
 }
 
 function render(){
   grid.innerHTML='';
+
   const year=current.getFullYear();
   const month=current.getMonth();
+
   monthSelect.value=month;
   yearSelect.value=year;
 
@@ -881,116 +815,117 @@ function render(){
   }
 
   const totalDays=new Date(year,month+1,0).getDate();
+
+  // Obtener la fecha exacta de hoy para comparar
   const today = new Date();
+  const todayDay = today.getDate();
+  const todayMonth = today.getMonth();
+  const todayYear = today.getFullYear();
 
   for(let day=1;day<=totalDays;day++){
     const date=new Date(year,month,day);
     const data=getData(date);
     const k=key(year,month,day);
+
     const card=document.createElement('div');
     
-    const isToday = (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) ? 'today' : '';
+    // Comprobar si esta celda coincide con la fecha de hoy
+    const isToday = (day === todayDay && month === todayMonth && year === todayYear) ? 'today' : '';
     const isSelectedClass = (isSelectionMode && selectedDays.has(k)) ? 'selected' : '';
     
     card.className=`day ${data.type} ${isToday} ${isSelectedClass}`;
-    card.innerHTML=`<span class="day-number">${day}</span>${data.note ? `<div class="day-note">${data.note.replace(/\n/g, '<br>')}</div>` : ''}`;
+
+    card.innerHTML=`
+      <span class="day-number">${day}</span>
+      ${data.note ? `<div class="day-note">${data.note.replace(/\n/g, '<br>')}</div>` : ''}
+    `;
 
     card.addEventListener('click',()=> {
       if (isSelectionMode) {
-        if (selectedDays.has(k)) { selectedDays.delete(k); card.classList.remove('selected'); }
-        else { selectedDays.add(k); card.classList.add('selected'); }
+        if (selectedDays.has(k)) {
+          selectedDays.delete(k);
+          card.classList.remove('selected');
+        } else {
+          selectedDays.add(k);
+          card.classList.add('selected');
+        }
         selectedCount.textContent = `${selectedDays.size} días seleccionados`;
-      } else { openModal(date); }
+      } else {
+        openModal(date);
+      }
     });
     grid.appendChild(card);
   }
 }
 
-// OBSERVADOR DEL ESTADO DE AUTENTICACIÓN
-onAuthStateChanged(auth, (user) => {
-  if (user) {
-    // Si ya está logueado de antes, entra directo sin preguntar nada
-    authPage.style.display = 'none';
-    appContent.style.display = 'block';
-    
-    // Conectar base de datos bajo sesión activa
-    const calendarRef = ref(db, 'calendarData');
-    dbUnsubscribe = onValue(calendarRef, (snapshot) => {
-      storage = snapshot.val() || {};
-      render();
-      if(summaryPage.style.display === 'block') renderSummary();
-    });
-  } else {
-    // Si no está logueado (o cierra sesión), se muestra el formulario
-    authPage.style.display = 'flex';
-    appContent.style.display = 'none';
-    
-    if (dbUnsubscribe) {
-      dbUnsubscribe(); // Apagar el escucha de la base de datos si existía
-      dbUnsubscribe = null;
-    }
+const calendarRef = ref(db, 'calendarData');
+onValue(calendarRef, (snapshot) => {
+  const data = snapshot.val();
+  storage = data || {};
+  render();
+  if(summaryPage.style.display === 'block') {
+    renderSummary();
   }
 });
 
-// EVENTO DE LOGIN (AL HACER CLIC EN ENTRAR)
-loginSubmitBtn.onclick = () => {
-  const email = loginEmailInput.value.trim();
-  const password = loginPasswordInput.value;
-
-  if(!email || !password) {
-    alert("Por favor, rellena todos los campos.");
-    return;
-  }
-
-  signInWithEmailAndPassword(auth, email, password)
-    .then((userCredential) => {
-      console.log("Inicio de sesión exitoso:", userCredential.user.email);
-      loginEmailInput.value = "";
-      loginPasswordInput.value = "";
-    })
-    .catch((error) => {
-      console.error("Error en el login:", error.code);
-      alert("Error de autenticación: Verifica el usuario y la contraseña.");
-    });
-};
-
-// BOTÓN CERRAR SESIÓN
-logoutBtn.onclick = () => {
-  if(confirm("¿Seguro que quieres cerrar sesión en este navegador?")) {
-    signOut(auth).catch(err => alert("Error al salir: " + err.message));
-  }
-};
-
 function openModal(date){
-  selectedKey=key(date.getFullYear(),date.getMonth(),date.getDate());
+  const k=key(date.getFullYear(),date.getMonth(),date.getDate());
+  selectedKey=k;
   const data=getData(date);
+
   modalTitle.textContent=`${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
   typeInput.value=data.type;
   noteInput.value=data.note;
+
   modal.classList.add('active');
 }
 
-function closeModal(){ modal.classList.remove('active'); }
+function closeModal(){
+  modal.classList.remove('active');
+}
 
 document.getElementById('saveBtn').onclick=()=>{
-  set(ref(db, `calendarData/${selectedKey}`), { type: typeInput.value, note: noteInput.value })
-    .then(() => closeModal())
-    .catch(err => alert("Error: " + err.message));
+  const dayRef = ref(db, `calendarData/${selectedKey}`);
+  set(dayRef, {
+    type: typeInput.value,
+    note: noteInput.value
+  }).then(() => {
+    closeModal();
+  }).catch(err => alert("Error en Firebase: " + err.message));
 };
 
 document.getElementById('deleteBtn').onclick=()=>{
-  remove(ref(db, `calendarData/${selectedKey}`))
-    .then(() => closeModal())
-    .catch(err => alert("Error: " + err.message));
+  const dayRef = ref(db, `calendarData/${selectedKey}`);
+  remove(dayRef).then(() => {
+    closeModal();
+  }).catch(err => alert("Error en Firebase: " + err.message));
 };
 
 document.getElementById('cancelBtn').onclick=closeModal;
-modal.addEventListener('click',e=>{ if(e.target===modal) closeModal(); });
 
-monthSelect.onchange=()=>{ current.setMonth(parseInt(monthSelect.value)); render(); };
-yearSelect.onchange=()=>{ current.setFullYear(parseInt(yearSelect.value)); render(); };
-document.getElementById('prev').onclick=()=>{ current.setMonth(current.getMonth()-1); render(); };
-document.getElementById('next').onclick=()=>{ current.setMonth(current.getMonth()+1); render(); };
+modal.addEventListener('click',e=>{
+  if(e.target===modal) closeModal();
+});
+
+monthSelect.onchange=()=>{
+  current.setMonth(parseInt(monthSelect.value));
+  render();
+};
+
+yearSelect.onchange=()=>{
+  current.setFullYear(parseInt(yearSelect.value));
+  render();
+};
+
+document.getElementById('prev').onclick=()=>{
+  current.setMonth(current.getMonth()-1);
+  render();
+};
+
+document.getElementById('next').onclick=()=>{
+  current.setMonth(current.getMonth()+1);
+  render();
+};
 
 const mainPage=document.getElementById('mainPage');
 const summaryPage=document.getElementById('summaryPage');
@@ -998,10 +933,14 @@ const yearGrid=document.getElementById('yearGrid');
 const summaryTitle=document.getElementById('summaryTitle');
 
 document.getElementById('summaryBtn').onclick=()=>{
-  mainPage.style.display='none'; summaryPage.style.display='block'; renderSummary();
+  mainPage.style.display='none';
+  summaryPage.style.display='block';
+  renderSummary();
 };
+
 document.getElementById('backBtn').onclick=()=>{
-  summaryPage.style.display='none'; mainPage.style.display='block';
+  summaryPage.style.display='none';
+  mainPage.style.display='block';
 };
 
 function renderSummary(){
@@ -1012,20 +951,33 @@ function renderSummary(){
   for(let month=0;month<12;month++){
     const card=document.createElement('div');
     card.className='month-card';
-    let html=`<h3>${months[month]}</h3><div class="mini-grid">`;
+
+    let html=`
+      <h3>${months[month]}</h3>
+      <div class="mini-grid">
+    `;
 
     const firstDate=new Date(year,month,1);
     let firstDay=firstDate.getDay();
     firstDay=firstDay===0 ? 6 : firstDay-1;
 
-    for(let i=0;i<firstDay;i++) html+=`<div class="mini-day empty"></div>`;
+    for(let i=0;i<firstDay;i++){
+      html+=`<div class="mini-day empty"></div>`;
+    }
+
     const totalDays=new Date(year,month+1,0).getDate();
 
     for(let day=1;day<=totalDays;day++){
       const date=new Date(year,month,day);
       const data=getData(date);
-      html+=`<div class="mini-day ${data.type}">${day}</div>`;
+
+      html+=`
+        <div class="mini-day ${data.type}">
+          ${day}
+        </div>
+      `;
     }
+
     html+='</div>';
     card.innerHTML=html;
     yearGrid.appendChild(card);
@@ -1037,21 +989,30 @@ document.getElementById('exportBtn').onclick=()=>{
   const blob=new Blob([dataStr],{type:'application/json'});
   const url=URL.createObjectURL(blob);
   const a=document.createElement('a');
-  a.href=url; a.download=`calendario-${current.getFullYear()}.json`; a.click();
+  a.href=url;
+  a.download=`calendario-${current.getFullYear()}.json`;
+  a.click();
   URL.revokeObjectURL(url);
 };
 
-document.getElementById('importBtn').onclick=()=>{ document.getElementById('importFile').click(); };
+document.getElementById('importBtn').onclick=()=>{
+  document.getElementById('importFile').click();
+};
+
 document.getElementById('importFile').addEventListener('change',(event)=>{
-  const file=event.target.files[0]; if(!file) return;
+  const file=event.target.files[0];
+  if(!file) return;
+
   const reader=new FileReader();
   reader.onload=(e)=>{
     try{
       const importedData=JSON.parse(e.target.result);
-      set(ref(db, 'calendarData'), importedData)
-        .then(() => alert('Datos importados correctamente'))
+      set(calendarRef, importedData)
+        .then(() => alert('Datos importados correctamente en Firebase'))
         .catch(err => alert('Error: ' + err.message));
-    }catch(error){ alert('Archivo JSON no válido'); }
+    }catch(error){
+      alert('El archivo JSON no es válido');
+    }
   };
   reader.readAsText(file);
 });
@@ -1063,23 +1024,43 @@ multiSelectBtn.onclick = () => {
     multiSelectBtn.style.background = 'var(--danger)';
     batchActions.style.display = 'flex';
     selectedCount.textContent = '0 días seleccionados';
-  } else { resetMultiSelect(); }
+  } else {
+    resetMultiSelect();
+  }
 };
 
 function resetMultiSelect() {
-  isSelectionMode = false; selectedDays.clear();
+  isSelectionMode = false;
+  selectedDays.clear();
   multiSelectBtn.textContent = 'Selección Múltiple';
   multiSelectBtn.style.background = 'var(--success)';
-  batchActions.style.display = 'none'; batchNote.value = '';
+  batchActions.style.display = 'none';
+  batchNote.value = '';
   render();
 }
 
 document.getElementById('batchCancelBtn').onclick = resetMultiSelect;
+
 document.getElementById('batchSaveBtn').onclick = () => {
-  if (selectedDays.size === 0) { alert('Selecciona al menos un día.'); return; }
+  if (selectedDays.size === 0) {
+    alert('Por favor, selecciona al menos un día haciendo clic sobre el calendario.');
+    return;
+  }
+
   const updates = {};
-  selectedDays.forEach(k => { updates[`calendarData/${k}`] = { type: batchType.value, note: batchNote.value }; });
-  update(ref(db), updates).then(() => resetMultiSelect()).catch(err => alert("Error: " + err.message));
+  selectedDays.forEach(k => {
+    updates[`calendarData/${k}`] = {
+      type: batchType.value,
+      note: batchNote.value
+    };
+  });
+
+  const dbRef = ref(db);
+  update(dbRef, updates)
+    .then(() => {
+      resetMultiSelect();
+    })
+    .catch(err => alert("Error al guardar en Firebase: " + err.message));
 };
 </script>
 
