@@ -372,17 +372,22 @@ async function initializeGapiClient() {
 }
 // Inicialización Google Identity Services
 function gisLoaded() {
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID,
-    scope: SCOPES,
-    callback: (tokenResponse) => {
-      if (tokenResponse && tokenResponse.access_token) {
-        googleCalendarEnabled = true;
-        document.getElementById('gcalAuthBtn').textContent = "Google Calendar Vinculado ✓";
-        document.getElementById('gcalAuthBtn').style.background = "var(--success)";
-      }
-    },
-  });
+ 
+    tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: CLIENT_ID,
+      scope: SCOPES,
+      callback: (tokenResponse) => {
+        if (tokenResponse && tokenResponse.access_token) {
+          googleCalendarEnabled = true;
+          localStorage.setItem('gcal_connected', 'true'); // <--- GUARDAMOS EL ESTADO
+          document.getElementById('gcalAuthBtn').textContent = "Google Calendar Vinculado ✓";
+          document.getElementById('gcalAuthBtn').style.background = "var(--success)";
+        }
+      },
+    });
+
+
+
   gisInited = true;
 }
 
@@ -656,10 +661,23 @@ document.getElementById('batchSaveBtn').onclick = () => {
 </script>
 <!-- Asegúrate de cargar las funciones globales para Google API -->
 <script>
-  window.onload = function() {
+ 
+window.onload = function() {
     if (typeof gapiLoaded === 'function') gapiLoaded();
     if (typeof gisLoaded === 'function') gisLoaded();
+
+    // Comprobar si ya se había vinculado antes en este navegador
+    if (localStorage.getItem('gcal_connected') === 'true') {
+      // Esperamos un segundo a que cargue la librería y pedimos el token de forma silenciosa
+      setTimeout(() => {
+        if (tokenClient) {
+          tokenClient.requestAccessToken({ prompt: '' }); // prompt: '' intenta hacerlo sin mostrar ventana si ya tiene permiso
+        }
+      }, 1000);
+    }
   }
+
+
 </script>
 </body>
 </html>
