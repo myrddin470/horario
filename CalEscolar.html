@@ -39,8 +39,6 @@
   --secondary-hover: #475569;
   --success: #10b981;
   --success-hover: #059669;
-  --google: #ea4335;
-  --google-hover: #d33828;
 
   --clr-today-border: #6366f1; 
 }
@@ -88,9 +86,6 @@ button,select,textarea,input{ font-family:inherit; }
   border-radius:10px; font-weight:600; font-size: 0.9rem; border: 1px solid transparent;
 }
 .summary-btn:hover{ background: var(--primary-hover); }
-
-.google-btn { background: var(--google); }
-.google-btn:hover { background: var(--google-hover); }
 
 select{
   background: white; border:1px solid var(--border-color);
@@ -192,7 +187,6 @@ textarea:focus, input:focus{ border-color: var(--primary); }
 }
 .mini-day.empty{ visibility:hidden; border: none; }
 
-/* auth css ommited for brevity, kept exactly same */
 .auth-screen{ position:fixed; inset:0; z-index:2000; background:var(--bg-main); display:flex; align-items:center; justify-content:center; padding:20px; }
 .auth-box{ width:100%; max-width:420px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:16px; padding:28px; box-shadow:0 20px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04); }
 .auth-box h2{margin-bottom:8px;font-size:1.5rem;}
@@ -238,8 +232,6 @@ textarea:focus, input:focus{ border-color: var(--primary); }
 <select id="month"></select>
 <select id="year"></select>
 <button class="nav-btn" id="next">▶</button>
-<!-- NUEVO BOTÓN DE GOOGLE CALENDAR -->
-<button class="summary-btn google-btn" id="gcalAuthBtn">Vincular G. Calendar</button>
 <button class="summary-btn" id="summaryBtn">Resumen anual</button>
 </div>
 </div>
@@ -323,9 +315,8 @@ textarea:focus, input:focus{ border-color: var(--primary); }
 <textarea id="note" placeholder="Escribe una nota para este día..."></textarea>
 </div>
 
-<!-- NUEVOS CAMPOS DE ALARMA -->
 <div class="form-group">
-<label>Hora de notificación (Para Google Calendar)</label>
+<label>Hora de notificación (Generar archivo ICS)</label>
 <input type="time" id="alarmTime">
 </div>
 <div class="form-group">
@@ -341,71 +332,11 @@ textarea:focus, input:focus{ border-color: var(--primary); }
 </div>
 </div>
 
-<!-- SCRIPTS DE GOOGLE API -->
-<script async defer src="https://apis.google.com/js/api.js"></script>
-<script async defer src="https://accounts.google.com/gsi/client"></script>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { getDatabase, ref, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
-// --- RELLENAR ESTOS DATOS DE GOOGLE CLOUD CONSOLE ---
-const CLIENT_ID = '629132173947-886tdoqutkiv414n0e284iehq7l48sf0.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyAjyNqd8FzC0EJbONJFs9nHNLBzhcb10cY';
-// ----------------------------------------------------
-
-const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
-const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
-let tokenClient;
-let gapiInited = false;
-let gisInited = false;
-let googleCalendarEnabled = false;
-
-// Inicialización GAPI
-function gapiLoaded() {
-  gapi.load('client', initializeGapiClient);
-}
-async function initializeGapiClient() {
-  await gapi.client.init({ apiKey: API_KEY, discoveryDocs: [DISCOVERY_DOC] });
-  gapiInited = true;
-}
-// Inicialización Google Identity Services
-function gisLoaded() {
- 
-    tokenClient = google.accounts.oauth2.initTokenClient({
-      client_id: CLIENT_ID,
-      scope: SCOPES,
-      callback: (tokenResponse) => {
-        if (tokenResponse && tokenResponse.access_token) {
-          googleCalendarEnabled = true;
-          localStorage.setItem('gcal_connected', 'true'); // <--- GUARDAMOS EL ESTADO
-          document.getElementById('gcalAuthBtn').textContent = "Google Calendar Vinculado ✓";
-          document.getElementById('gcalAuthBtn').style.background = "var(--success)";
-        }
-      },
-    });
-
-
-
-  gisInited = true;
-}
-
-// Para llamar desde el HTML ya que estamos en un module
-window.gapiLoaded = gapiLoaded;
-window.gisLoaded = gisLoaded;
-
-document.getElementById('gcalAuthBtn').onclick = () => {
-  if (!googleCalendarEnabled) {
-    if (gapi.client.getToken() === null) {
-      tokenClient.requestAccessToken({prompt: 'consent'});
-    } else {
-      tokenClient.requestAccessToken({prompt: ''});
-    }
-  }
-};
-
-// FIREBASE INIT
 const firebaseConfig = {
   apiKey: "AIzaSyBatYG7fgtozpxnI3UhI35NPLizXpAIhhw",
   authDomain: "calescolar-4d347.firebaseapp.com",
@@ -456,7 +387,7 @@ const selectedDays = new Set();
 let storage = {};
 let current = new Date();
 let selectedKey = '';
-let selectedFullDate = null; // Para la API de Google
+let selectedFullDateStr = '';
 
 months.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m; monthSelect.appendChild(o); });
 for(let y=2020;y<=2035;y++){ const o=document.createElement('option'); o.value=y; o.textContent=y; yearSelect.appendChild(o); }
@@ -465,10 +396,10 @@ monthSelect.value=current.getMonth();
 yearSelect.value=current.getFullYear();
 
 function key(y,m,d){ return `${y}-${m}-${d}`; }
-function formatGCalDate(y,m,d){ 
+function formatICSDate(y,m,d){ 
   const mm = String(m+1).padStart(2, '0');
   const dd = String(d).padStart(2, '0');
-  return `${y}-${mm}-${dd}`; 
+  return `${y}${mm}${dd}`; 
 }
 
 function defaultType(date){
@@ -547,7 +478,7 @@ onAuthStateChanged(auth, (user) => {
 function openModal(date){
   const k=key(date.getFullYear(),date.getMonth(),date.getDate());
   selectedKey=k;
-  selectedFullDate=formatGCalDate(date.getFullYear(),date.getMonth(),date.getDate());
+  selectedFullDateStr=formatICSDate(date.getFullYear(),date.getMonth(),date.getDate());
   const data=getData(date);
 
   modalTitle.textContent=`${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
@@ -561,39 +492,54 @@ function openModal(date){
 
 function closeModal(){ modal.classList.remove('active'); }
 
+// --- GENERAR ARCHIVO .ICS PARA DESCARGAR E IMPORTAR AL CALENDARIO ---
+function downloadICS(dateStr, timeStr, summaryText, descriptionText) {
+  // dateStr formato YYYYMMDD, timeStr formato HH:MM
+  const cleanTime = timeStr.replace(':', '');
+  const dtStart = `${dateStr}T${cleanTime}00`;
+  
+  // Calculamos 1 hora más para el fin
+  let [h, m] = timeStr.split(':');
+  let endH = parseInt(h) + 1;
+  if (endH >= 24) endH = 23;
+  const dtEnd = `${dateStr}T${String(endH).padStart(2,'0')}${m}00`;
+
+  const icsContent = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Calendario Escolar JCOS//ES",
+    "BEGIN:VEVENT",
+    `UID:${Date.now()}@calescolar.app`,
+    `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+    `DTSTART;TZID=Europe/Madrid:${dtStart}`,
+    `DTEND;TZID=Europe/Madrid:${dtEnd}`,
+    `SUMMARY:${summaryText || 'Aviso Escolar'}`,
+    `DESCRIPTION:${descriptionText || ''}`,
+    "BEGIN:VALARM",
+    "TRIGGER:-PT0M",
+    "ACTION:DISPLAY",
+    `DESCRIPTION:${summaryText || 'Aviso Escolar'}`,
+    "END:VALARM",
+    "END:VEVENT",
+    "END:VCALENDAR"
+  ].join("\r\n");
+
+  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+  const link = document.createElement('a');
+  link.href = window.URL.createObjectURL(blob);
+  link.setAttribute('download', `aviso_${dateStr}.ics`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 document.getElementById('saveBtn').onclick=async ()=>{
   const aTime = alarmTimeInput.value;
   const aText = alarmTextInput.value;
 
-  if (aTime && googleCalendarEnabled) {
-    // Calculamos 1 hora de duración para que el bloque se vea bien
-    const [h, m] = aTime.split(':');
-    let endH = parseInt(h) + 1;
-    let endM = m;
-    if (endH >= 24) { endH = 23; endM = '59'; } 
-    const endTime = `${String(endH).padStart(2, '0')}:${endM}`;
-
-    const event = {
-      'summary': aText || 'Aviso Escolar',
-      'description': noteInput.value,
-      'colorId': '5', // 5 corresponde al color Plátano (amarillo)
-      'start': { 'dateTime': `${selectedFullDate}T${aTime}:00`, 'timeZone': 'Europe/Madrid' },
-      'end': { 'dateTime': `${selectedFullDate}T${endTime}:00`, 'timeZone': 'Europe/Madrid' },
-      'reminders': {
-        'useDefault': false,
-        'overrides': [ { 'method': 'popup', 'minutes': 0 } ]
-      }
-    };
-
-    try {
-      await gapi.client.calendar.events.insert({ 'calendarId': 'primary', 'resource': event });
-      alert("Alarma creada en Google Calendar");
-    } catch (err) {
-      console.error("Error al crear evento en GCal", err);
-      alert("Hubo un error al crear el aviso en Google Calendar.");
-    }
-  } else if (aTime && !googleCalendarEnabled) {
-    alert("Atención: Has puesto una hora de alarma pero no has vinculado Google Calendar. Los datos se guardarán pero no sonará el aviso.");
+  if (aTime) {
+    // Genera y descarga instantáneamente el archivo .ics para el calendario
+    downloadICS(selectedFullDateStr, aTime, aText, noteInput.value);
   }
 
   const dayRef = ref(db, `calendarData/${selectedKey}`);
@@ -602,7 +548,12 @@ document.getElementById('saveBtn').onclick=async ()=>{
     note: noteInput.value,
     alarmTime: aTime,
     alarmText: aText
-  }).then(() => closeModal()).catch(err => alert("Error en Firebase: " + err.message));
+  }).then(() => {
+    closeModal();
+    if(aTime) {
+      alert("¡Dato guardado y archivo .ics descargado! Haz clic en el archivo descargado para añadirlo automáticamente a tu calendario con alarma.");
+    }
+  }).catch(err => alert("Error en Firebase: " + err.message));
 };
 
 document.getElementById('deleteBtn').onclick=()=>{
@@ -627,15 +578,42 @@ document.getElementById('backBtn').onclick=()=>{
   document.getElementById('mainPage').style.display='block';
 };
 
-function renderSummary(){ /* Omitido reescribir completo, es exactamente el tuyo */ }
+function renderSummary(){ 
+  const year = current.getFullYear();
+  document.getElementById('summaryTitle').textContent = `Resumen anual ${year}`;
+  const yearGrid = document.getElementById('yearGrid');
+  yearGrid.innerHTML = '';
+  
+  for(let m = 0; m < 12; m++) {
+    const card = document.createElement('div');
+    card.className = 'month-card';
+    card.innerHTML = `<h3>${months[m]}</h3>`;
+    
+    const miniGrid = document.createElement('div');
+    miniGrid.className = 'mini-grid';
+    
+    const firstDay = (new Date(year, m, 1).getDay() + 6) % 7;
+    for(let i=0; i<firstDay; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'mini-day empty';
+      miniGrid.appendChild(empty);
+    }
+    
+    const totalDays = new Date(year, m+1, 0).getDate();
+    for(let d=1; d<=totalDays; d++) {
+      const k = key(year, m, d);
+      const data = storage[k] || { type: defaultType(new Date(year, m, d)) };
+      const dayEl = document.createElement('div');
+      dayEl.className = `mini-day ${data.type}`;
+      dayEl.textContent = d;
+      miniGrid.appendChild(dayEl);
+    }
+    
+    card.appendChild(miniGrid);
+    yearGrid.appendChild(card);
+  }
+}
 
-// Export/Import JSON (exactamente igual que el original)
-// MultiSelect logic (exactamente igual que el original)
-
-// (Asegúrate de copiar esas funciones del final de tu script aquí si las necesitas,
-// las he abreviado para centrarme en la lógica de Calendar que es lo nuevo)
-
-// Por asegurar que no te falte código, añado MultiSelect básico:
 const multiSelectBtn = document.getElementById('multiSelectBtn');
 const batchActions = document.getElementById('batchActions');
 const batchType = document.getElementById('batchType');
@@ -658,26 +636,6 @@ document.getElementById('batchSaveBtn').onclick = () => {
   selectedDays.forEach(k => { updates[`calendarData/${k}`] = { type: batchType.value, note: batchNote.value }; });
   update(ref(db), updates).then(() => resetMultiSelect());
 };
-</script>
-<!-- Asegúrate de cargar las funciones globales para Google API -->
-<script>
- 
-window.onload = function() {
-    if (typeof gapiLoaded === 'function') gapiLoaded();
-    if (typeof gisLoaded === 'function') gisLoaded();
-
-    // Comprobar si ya se había vinculado antes en este navegador
-    if (localStorage.getItem('gcal_connected') === 'true') {
-      // Esperamos un segundo a que cargue la librería y pedimos el token de forma silenciosa
-      setTimeout(() => {
-        if (tokenClient) {
-          tokenClient.requestAccessToken({ prompt: '' }); // prompt: '' intenta hacerlo sin mostrar ventana si ya tiene permiso
-        }
-      }, 1000);
-    }
-  }
-
-
 </script>
 </body>
 </html>
