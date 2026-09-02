@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Laboral</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="icon" type="image/png" href="favicon3.png" sizes="32x32">
+<link rel="icon" type="image/png" href="icon-desktop3.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-desktop2.png">
+
+<style>
+:root {
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --border-color: #e2e8f0;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  
+  --clr-lectivo: #ffffff;
+  --clr-no-lectivo: #f1f5f9;
+  --clr-festivo: #fecdd3; 
+  --clr-vacaciones: #bfdbfe; 
+  --clr-otro: #bbf7d0; 
+  
+  --text-festivo: #9f1239;
+  --text-vacaciones: #1e3a8a;
+  --text-otro: #14532d;
+  --text-no-lectivo: #475569;
+  
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --danger: #ef4444;
+  --danger-hover: #dc2626;
+  --secondary: #64748b;
+  --secondary-hover: #475569;
+  --success: #10b981;
+  --success-hover: #059669;
+  --google: #ea4335;
+  --google-hover: #d33828;
+
+  --clr-today-border: #6366f1; 
+}
+
+*{ margin:0; padding:0; box-sizing:border-box; }
+
+body{
+  font-family:'Inter',sans-serif;
+  min-height:100vh;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  padding:30px;
+}
+
+.container{ max-width:1400px; margin:auto; }
+
+.header{
+  display:flex; justify-content:space-between; align-items:center;
+  gap:20px; margin-bottom:30px; flex-wrap:wrap;
+  background: var(--bg-card); padding: 24px; border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05), 0 1px 2px -1px rgba(0,0,0,0.05);
+}
+
+.title h1{ font-size:1.8rem; font-weight: 700; color: var(--text-main); margin-bottom:4px; }
+.title p{ color: var(--text-muted); font-size: 0.95rem; }
+
+.controls{ display:flex; align-items:center; gap:12px; }
+
+button,select,textarea,input{ font-family:inherit; }
+
+.nav-btn, .summary-btn{
+  border:none; cursor:pointer; transition: all .2s;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+
+.nav-btn{
+  width:40px; height:40px; border-radius:10px; background:#ffffff;
+  color: var(--text-main); font-size:0.9rem; flex-shrink:0; border: 1px solid var(--border-color);
+}
+.nav-btn:hover{ background: #f1f5f9; border-color: #cbd5e1; }
+
+.summary-btn{
+  background: var(--primary); color:white; padding:10px 16px;
+  border-radius:10px; font-weight:600; font-size: 0.9rem; border: 1px solid transparent;
+}
+.summary-btn:hover{ background: var(--primary-hover); }
+
+.google-btn { background: var(--google); }
+.google-btn:hover { background: var(--google-hover); }
+
+select{
+  background: white; border:1px solid var(--border-color);
+  color: var(--text-main); padding:10px 14px; border-radius:10px;
+  cursor:pointer; font-weight: 500; font-size: 0.9rem; outline: none;
+}
+select:focus{ border-color: var(--primary); }
+
+.calendar{
+  background: var(--bg-card); border:1px solid var(--border-color);
+  border-radius:16px; padding:24px;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05);
+}
+
+.weekdays, .grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:12px; }
+
+.weekdays{ margin-bottom:12px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; }
+.weekday{ text-align:center; font-weight:600; color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+
+.day{
+  height:115px; border-radius:12px; padding:10px; cursor:pointer;
+  transition: all .2s; position:relative; display:flex; flex-direction: column;
+  align-items: flex-start; justify-content: flex-start; gap: 6px;
+  border: 1px solid var(--border-color); overflow: hidden;
+}
+.day .day-number { font-weight:700; font-size:1.1rem; }
+.day:hover{ transform:translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+.day.selected { outline: 3px solid var(--success); outline-offset: -3px; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); }
+.day.today { border: 2px solid var(--clr-today-border); box-shadow: 0 0 8px rgba(99, 102, 241, 0.15); }
+.day.today.selected { outline: 3px solid var(--success); outline-offset: -3px; }
+.empty{ visibility:hidden; }
+
+.lectivo{ background-color: var(--clr-lectivo); color: var(--text-main); }
+.no_lectivo{ background-color: var(--clr-no-lectivo); color: var(--text-no-lectivo); }
+.festivo{ background-color: var(--clr-festivo); color: var(--text-festivo); }
+.vacaciones{ background-color: var(--clr-vacaciones); color: var(--text-vacaciones); }
+.otro{ background-color: var(--clr-otro); color: var(--text-otro); }
+
+.day-note {
+  font-size: 0.75rem; font-weight: 400; line-height: 1.25; color: inherit;
+  opacity: 0.85; width: 100%; display: -webkit-box; -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; word-break: break-word;
+}
+
+.bell-icon { position: absolute; bottom: 8px; right: 8px; font-size: 14px; opacity: 0.8; }
+
+.legend-wrapper{
+  display:flex; justify-content:space-between; align-items:center;
+  gap:20px; flex-wrap:wrap; margin-top:24px; padding-top: 20px; border-top: 1px solid var(--border-color);
+}
+.legend{ display:flex; gap:16px; flex-wrap:wrap; }
+.legend-item{ display:flex; align-items:center; gap:8px; color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
+.legend-color{ width:20px; height:20px; border-radius:6px; border: 1px solid var(--border-color); }
+
+.data-buttons{ display:flex; gap:10px; flex-wrap:wrap; }
+
+.modal{
+  position:fixed; inset:0; background:rgba(15, 23, 42, 0.4); display:none;
+  align-items:center; justify-content:center; z-index:999; padding:20px; backdrop-filter: blur(4px);
+}
+.modal.active{ display:flex; }
+.modal-box{
+  width:100%; max-width:450px; background: var(--bg-card); color: var(--text-main);
+  border-radius:16px; padding:24px; border:1px solid var(--border-color);
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+}
+.modal-box h2{ margin-bottom:20px; font-size: 1.4rem; font-weight: 700; }
+
+.form-group{ margin-bottom:16px; }
+.form-group label{ display:block; margin-bottom:6px; font-weight:600; font-size: 0.85rem; color: var(--text-muted); }
+.form-group textarea, .form-group select, .form-group input{
+  width:100%; padding:10px 12px; border:1px solid var(--border-color);
+  border-radius:10px; font-size: 0.9rem; outline: none; background: white; color: var(--text-main);
+}
+textarea{ min-height:80px; resize:vertical; }
+textarea:focus, input:focus{ border-color: var(--primary); }
+
+.actions{ display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; margin-top: 24px; }
+.actions button{ border:none; padding:10px 16px; border-radius:10px; cursor:pointer; font-weight:600; font-size: 0.9rem; transition: all 0.2s; }
+.save{ background: var(--primary); color:white; }
+.save:hover{ background: var(--primary-hover); }
+.delete{ background: var(--danger); color:white; }
+.delete:hover{ background: var(--danger-hover); }
+.cancel{ background: var(--secondary); color:white; }
+.cancel:hover{ background: var(--secondary-hover); }
+
+.summary-page{
+  display:none; background: var(--bg-card); border:1px solid var(--border-color);
+  border-radius:16px; padding:24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+.summary-page h2{ font-size:1.6rem; font-weight: 700; }
+.year-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:24px; margin-top: 20px; }
+.month-card{ background: var(--bg-main); border-radius:12px; padding:16px; border: 1px solid var(--border-color); }
+.month-card h3{ text-align:center; margin-bottom:12px; font-size: 1rem; color: var(--text-main); font-weight: 600; }
+.mini-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:6px; }
+.mini-day{
+  height:28px; border-radius:6px; display:flex; align-items:center; justify-content:center;
+  font-size:.75rem; font-weight:600; position:relative; border: 1px solid var(--border-color);
+}
+.mini-day.empty{ visibility:hidden; border: none; }
+
+.auth-screen{ position:fixed; inset:0; z-index:2000; background:var(--bg-main); display:flex; align-items:center; justify-content:center; padding:20px; }
+.auth-box{ width:100%; max-width:420px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:16px; padding:28px; box-shadow:0 20px 25px -5px rgba(0,0,0,.1),0 10px 10px -5px rgba(0,0,0,.04); }
+.auth-box h2{margin-bottom:8px;font-size:1.5rem;}
+.auth-box p{color:var(--text-muted);font-size:.9rem;margin-bottom:20px;}
+.auth-box label{display:block;margin-bottom:6px;font-weight:600;font-size:.85rem;color:var(--text-muted);}
+.auth-box input{ width:100%; padding:11px 12px; border:1px solid var(--border-color); border-radius:10px; margin-bottom:14px; font:inherit; color:var(--text-main); background:white; outline:none; }
+.auth-box input:focus{border-color:var(--primary);}
+.auth-btn{ width:100%; border:none; border-radius:10px; padding:11px 16px; background:var(--primary); color:white; font:600 .9rem inherit; cursor:pointer; }
+.auth-error{ margin-top:12px; color:var(--danger); font-size:.85rem; min-height:1.2em; }
+#appContent{display:none;}
+</style>
+</head>
+<body>
+
+<div class="auth-screen" id="authScreen">
+  <div class="auth-box">
+    <h2>Calendario escolar</h2>
+    <p>Inicia sesión para acceder al calendario.</p>
+    <form id="loginForm">
+      <label for="loginEmail">Correo electrónico</label>
+      <input type="email" id="loginEmail" autocomplete="username" required>
+      <label for="loginPassword">Contraseña</label>
+      <input type="password" id="loginPassword" autocomplete="current-password" required>
+      <button class="auth-btn" type="submit">Entrar</button>
+      <div class="auth-error" id="authError"></div>
+    </form>
+  </div>
+</div>
+
+<div id="appContent">
+<div class="container">
+
+<div id="mainPage">
+
+<div class="header">
+<div class="title">
+<h1>Calendario escolar</h1>
+<p>Gestión calendario escolar. © JCOS</p>
+</div>
+
+<div class="controls">
+<button class="nav-btn" id="prev">◀</button>
+<select id="month"></select>
+<select id="year"></select>
+<button class="nav-btn" id="next">▶</button>
+<button class="summary-btn google-btn" id="gcalAuthBtn">Vincular G. Calendar</button>
+<button class="summary-btn" id="summaryBtn">Resumen anual</button>
+</div>
+</div>
+
+<div class="calendar">
+
+<div class="weekdays">
+<div class="weekday">L</div><div class="weekday">M</div><div class="weekday">X</div>
+<div class="weekday">J</div><div class="weekday">V</div><div class="weekday">S</div>
+<div class="weekday">D</div>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<div class="legend-wrapper">
+  <div class="legend">
+    <div class="legend-item"><div class="legend-color lectivo"></div>Lectivo</div>
+    <div class="legend-item"><div class="legend-color no_lectivo"></div>No Lectivo</div>
+    <div class="legend-item"><div class="legend-color festivo"></div>Festivo</div>
+    <div class="legend-item"><div class="legend-color vacaciones"></div>Vacaciones</div>
+    <div class="legend-item"><div class="legend-color otro"></div>Otros</div>
+  </div>
+
+  <div class="right-controls-container" style="display: flex; flex-direction: column; gap: 12px; align-items: flex-end;">
+    <div id="batchActions" style="display:none; background: var(--bg-main); padding:16px; border-radius:12px; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap; border:1px solid var(--border-color); width: 100%;">
+      <span id="selectedCount" style="font-weight:600; color: var(--text-main); font-size: 0.9rem;">0 días seleccionados</span>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+        <select id="batchType">
+          <option value="lectivo">Lectivo</option>
+          <option value="no_lectivo">No Lectivo</option>
+          <option value="festivo">Festivo</option>
+          <option value="vacaciones">Vacaciones</option>
+          <option value="otro">Otros</option>
+        </select>
+        <input type="text" id="batchNote" placeholder="Nota común..." style="padding:10px 14px; border-radius:10px; border:1px solid var(--border-color); color: var(--text-main); font-size:0.9rem; outline: none;">
+        <button id="batchSaveBtn" style="border:none; padding:10px 16px; border-radius:10px; cursor:pointer; font-weight:600; background: var(--success); color:white; font-size:0.9rem;">Guardar días</button>
+        <button id="batchCancelBtn" style="border:none; padding:10px 16px; border-radius:10px; cursor:pointer; font-weight:600; background: var(--secondary); color:white; font-size:0.9rem;">Cancelar</button>
+      </div>
+    </div>
+
+    <div class="data-buttons">
+      <button class="summary-btn" id="multiSelectBtn" style="background: var(--success);">Selección Múltiple</button>
+      <button class="summary-btn" id="exportBtn" style="background: var(--secondary);">Exportar JSON</button>
+      <button class="summary-btn" id="importBtn" style="background: var(--secondary);">Importar JSON</button>
+      <input type="file" id="importFile" accept=".json" hidden>
+    </div>
+  </div>
+</div>
+
+</div>
+</div>
+
+<div class="summary-page" id="summaryPage">
+  <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 20px;">
+    <h2 id="summaryTitle">Resumen anual</h2>
+    <button class="summary-btn" id="backBtn" style="background: var(--secondary);">← Volver al calendario</button>
+  </div>
+  <div class="year-grid" id="yearGrid"></div>
+</div>
+
+</div>
+</div>
+
+<div class="modal" id="modal">
+<div class="modal-box">
+<h2 id="modalTitle">Configurar Día</h2>
+
+<div class="form-group">
+<label>Tipo de día</label>
+<select id="type">
+<option value="lectivo">Lectivo</option>
+<option value="no_lectivo">No Lectivo</option>
+<option value="festivo">Festivo</option>
+<option value="vacaciones">Vacaciones</option>
+<option value="otro">Otros</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Nota / Comentario</label>
+<textarea id="note" placeholder="Escribe una nota para este día..."></textarea>
+</div>
+
+<div class="form-group">
+<label>Hora de notificación (Para Google Calendar)</label>
+<input type="time" id="alarmTime">
+</div>
+<div class="form-group">
+<label>Texto de la notificación</label>
+<input type="text" id="alarmText" placeholder="Ej: Entregar informes">
+</div>
+
+<div class="actions">
+<button class="delete" id="deleteBtn">Borrar datos</button>
+<button class="cancel" id="cancelBtn">Cancelar</button>
+<button class="save" id="saveBtn">Guardar</button>
+</div>
+</div>
+</div>
+
+<script async defer src="https://apis.google.com/js/api.js"></script>
+<script async defer src="https://accounts.google.com/gsi/client"></script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getDatabase, ref, set, remove, onValue, update } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+
+const CLIENT_ID = '629132173947-886tdoqutkiv414n0e284iehq7l48sf0.apps.googleusercontent.com';
+const API_KEY = 'AIzaSyAjyNqd8FzC0EJbONJFs9nHNLBzhcb10cY';
+
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest';
+const SCOPES = 'https://www.googleapis.com/auth/calendar.events';
+let tokenClient;
+let gapiInited = false;
+let gisInited = false;
+let googleCalendarEnabled = false;
+
+function gapiLoaded() {
+  gapi.load('client', initializeGapiClient);
+}
+async function initializeGapiClient() {
+  await gapi.client.init({ apiKey: API_KEY, discoveryDocs: [DISCOVERY_DOC] });
+  gapiInited = true;
+}
+
+function gisLoaded() {
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID,
+    scope: SCOPES,
+    callback: (tokenResponse) => {
+      if (tokenResponse && tokenResponse.access_token) {
+        googleCalendarEnabled = true;
+        localStorage.setItem('gcal_connected', 'true');
+        document.getElementById('gcalAuthBtn').textContent = "Google Calendar Vinculado ✓";
+        document.getElementById('gcalAuthBtn').style.background = "var(--success)";
+      }
+    },
+  });
+  gisInited = true;
+}
+
+window.gapiLoaded = gapiLoaded;
+window.gisLoaded = gisLoaded;
+
+document.getElementById('gcalAuthBtn').onclick = () => {
+  if (!googleCalendarEnabled) {
+    if (gapi.client.getToken() === null) {
+      tokenClient.requestAccessToken({prompt: 'consent'});
+    } else {
+      tokenClient.requestAccessToken({prompt: ''});
+    }
+  }
+};
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBatYG7fgtozpxnI3UhI35NPLizXpAIhhw",
+  authDomain: "calescolar-4d347.firebaseapp.com",
+  databaseURL: "https://calescolar-4d347-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "calescolar-4d347",
+  storageBucket: "calescolar-4d347.firebasestorage.app",
+  messagingSenderId: "645908876195",
+  appId: "1:645908876195:web:c0a973a31953d09d1fa816"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const auth = getAuth(app);
+
+const authScreen = document.getElementById('authScreen');
+const appContent = document.getElementById('appContent');
+const loginForm = document.getElementById('loginForm');
+const loginEmail = document.getElementById('loginEmail');
+const loginPassword = document.getElementById('loginPassword');
+const authError = document.getElementById('authError');
+
+loginForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  authError.textContent = '';
+  try { await signInWithEmailAndPassword(auth, loginEmail.value.trim(), loginPassword.value); } 
+  catch (error) { authError.textContent = 'Error de inicio de sesión.'; }
+});
+
+onAuthStateChanged(auth, (user) => {
+  if (user) { authScreen.style.display = 'none'; appContent.style.display = 'block'; } 
+  else { authScreen.style.display = 'flex'; appContent.style.display = 'none'; }
+});
+
+const months=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const grid=document.getElementById('grid');
+const monthSelect=document.getElementById('month');
+const yearSelect=document.getElementById('year');
+
+const modal=document.getElementById('modal');
+const modalTitle=document.getElementById('modalTitle');
+const typeInput=document.getElementById('type');
+const noteInput=document.getElementById('note');
+const alarmTimeInput=document.getElementById('alarmTime');
+const alarmTextInput=document.getElementById('alarmText');
+
+let isSelectionMode = false;
+const selectedDays = new Set();
+let storage = {};
+let current = new Date();
+let selectedKey = '';
+let selectedFullDate = null;
+
+months.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m; monthSelect.appendChild(o); });
+for(let y=2020;y<=2035;y++){ const o=document.createElement('option'); o.value=y; o.textContent=y; yearSelect.appendChild(o); }
+
+monthSelect.value=current.getMonth();
+yearSelect.value=current.getFullYear();
+
+function key(y,m,d){ return `${y}-${m}-${d}`; }
+function formatGCalDate(y,m,d){ 
+  const mm = String(m+1).padStart(2, '0');
+  const dd = String(d).padStart(2, '0');
+  return `${y}-${mm}-${dd}`; 
+}
+
+function defaultType(date){
+  const day = date.getDay();
+  if (day === 0) return 'festivo';
+  if (day === 6) return 'no_lectivo';
+  return 'lectivo';
+}
+
+function getData(date){
+  const k=key(date.getFullYear(),date.getMonth(),date.getDate());
+  return storage[k] || { type:defaultType(date), note:'', alarmTime:'', alarmText:'' };
+}
+
+function render(){
+  grid.innerHTML='';
+  const year=current.getFullYear();
+  const month=current.getMonth();
+  monthSelect.value=month; yearSelect.value=year;
+
+  const firstDate=new Date(year,month,1);
+  let firstDay=firstDate.getDay();
+  firstDay=firstDay===0 ? 6 : firstDay-1;
+
+  for(let i=0;i<firstDay;i++){
+    const empty=document.createElement('div'); empty.className='empty'; grid.appendChild(empty);
+  }
+
+  const totalDays=new Date(year,month+1,0).getDate();
+  const today = new Date();
+  const todayDay = today.getDate(), todayMonth = today.getMonth(), todayYear = today.getFullYear();
+
+  for(let day=1;day<=totalDays;day++){
+    const date=new Date(year,month,day);
+    const data=getData(date);
+    const k=key(year,month,day);
+    const card=document.createElement('div');
+    
+    const isToday = (day === todayDay && month === todayMonth && year === todayYear) ? 'today' : '';
+    const isSelectedClass = (isSelectionMode && selectedDays.has(k)) ? 'selected' : '';
+    card.className=`day ${data.type} ${isToday} ${isSelectedClass}`;
+
+    let icon = data.alarmTime ? '<span class="bell-icon">🔔</span>' : '';
+
+    card.innerHTML=`
+      <span class="day-number">${day}</span>
+      ${data.note ? `<div class="day-note">${data.note.replace(/\n/g, '<br>')}</div>` : ''}
+      ${icon}
+    `;
+
+    card.addEventListener('click',()=> {
+      if (isSelectionMode) {
+        if (selectedDays.has(k)) { selectedDays.delete(k); card.classList.remove('selected'); } 
+        else { selectedDays.add(k); card.classList.add('selected'); }
+        document.getElementById('selectedCount').textContent = `${selectedDays.size} días seleccionados`;
+      } else {
+        openModal(date);
+      }
+    });
+    grid.appendChild(card);
+  }
+}
+
+const calendarRef = ref(db, 'calendarData');
+let unsubscribeCalendar = null;
+onAuthStateChanged(auth, (user) => {
+  if (unsubscribeCalendar) { unsubscribeCalendar(); unsubscribeCalendar = null; }
+  if (!user) return;
+  unsubscribeCalendar = onValue(calendarRef, (snapshot) => {
+    storage = snapshot.val() || {};
+    render();
+    if(document.getElementById('summaryPage').style.display === 'block') renderSummary();
+  });
+});
+
+function openModal(date){
+  const k=key(date.getFullYear(),date.getMonth(),date.getDate());
+  selectedKey=k;
+  selectedFullDate=formatGCalDate(date.getFullYear(),date.getMonth(),date.getDate());
+  const data=getData(date);
+
+  modalTitle.textContent=`${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
+  typeInput.value=data.type;
+  noteInput.value=data.note;
+  alarmTimeInput.value=data.alarmTime || '';
+  alarmTextInput.value=data.alarmText || '';
+
+  modal.classList.add('active');
+}
+
+function closeModal(){ modal.classList.remove('active'); }
+
+
+document.getElementById('saveBtn').onclick = async () => {
+  const aTime = alarmTimeInput.value;
+  const aText = alarmTextInput.value;
+
+  if (aTime && googleCalendarEnabled) {
+    // Verificamos si tenemos un token válido de GAPI, si no, lo solicitamos de forma interactiva
+    if (!gapi.client.getToken()) {
+      await new Promise((resolve) => {
+        tokenClient.callback = (resp) => {
+          if (resp.error) {
+            console.error(resp);
+          }
+          resolve();
+        };
+        tokenClient.requestAccessToken({ prompt: 'consent' });
+      });
+    }
+
+    // Calculamos 1 hora de duración para que el bloque se vea bien
+    const [h, m] = aTime.split(':');
+    let endH = parseInt(h) + 1;
+    let endM = m;
+    if (endH >= 24) { endH = 23; endM = '59'; } 
+    const endTime = `${String(endH).padStart(2, '0')}:${endM}`;
+
+    const event = {
+      'summary': aText || 'Aviso Escolar',
+      'description': noteInput.value,
+      'colorId': '5', 
+      'start': { 'dateTime': `${selectedFullDate}T${aTime}:00`, 'timeZone': 'Europe/Madrid' },
+      'end': { 'dateTime': `${selectedFullDate}T${endTime}:00`, 'timeZone': 'Europe/Madrid' },
+      'reminders': {
+        'useDefault': false,
+        'overrides': [ { 'method': 'popup', 'minutes': 0 } ]
+      }
+    };
+
+    try {
+      await gapi.client.calendar.events.insert({ 'calendarId': 'primary', 'resource': event });
+      alert("Alarma creada en Google Calendar");
+    } catch (err) {
+      console.error("Error al crear evento en GCal", err);
+      alert("Hubo un error al crear el aviso en Google Calendar. Es posible que debas revincular la cuenta.");
+      googleCalendarEnabled = false;
+      localStorage.removeItem('gcal_connected');
+      document.getElementById('gcalAuthBtn').textContent = "Vincular G. Calendar";
+      document.getElementById('gcalAuthBtn').style.background = "var(--google)";
+      return; // Cortamos para que no cierre si hubo fallo
+    }
+  } else if (aTime && !googleCalendarEnabled) {
+    alert("Atención: Has puesto una hora de alarma pero no has vinculado Google Calendar. Los datos se guardarán pero no sonará el aviso.");
+  }
+
+  const dayRef = ref(db, `calendarData/${selectedKey}`);
+  set(dayRef, {
+    type: typeInput.value,
+    note: noteInput.value,
+    alarmTime: aTime,
+    alarmText: aText
+  }).then(() => closeModal()).catch(err => alert("Error en Firebase: " + err.message));
+};
+
+
+
+document.getElementById('deleteBtn').onclick=()=>{
+  const dayRef = ref(db, `calendarData/${selectedKey}`);
+  remove(dayRef).then(() => closeModal());
+};
+document.getElementById('cancelBtn').onclick=closeModal;
+modal.addEventListener('click',e=>{ if(e.target===modal) closeModal(); });
+
+monthSelect.onchange=()=>{ current.setMonth(parseInt(monthSelect.value)); render(); };
+yearSelect.onchange=()=>{ current.setFullYear(parseInt(yearSelect.value)); render(); };
+document.getElementById('prev').onclick=()=>{ current.setMonth(current.getMonth()-1); render(); };
+document.getElementById('next').onclick=()=>{ current.setMonth(current.getMonth()+1); render(); };
+
+document.getElementById('summaryBtn').onclick=()=>{
+  document.getElementById('mainPage').style.display='none';
+  document.getElementById('summaryPage').style.display='block';
+  renderSummary();
+};
+document.getElementById('backBtn').onclick=()=>{
+  document.getElementById('summaryPage').style.display='none';
+  document.getElementById('mainPage').style.display='block';
+};
+
+function renderSummary(){ 
+  const year = current.getFullYear();
+  document.getElementById('summaryTitle').textContent = `Resumen anual ${year}`;
+  const yearGrid = document.getElementById('yearGrid');
+  yearGrid.innerHTML = '';
+  
+  for(let m = 0; m < 12; m++) {
+    const card = document.createElement('div');
+    card.className = 'month-card';
+    card.innerHTML = `<h3>${months[m]}</h3>`;
+    
+    const miniGrid = document.createElement('div');
+    miniGrid.className = 'mini-grid';
+    
+    const firstDay = (new Date(year, m, 1).getDay() + 6) % 7;
+    for(let i=0; i<firstDay; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'mini-day empty';
+      miniGrid.appendChild(empty);
+    }
+    
+    const totalDays = new Date(year, m+1, 0).getDate();
+    for(let d=1; d<=totalDays; d++) {
+      const k = key(year, m, d);
+      const data = storage[k] || { type: defaultType(new Date(year, m, d)) };
+      const dayEl = document.createElement('div');
+      dayEl.className = `mini-day ${data.type}`;
+      dayEl.textContent = d;
+      miniGrid.appendChild(dayEl);
+    }
+    
+    card.appendChild(miniGrid);
+    yearGrid.appendChild(card);
+  }
+}
+
+const multiSelectBtn = document.getElementById('multiSelectBtn');
+const batchActions = document.getElementById('batchActions');
+const batchType = document.getElementById('batchType');
+const batchNote = document.getElementById('batchNote');
+multiSelectBtn.onclick = () => {
+  isSelectionMode = !isSelectionMode;
+  if (isSelectionMode) {
+    multiSelectBtn.textContent = 'Cancelar Selección'; multiSelectBtn.style.background = 'var(--danger)';
+    batchActions.style.display = 'flex'; document.getElementById('selectedCount').textContent = '0 días seleccionados';
+  } else { resetMultiSelect(); }
+};
+function resetMultiSelect() {
+  isSelectionMode = false; selectedDays.clear();
+  multiSelectBtn.textContent = 'Selección Múltiple'; multiSelectBtn.style.background = 'var(--success)';
+  batchActions.style.display = 'none'; batchNote.value = ''; render();
+}
+document.getElementById('batchCancelBtn').onclick = resetMultiSelect;
+document.getElementById('batchSaveBtn').onclick = () => {
+  const updates = {};
+  selectedDays.forEach(k => { updates[`calendarData/${k}`] = { type: batchType.value, note: batchNote.value }; });
+  update(ref(db), updates).then(() => resetMultiSelect());
+};
+
+// --- CARGA DE GOOGLE CALENDAR (SIN VENTANA AUTOMÁTICA) ---
+window.addEventListener('load', () => {
+  if (typeof gapi !== 'undefined') gapiLoaded();
+  if (typeof google !== 'undefined' && google.accounts) gisLoaded();
+
+  // Si ya estaba conectado antes, marcamos el botón como vinculado visualmente 
+  // pero sin forzar ventanas emergentes al abrir la web
+  if (localStorage.getItem('gcal_connected') === 'true') {
+    googleCalendarEnabled = true;
+    const btn = document.getElementById('gcalAuthBtn');
+    if(btn) {
+      btn.textContent = "Google Calendar Vinculado ✓";
+      btn.style.background = "var(--success)";
+    }
+  }
+});
+
+</script>
+</body>
+</html>
