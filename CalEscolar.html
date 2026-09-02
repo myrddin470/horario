@@ -24,11 +24,11 @@
   --clr-no-lectivo: #f1f5f9;
   --clr-festivo: #fecdd3; 
   --clr-vacaciones: #bfdbfe; 
-  --clr-otro: #bbf7d0; 
+  --clr-otro: #fef08a; /* Color plátano por defecto */
   
   --text-festivo: #9f1239;
   --text-vacaciones: #1e3a8a;
-  --text-otro: #14532d;
+  --text-otro: #854d0e; /* Texto oscuro para contraste sobre el color plátano */
   --text-no-lectivo: #475569;
   
   --primary: #4f46e5;
@@ -264,7 +264,7 @@ textarea:focus, input:focus{ border-color: var(--primary); }
           <option value="no_lectivo">No Lectivo</option>
           <option value="festivo">Festivo</option>
           <option value="vacaciones">Vacaciones</option>
-          <option value="otro">Otros</option>
+          <option value="otro" selected>Otros (Plátano)</option>
         </select>
         <input type="text" id="batchNote" placeholder="Nota común..." style="padding:10px 14px; border-radius:10px; border:1px solid var(--border-color); color: var(--text-main); font-size:0.9rem; outline: none;">
         <button id="batchSaveBtn" style="border:none; padding:10px 16px; border-radius:10px; cursor:pointer; font-weight:600; background: var(--success); color:white; font-size:0.9rem;">Guardar días</button>
@@ -306,7 +306,7 @@ textarea:focus, input:focus{ border-color: var(--primary); }
 <option value="no_lectivo">No Lectivo</option>
 <option value="festivo">Festivo</option>
 <option value="vacaciones">Vacaciones</option>
-<option value="otro">Otros</option>
+<option value="otro" selected>Otros (Plátano)</option>
 </select>
 </div>
 
@@ -406,12 +406,12 @@ function defaultType(date){
   const day = date.getDay();
   if (day === 0) return 'festivo';
   if (day === 6) return 'no_lectivo';
-  return 'lectivo';
+  return 'otro'; // Por defecto color plátano si se prefiere
 }
 
 function getData(date){
   const k=key(date.getFullYear(),date.getMonth(),date.getDate());
-  return storage[k] || { type:defaultType(date), note:'', alarmTime:'', alarmText:'' };
+  return storage[k] || { type:'otro', note:'', alarmTime:'', alarmText:'' };
 }
 
 function render(){
@@ -492,13 +492,11 @@ function openModal(date){
 
 function closeModal(){ modal.classList.remove('active'); }
 
-// --- GENERAR ARCHIVO .ICS PARA DESCARGAR E IMPORTAR AL CALENDARIO ---
+// --- GENERAR Y EJECUTAR ARCHIVO .ICS AUTOMÁTICAMENTE ---
 function downloadICS(dateStr, timeStr, summaryText, descriptionText) {
-  // dateStr formato YYYYMMDD, timeStr formato HH:MM
   const cleanTime = timeStr.replace(':', '');
   const dtStart = `${dateStr}T${cleanTime}00`;
   
-  // Calculamos 1 hora más para el fin
   let [h, m] = timeStr.split(':');
   let endH = parseInt(h) + 1;
   if (endH >= 24) endH = 23;
@@ -525,12 +523,18 @@ function downloadICS(dateStr, timeStr, summaryText, descriptionText) {
   ].join("\r\n");
 
   const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+  const url = window.URL.createObjectURL(blob);
   const link = document.createElement('a');
-  link.href = window.URL.createObjectURL(blob);
+  link.href = url;
   link.setAttribute('download', `aviso_${dateStr}.ics`);
+  
+  // Forzar ejecución inmediata simulando el click en background
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  
+  // Limpiar memoria de objeto URL
+  setTimeout(() => window.URL.revokeObjectURL(url), 1000);
 }
 
 document.getElementById('saveBtn').onclick=async ()=>{
@@ -538,7 +542,6 @@ document.getElementById('saveBtn').onclick=async ()=>{
   const aText = alarmTextInput.value;
 
   if (aTime) {
-    // Genera y descarga instantáneamente el archivo .ics para el calendario
     downloadICS(selectedFullDateStr, aTime, aText, noteInput.value);
   }
 
@@ -550,9 +553,6 @@ document.getElementById('saveBtn').onclick=async ()=>{
     alarmText: aText
   }).then(() => {
     closeModal();
-    if(aTime) {
-      alert("¡Dato guardado y archivo .ics descargado! Haz clic en el archivo descargado para añadirlo automáticamente a tu calendario con alarma.");
-    }
   }).catch(err => alert("Error en Firebase: " + err.message));
 };
 
@@ -602,7 +602,7 @@ function renderSummary(){
     const totalDays = new Date(year, m+1, 0).getDate();
     for(let d=1; d<=totalDays; d++) {
       const k = key(year, m, d);
-      const data = storage[k] || { type: defaultType(new Date(year, m, d)) };
+      const data = storage[k] || { type: 'otro' };
       const dayEl = document.createElement('div');
       dayEl.className = `mini-day ${data.type}`;
       dayEl.textContent = d;
