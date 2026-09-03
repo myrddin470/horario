@@ -347,14 +347,14 @@ textarea:focus, input:focus{ border-color: var(--primary); }
 </div>
 </div>
 
-<!-- Modal para abrir Google Calendar directamente -->
+<!-- Modal para generar archivo de evento .ICS -->
 <div class="modal" id="icsModal">
 <div class="modal-box" style="text-align: center;">
-<h2>📅 ¿Añadir a Google Calendar?</h2>
-<p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Se abrirá Google Calendar con el evento en color <b>plátano</b> y avisos programados para <b>1 y 2 días antes</b>.</p>
+<h2>📅 ¿Añadir al Calendario?</h2>
+<p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Al hacer clic, se descargará un archivo que añadirá el evento con tus avisos listos de <b>1 y 2 días</b> y el color correcto.</p>
 <div class="actions" style="justify-content: center;">
 <button class="cancel" id="icsNoBtn" style="flex: 1;">No</button>
-<button class="save" id="icsYesBtn" style="flex: 1; background: var(--success);">Sí, abrir y añadir</button>
+<button class="save" id="icsYesBtn" style="flex: 1; background: var(--success);">Sí, descargar y añadir</button>
 </div>
 </div>
 </div>
@@ -410,7 +410,7 @@ const alarmTimeInput=document.getElementById('alarmTime');
 const alarmTextInput=document.getElementById('alarmText');
 
 const icsModal = document.getElementById('icsModal');
-let pendingCalendarUrl = null;
+let pendingEventData = null;
 
 let isSelectionMode = false;
 const selectedDays = new Set();
@@ -425,22 +425,6 @@ monthSelect.value=current.getMonth();
 yearSelect.value=current.getFullYear();
 
 function key(y,m,d){ return `${y}-${m}-${d}`; }
-
-function formatGoogleDate(y,m,d, timeStr){
-  const mm = String(m+1).padStart(2, '0');
-  const dd = String(d).padStart(2, '0');
-  const cleanTime = timeStr.replace(':', '') + '00';
-  
-  let [h, min] = timeStr.split(':');
-  let endH = parseInt(h) + 1;
-  if (endH >= 24) endH = 23;
-  const endCleanTime = String(endH).padStart(2,'0') + min + '00';
-
-  return {
-    start: `${y}${mm}${dd}T${cleanTime}`,
-    end: `${y}${mm}${dd}T${endCleanTime}`
-  };
-}
 
 function defaultType(date){
   const day = date.getDay();
@@ -480,8 +464,6 @@ function render(){
     
     const isToday = (day === todayDay && month === todayMonth && year === todayYear) ? 'today' : '';
     const isSelectedClass = (isSelectionMode && selectedDays.has(k)) ? 'selected' : '';
-    
-    // Mantiene exclusivamente el color original del tipo de día en el calendario
     card.className=`day ${data.type} ${isToday} ${isSelectedClass}`;
 
     let icon = data.alarmTime ? '<span class="bell-icon">🔔</span>' : '';
@@ -548,29 +530,76 @@ document.getElementById('saveBtn').onclick = () => {
   }).then(() => {
     closeModal();
     if (aTime && activeDate) {
-      const dates = formatGoogleDate(activeDate.getFullYear(), activeDate.getMonth(), activeDate.getDate(), aTime);
-      const text = encodeURIComponent(aText || 'Aviso Escolar');
-      const details = encodeURIComponent(noteInput.value || '');
-      
-      // color=5 corresponde al color amarillo/plátano en Google Calendar
-      // reminders=2880,1440 añade recordatorios de 2 días y 1 día antes
-      pendingCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dates.start}/${dates.end}&details=${details}&color=5&reminders=2880%2C1440`;
+      pendingEventData = {
+        title: aText || 'Aviso Escolar',
+        note: noteInput.value || '',
+        date: activeDate,
+        time: aTime
+      };
       icsModal.classList.add('active');
     }
   }).catch(err => alert("Error en Firebase: " + err.message));
 };
 
 document.getElementById('icsYesBtn').onclick = () => {
-  if (pendingCalendarUrl) {
-    window.open(pendingCalendarUrl, '_blank');
+  if (pendingEventData) {
+    const d = pendingEventData.date;
+    const timeStr = pendingEventData.time;
+    
+    // Formatear fechas para .ICS
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const cleanTime = timeStr.replace(':', '') + '00';
+    
+    let [h, min] = timeStr.split(':');
+    let endH = parseInt(h) + 1;
+    if (endH >= 24) endH = 23;
+    const endCleanTime = String(endH).padStart(2,'0') + min + '00';
+
+    const dtStart = `${d.getFullYear()}${mm}${dd}T${cleanTime}`;
+    const dtEnd = `${d.getFullYear()}${mm}${dd}T${endCleanTime}`;
+    const cleanNote = pendingEventData.note.replace(/\n/g, '\\n');
+
+    // Construcción del archivo ICS con color plátano y dos alarmas
+    const icsContent = 
+`BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//JCOS//Calendario Escolar//ES
+BEGIN:VEVENT
+SUMMARY:${pendingEventData.title}
+DTSTART:${dtStart}
+DTEND:${dtEnd}
+DESCRIPTION:${cleanNote}
+COLOR:yellow
+BEGIN:VALARM
+TRIGGER:-PT24H
+ACTION:DISPLAY
+DESCRIPTION:Aviso 1 día
+END:VALARM
+BEGIN:VALARM
+TRIGGER:-PT48H
+ACTION:DISPLAY
+DESCRIPTION:Aviso 2 días
+END:VALARM
+END:VEVENT
+END:VCALENDAR`.replace(/\n/g, '\r\n');
+
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = `Evento_${dtStart}.ics`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
+  
   icsModal.classList.remove('active');
-  pendingCalendarUrl = null;
+  pendingEventData = null;
 };
 
 document.getElementById('icsNoBtn').onclick = () => {
   icsModal.classList.remove('active');
-  pendingCalendarUrl = null;
+  pendingEventData = null;
 };
 
 document.getElementById('deleteBtn').onclick=()=>{
