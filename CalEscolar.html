@@ -331,7 +331,7 @@ textarea:focus, input:focus{ border-color: var(--primary); }
 </div>
 
 <div class="form-group">
-<label>Hora de notificación (Generar archivo ICS)</label>
+<label>Hora de notificación (Añadir a Google Calendar)</label>
 <input type="time" id="alarmTime">
 </div>
 <div class="form-group">
@@ -347,14 +347,14 @@ textarea:focus, input:focus{ border-color: var(--primary); }
 </div>
 </div>
 
-<!-- Modal específico de confirmación para añadir al calendario -->
+<!-- Modal optimizado para abrir Google Calendar directamente -->
 <div class="modal" id="icsModal">
 <div class="modal-box" style="text-align: center;">
-<h2>📅 ¿Añadir al calendario?</h2>
-<p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Se ha configurado una alarma con hora. ¿Quieres descargar el archivo y añadir la cita a tu calendario?</p>
+<h2>📅 ¿Añadir a Google Calendar?</h2>
+<p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Se abrirá Google Calendar con los datos de la alarma listos para guardar con un solo clic.</p>
 <div class="actions" style="justify-content: center;">
 <button class="cancel" id="icsNoBtn" style="flex: 1;">No</button>
-<button class="save" id="icsYesBtn" style="flex: 1; background: var(--success);">Sí, añadir</button>
+<button class="save" id="icsYesBtn" style="flex: 1; background: var(--success);">Sí, abrir y añadir</button>
 </div>
 </div>
 </div>
@@ -410,14 +410,13 @@ const alarmTimeInput=document.getElementById('alarmTime');
 const alarmTextInput=document.getElementById('alarmText');
 
 const icsModal = document.getElementById('icsModal');
-let pendingIcsData = null;
+let pendingCalendarUrl = null;
 
 let isSelectionMode = false;
 const selectedDays = new Set();
 let storage = {};
 let current = new Date();
 let selectedKey = '';
-let selectedFullDateStr = '';
 
 months.forEach((m,i)=>{ const o=document.createElement('option'); o.value=i; o.textContent=m; monthSelect.appendChild(o); });
 for(let y=2020;y<=2035;y++){ const o=document.createElement('option'); o.value=y; o.textContent=y; yearSelect.appendChild(o); }
@@ -426,10 +425,21 @@ monthSelect.value=current.getMonth();
 yearSelect.value=current.getFullYear();
 
 function key(y,m,d){ return `${y}-${m}-${d}`; }
-function formatICSDate(y,m,d){ 
+
+function formatGoogleDate(y,m,d, timeStr){
   const mm = String(m+1).padStart(2, '0');
   const dd = String(d).padStart(2, '0');
-  return `${y}${mm}${dd}`; 
+  const cleanTime = timeStr.replace(':', '') + '00';
+  
+  let [h, min] = timeStr.split(':');
+  let endH = parseInt(h) + 1;
+  if (endH >= 24) endH = 23;
+  const endCleanTime = String(endH).padStart(2,'0') + min + '00';
+
+  return {
+    start: `${y}${mm}${dd}T${cleanTime}`,
+    end: `${y}${mm}${dd}T${endCleanTime}`
+  };
 }
 
 function defaultType(date){
@@ -505,10 +515,11 @@ onAuthStateChanged(auth, (user) => {
   });
 });
 
+let activeDate = null;
 function openModal(date){
+  activeDate = date;
   const k=key(date.getFullYear(),date.getMonth(),date.getDate());
   selectedKey=k;
-  selectedFullDateStr=formatICSDate(date.getFullYear(),date.getMonth(),date.getDate());
   const data=getData(date);
 
   modalTitle.textContent=`${date.getDate()} de ${months[date.getMonth()]} de ${date.getFullYear()}`;
@@ -522,44 +533,6 @@ function openModal(date){
 
 function closeModal(){ modal.classList.remove('active'); }
 
-function triggerICSDownload(dateStr, timeStr, summaryText, descriptionText) {
-  const cleanTime = timeStr.replace(':', '');
-  const dtStart = `${dateStr}T${cleanTime}00`;
-  
-  let [h, m] = timeStr.split(':');
-  let endH = parseInt(h) + 1;
-  if (endH >= 24) endH = 23;
-  const dtEnd = `${dateStr}T${String(endH).padStart(2,'0')}${m}00`;
-
-  const icsContent = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Calendario Escolar JCOS//ES",
-    "BEGIN:VEVENT",
-    `UID:${Date.now()}@calescolar.app`,
-    `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
-    `DTSTART;TZID=Europe/Madrid:${dtStart}`,
-    `DTEND;TZID=Europe/Madrid:${dtEnd}`,
-    `SUMMARY:${summaryText || 'Aviso Escolar'}`,
-    `DESCRIPTION:${descriptionText || ''}`,
-    "BEGIN:VALARM",
-    "TRIGGER:-PT0M",
-    "ACTION:DISPLAY",
-    `DESCRIPTION:${summaryText || 'Aviso Escolar'}`,
-    "END:VALARM",
-    "END:VEVENT",
-    "END:VCALENDAR"
-  ].join("\r\n");
-
-  const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
-  const link = document.createElement('a');
-  link.href = window.URL.createObjectURL(blob);
-  link.setAttribute('download', `aviso_${dateStr}.ics`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
-
 document.getElementById('saveBtn').onclick = () => {
   const aTime = alarmTimeInput.value;
   const aText = alarmTextInput.value;
@@ -572,29 +545,28 @@ document.getElementById('saveBtn').onclick = () => {
     alarmText: aText
   }).then(() => {
     closeModal();
-    if (aTime) {
-      pendingIcsData = {
-        dateStr: selectedFullDateStr,
-        timeStr: aTime,
-        summary: aText,
-        description: noteInput.value
-      };
+    if (aTime && activeDate) {
+      const dates = formatGoogleDate(activeDate.getFullYear(), activeDate.getMonth(), activeDate.getDate(), aTime);
+      const text = encodeURIComponent(aText || 'Aviso Escolar');
+      const details = encodeURIComponent(noteInput.value || '');
+      
+      pendingCalendarUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${text}&dates=${dates.start}/${dates.end}&details=${details}`;
       icsModal.classList.add('active');
     }
   }).catch(err => alert("Error en Firebase: " + err.message));
 };
 
 document.getElementById('icsYesBtn').onclick = () => {
-  if (pendingIcsData) {
-    triggerICSDownload(pendingIcsData.dateStr, pendingIcsData.timeStr, pendingIcsData.summary, pendingIcsData.description);
+  if (pendingCalendarUrl) {
+    window.open(pendingCalendarUrl, '_blank');
   }
   icsModal.classList.remove('active');
-  pendingIcsData = null;
+  pendingCalendarUrl = null;
 };
 
 document.getElementById('icsNoBtn').onclick = () => {
   icsModal.classList.remove('active');
-  pendingIcsData = null;
+  pendingCalendarUrl = null;
 };
 
 document.getElementById('deleteBtn').onclick=()=>{
