@@ -931,31 +931,41 @@ function toggleChat() {
     chatWidget.style.display = 'none';
   }
 }
+
 async function sendChatMessage() {
   const input = document.getElementById('chat-input');
   const text = input.value.trim();
   if (!text) return;
 
-  // 1. Mostrar mensaje del usuario y limpiar input
+  // 1. Verificar si hay un usuario autenticado en Firebase
+  const user = firebase.auth().currentUser;
+  if (!user) {
+    alert('Debes iniciar sesión para poder usar el asistente.');
+    return;
+  }
+
+  // 2. Mostrar mensaje del usuario y limpiar input
   appendChatMessage('user', text);
   input.value = '';
 
-  // 2. Mostrar burbuja de carga
+  // 3. Mostrar burbuja de carga
   const loadingBubble = appendChatMessage('bot', 'Pensando respuesta...');
 
   try {
-    // 3. Conectar y llamar a la Cloud Function
+    // 4. Conectar y llamar a la Cloud Function (adjunta el token del usuario automáticamente)
     const chatConAsistente = firebase.functions().httpsCallable('chatConAsistente');
     const response = await chatConAsistente({ message: text });
 
-    // 4. Actualizar el texto del bot con la respuesta real de Gemini
+    // 5. Mostrar la respuesta devuelta por Gemini
     if (loadingBubble) {
       loadingBubble.textContent = response.data.reply;
     }
   } catch (error) {
     console.error('Error al llamar al asistente:', error);
     if (loadingBubble) {
-      loadingBubble.textContent = 'Lo siento, ha ocurrido un error al procesar tu consulta.';
+      loadingBubble.textContent = error.code === 'functions/unauthenticated'
+        ? 'Sesión no válida. Inicia sesión de nuevo.'
+        : 'Lo siento, ha ocurrido un error al procesar tu consulta.';
     }
   }
 }
