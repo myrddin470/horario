@@ -261,6 +261,10 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.x.x/firebase-functions-compat.js"></script>
+
+
+
 </head>
 <body>
 
@@ -927,36 +931,53 @@ function toggleChat() {
     chatWidget.style.display = 'none';
   }
 }
-
-function sendChatMessage() {
+async function sendChatMessage() {
   const input = document.getElementById('chat-input');
   const text = input.value.trim();
   if (!text) return;
 
+  // 1. Mostrar mensaje del usuario y limpiar input
   appendChatMessage('user', text);
   input.value = '';
 
-  // Respuesta de prueba visual
-  setTimeout(() => {
-    appendChatMessage('bot', 'Pensando respuesta...');
-  }, 400);
+  // 2. Mostrar burbuja de carga
+  const loadingBubble = appendChatMessage('bot', 'Pensando respuesta...');
+
+  try {
+    // 3. Conectar y llamar a la Cloud Function
+    const chatConAsistente = firebase.functions().httpsCallable('chatConAsistente');
+    const response = await chatConAsistente({ message: text });
+
+    // 4. Actualizar el texto del bot con la respuesta real de Gemini
+    if (loadingBubble) {
+      loadingBubble.textContent = response.data.reply;
+    }
+  } catch (error) {
+    console.error('Error al llamar al asistente:', error);
+    if (loadingBubble) {
+      loadingBubble.textContent = 'Lo siento, ha ocurrido un error al procesar tu consulta.';
+    }
+  }
 }
 
 function appendChatMessage(sender, text) {
   const container = document.getElementById('chat-messages');
-  if (!container) return;
+  if (!container) return null;
 
   const msgDiv = document.createElement('div');
   
   if (sender === 'user') {
-    msgDiv.style.cssText = 'background-color: var(--primary, #4f46e5); color: white; padding: 10px 14px; border-radius: 12px; margin-left: auto; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 14px;';
+    msgDiv.style.cssText = 'background-color: var(--primary, #4f46e5); color: white; padding: 10px 14px; border-radius: 12px; margin-left: auto; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 14px; margin-bottom: 8px;';
   } else {
-    msgDiv.style.cssText = 'background-color: white; padding: 10px 14px; border-radius: 12px; border: 1px solid #e2e8f0; color: #334155; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 14px;';
+    msgDiv.style.cssText = 'background-color: white; padding: 10px 14px; border-radius: 12px; border: 1px solid #e2e8f0; color: #334155; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 14px; margin-bottom: 8px;';
   }
 
   msgDiv.textContent = text;
   container.appendChild(msgDiv);
   container.scrollTop = container.scrollHeight;
+
+  // Retornamos el elemento creado para poder actualizar su contenido cuando llegue la respuesta
+  return msgDiv;
 }
 
 
