@@ -306,6 +306,10 @@
                 <div style="display:flex; gap:10px; flex-wrap: wrap;">
                     <button class="btn-nav" style="background: var(--primary); color: white;" onclick="openConfigModal()">⚙️ Ajustes Horario</button>
                     <button class="btn-nav" style="background: var(--primary); color: white;" onclick="toggleView()">Vista Anual</button>
+                    <button id="chat-toggle-btn" class="btn-nav" style="background: var(--primary); color: white;" onclick="toggleChat()">🤖 Asistente IA</button>
+
+
+
                 </div>
             </header>
 
@@ -901,6 +905,97 @@
         function exportData() { const blob = new Blob([JSON.stringify(db)], {type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`control_horario_backup.json`; a.click(); }
         function importData(e) { const r = new FileReader(); r.onload = (ev) => { db = JSON.parse(ev.target.result); renderMonthly(); saveDataToCloud(); }; r.readAsText(e.target.files[0]); }
         function clearData() { if(confirm("¿Seguro que quieres borrar TODOS los datos guardados? Esto vaciará tu base de datos.")) { db = {}; renderMonthly(); saveDataToCloud(); } }
-    </script>
+  
+
+
+    
+
+
+
+
+
+function toggleChat() {
+  const chatWidget = document.getElementById('chat-widget');
+  if (!chatWidget) {
+    alert('Error: No se encontró el elemento con id "chat-widget" en el HTML.');
+    return;
+  }
+
+  if (chatWidget.style.display === 'none' || chatWidget.style.display === '') {
+    chatWidget.style.display = 'flex';
+  } else {
+    chatWidget.style.display = 'none';
+  }
+}
+
+function sendChatMessage() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  appendChatMessage('user', text);
+  input.value = '';
+
+  // Respuesta de prueba visual
+  setTimeout(() => {
+    appendChatMessage('bot', 'Pensando respuesta...');
+  }, 400);
+}
+
+function appendChatMessage(sender, text) {
+  const container = document.getElementById('chat-messages');
+  if (!container) return;
+
+  const msgDiv = document.createElement('div');
+  
+  if (sender === 'user') {
+    msgDiv.style.cssText = 'background-color: var(--primary, #4f46e5); color: white; padding: 10px 14px; border-radius: 12px; margin-left: auto; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 14px;';
+  } else {
+    msgDiv.style.cssText = 'background-color: white; padding: 10px 14px; border-radius: 12px; border: 1px solid #e2e8f0; color: #334155; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 14px;';
+  }
+
+  msgDiv.textContent = text;
+  container.appendChild(msgDiv);
+  container.scrollTop = container.scrollHeight;
+}
+
+
+
+  
+  
+  </script>
+
+<div id="chat-widget" style="display: none; position: fixed; top: 70px; right: 20px; width: 340px; height: 450px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); z-index: 999999; flex-direction: column; overflow: hidden; font-family: system-ui, -apple-system, sans-serif;">
+  
+  <!-- Encabezado -->
+  <div style="background-color: #1e293b; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="width: 10px; height: 10px; background-color: #34d399; border-radius: 50%;"></span>
+      <h3 style="margin: 0; font-size: 14px; font-weight: 600;">Asistente IA</h3>
+    </div>
+    <button onclick="toggleChat()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; line-height: 1;">&times;</button>
+  </div>
+
+  <!-- Mensajes -->
+  <div id="chat-messages" style="flex: 1; padding: 16px; overflow-y: auto; background-color: #f8fafc; font-size: 14px; display: flex; flex-direction: column; gap: 10px;">
+    <div style="background-color: white; padding: 10px 14px; border-radius: 12px; border: 1px solid #e2e8f0; color: #334155; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+      ¡Hola! ¿En qué puedo ayudarte hoy con tus turnos o registro horario?
+    </div>
+  </div>
+
+  <!-- Formulario -->
+  <form id="chat-form" onsubmit="event.preventDefault(); sendChatMessage();" style="padding: 12px; background-color: white; border-top: 1px solid #f1f5f9; display: flex; gap: 8px;">
+    <input type="text" id="chat-input" placeholder="Escribe tu consulta..." style="flex: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none;" required />
+    <button type="submit" style="background-color: var(--primary, #4f46e5); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 500; cursor: pointer; font-size: 14px;">
+      Enviar
+    </button>
+  </form>
+
+</div>
+
+</body>
+</html>
+
+
 </body>
 </html>
