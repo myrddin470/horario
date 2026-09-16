@@ -9,7 +9,7 @@
     <link rel="icon" type="image/png" href="icon-desktop.png" sizes="192x192">
     <link rel="apple-touch-icon" href="icon-desktop.png">
    
-    <style>
+   <style>
         :root {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
@@ -158,11 +158,11 @@
         .bg-nolaborable-sat { background-color: var(--c-nolaborable-sat); }
         .bg-nolaborable-other { background-color: var(--c-nolaborable-other); }
        
-        .bg-comision { background-color: rgba(217, 196, 154, 0.35); border-color: rgba(217, 196, 154, 0.7); color: #634819; }
+       .bg-comision { background-color: rgba(217, 196, 154, 0.35); border-color: rgba(217, 196, 154, 0.7); color: #634819; }
         .bg-comision .day-number { color: #634819; }
         .bg-comision .day-total { color: #634819; background: rgba(217, 196, 154, 0.4); }
         
-        .bg-vacaciones { background-color: rgba(59, 130, 246, 0.28); border-color: rgba(59, 130, 246, 0.6); color: #1e40af; }
+       .bg-vacaciones { background-color: rgba(59, 130, 246, 0.28); border-color: rgba(59, 130, 246, 0.6); color: #1e40af; }
         .bg-vacaciones .day-number { color: #1e40af; }
         .bg-vacaciones .day-total { color: #1e40af; background: rgba(59, 130, 246, 0.3); }
         
@@ -174,7 +174,7 @@
         .bg-extras .day-number { color: #86198f; }
         .bg-extras .day-total { color: #86198f; background: rgba(217, 70, 239, 0.3); }
         
-        .bg-festivo { background-color: rgba(248, 113, 113, 0.28); border-color: rgba(248, 113, 113, 0.6); color: #991b1b; }
+       .bg-festivo { background-color: rgba(248, 113, 113, 0.28); border-color: rgba(248, 113, 113, 0.6); color: #991b1b; }
         .bg-festivo .day-number { color: #991b1b; }
         .bg-festivo .day-total { color: #991b1b; background: rgba(248, 113, 113, 0.3); }
 
@@ -236,6 +236,7 @@
             .main-header-bar { flex-direction: column; text-align: center; justify-content: center; }
             .header-nav { flex-direction: column; align-items: stretch; }
             .nav-controls { justify-content: center; }
+            .header-nav style { width: 100%; }
             .header-nav button, .header-nav div { width: 100%; justify-content: center; }
             .calendar-grid { gap: 6px; }
             .day-box { min-height: 95px; padding: 8px; border-radius: 10px; }
@@ -260,7 +261,6 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-functions-compat.js"></script>
 </head>
 <body>
 
@@ -279,7 +279,7 @@
         </div>
         <div class="login-group">
             <label>Contraseña</label>
-            <input type="password" id="login-pass">
+            <input type="password" id="login-pass" >
         </div>
         
         <button class="btn-login" onclick="execLogin()">Iniciar Sesión</button>
@@ -306,7 +306,6 @@
                 <div style="display:flex; gap:10px; flex-wrap: wrap;">
                     <button class="btn-nav" style="background: var(--primary); color: white;" onclick="openConfigModal()">⚙️ Ajustes Horario</button>
                     <button class="btn-nav" style="background: var(--primary); color: white;" onclick="toggleView()">Vista Anual</button>
-                    <button id="chat-toggle-btn" class="btn-nav" style="background: var(--primary); color: white;" onclick="toggleChat()">🤖 Asistente IA</button>
                 </div>
             </header>
 
@@ -459,35 +458,6 @@
         <button class="btn-tool" onclick="document.getElementById('importInput').click()">📤 Importar JSON</button>
         <button class="btn-tool" onclick="clearData()" style="color:#ef4444; border-color: #fca5a5;">🗑️ Borrar Todo</button>
         <input type="file" id="importInput" class="hidden" accept=".json" onchange="importData(event)">
-    </div>
-
-    <!-- Widget flotante del Asistente IA -->
-    <div id="chat-widget" style="display: none; position: fixed; top: 70px; right: 20px; width: 340px; height: 450px; background-color: #ffffff; border: 1px solid #cbd5e1; border-radius: 16px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.2); z-index: 999999; flex-direction: column; overflow: hidden; font-family: system-ui, -apple-system, sans-serif;">
-      
-      <!-- Encabezado -->
-      <div style="background-color: #1e293b; color: white; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="width: 10px; height: 10px; background-color: #34d399; border-radius: 50%;"></span>
-          <h3 style="margin: 0; font-size: 14px; font-weight: 600;">Asistente IA</h3>
-        </div>
-        <button onclick="toggleChat()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; line-height: 1;">&times;</button>
-      </div>
-
-      <!-- Mensajes -->
-      <div id="chat-messages" style="flex: 1; padding: 16px; overflow-y: auto; background-color: #f8fafc; font-size: 14px; display: flex; flex-direction: column; gap: 10px;">
-        <div style="background-color: white; padding: 10px 14px; border-radius: 12px; border: 1px solid #e2e8f0; color: #334155; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
-          ¡Hola! ¿En qué puedo ayudarte hoy con tus turnos o registro horario?
-        </div>
-      </div>
-
-      <!-- Formulario -->
-      <form id="chat-form" onsubmit="event.preventDefault(); sendChatMessage();" style="padding: 12px; background-color: white; border-top: 1px solid #f1f5f9; display: flex; gap: 8px;">
-        <input type="text" id="chat-input" placeholder="Escribe tu consulta..." style="flex: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none;" required />
-        <button type="submit" style="background-color: var(--primary, #4f46e5); color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 500; cursor: pointer; font-size: 14px;">
-          Enviar
-        </button>
-      </form>
-
     </div>
 
     <script>
@@ -782,6 +752,7 @@
             document.getElementById('configModalOverlay').style.display = 'flex';
         }
 
+        // Cierra modales de configuración
         function closeConfigModal() { document.getElementById('configModalOverlay').style.display = 'none'; }
 
         function saveAnnualLimits() {
@@ -804,7 +775,7 @@
             }
         }
 
-        function saveDayData() {
+       function saveDayData() {
             const newType = document.getElementById('dayType').value;
             const [y, m, d] = currentEditingKey.split('-').map(Number);
             const cfg = getConfig(y);
@@ -886,6 +857,7 @@
                     let def = (dow === 0)?'festivo':(dow===6?'nolaborable':'laborable');
                     const data = db[k] || { type: def };
                     
+                    // Acumulamos minutos de horas extras hechos (para saber los días totales que se generan)
                     if(db[k]) {
                         totalExMinutes += calcSEx(data, k);
                         if(data.type==='vacaciones') v++; 
@@ -902,6 +874,7 @@
                 mDiv.appendChild(dDiv); container.appendChild(mDiv);
             }
             
+            // Cálculo de los días totales generados por Horas Extras (Factor 1.75)
             const totalCompensatedMinutes = Math.round(totalExMinutes * 1.75);
             const totalGeneratedDays = Math.floor(totalCompensatedMinutes / cfg.minDay);
             
@@ -928,72 +901,6 @@
         function exportData() { const blob = new Blob([JSON.stringify(db)], {type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`control_horario_backup.json`; a.click(); }
         function importData(e) { const r = new FileReader(); r.onload = (ev) => { db = JSON.parse(ev.target.result); renderMonthly(); saveDataToCloud(); }; r.readAsText(e.target.files[0]); }
         function clearData() { if(confirm("¿Seguro que quieres borrar TODOS los datos guardados? Esto vaciará tu base de datos.")) { db = {}; renderMonthly(); saveDataToCloud(); } }
-
-        function toggleChat() {
-          const chatWidget = document.getElementById('chat-widget');
-          if (!chatWidget) {
-            alert('Error: No se encontró el elemento con id "chat-widget" en el HTML.');
-            return;
-          }
-
-          if (chatWidget.style.display === 'none' || chatWidget.style.display === '') {
-            chatWidget.style.display = 'flex';
-          } else {
-            chatWidget.style.display = 'none';
-          }
-        }
-
-        async function sendChatMessage() {
-          const input = document.getElementById('chat-input');
-          const text = input.value.trim();
-          if (!text) return;
-
-          const user = firebase.auth().currentUser;
-          if (!user) {
-            alert('Debes iniciar sesión para poder usar el asistente.');
-            return;
-          }
-
-          appendChatMessage('user', text);
-          input.value = '';
-
-          const loadingBubble = appendChatMessage('bot', 'Pensando respuesta...');
-
-          try {
-            const chatConAsistente = firebase.functions().httpsCallable('chatConAsistente');
-            const response = await chatConAsistente({ message: text });
-
-            if (loadingBubble) {
-              loadingBubble.textContent = response.data.reply;
-            }
-          } catch (error) {
-            console.error('Error al llamar al asistente:', error);
-            if (loadingBubble) {
-              loadingBubble.textContent = error.code === 'functions/unauthenticated'
-                ? 'Sesión no válida. Inicia sesión de nuevo.'
-                : 'Lo siento, ha ocurrido un error al procesar tu consulta.';
-            }
-          }
-        }
-
-        function appendChatMessage(sender, text) {
-          const container = document.getElementById('chat-messages');
-          if (!container) return null;
-
-          const msgDiv = document.createElement('div');
-          
-          if (sender === 'user') {
-            msgDiv.style.cssText = 'background-color: var(--primary, #4f46e5); color: white; padding: 10px 14px; border-radius: 12px; margin-left: auto; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 14px; margin-bottom: 8px;';
-          } else {
-            msgDiv.style.cssText = 'background-color: white; padding: 10px 14px; border-radius: 12px; border: 1px solid #e2e8f0; color: #334155; max-width: 85%; box-shadow: 0 1px 2px rgba(0,0,0,0.05); font-size: 14px; margin-bottom: 8px;';
-          }
-
-          msgDiv.textContent = text;
-          container.appendChild(msgDiv);
-          container.scrollTop = container.scrollHeight;
-
-          return msgDiv;
-        }
     </script>
 </body>
 </html>
