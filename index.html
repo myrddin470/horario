@@ -382,7 +382,7 @@
             <h3 id="modalDateTitle" style="margin-top:0; font-weight: 800; font-size: 1.3rem;">Editar Día</h3>
             <div class="input-group">
                 <label>Tipo de Día</label>
-                <select id="dayType">
+                <select id="dayType" onchange="handleDayTypeChange()">
                     <option value="laborable">Laborable</option>
                     <option value="nolaborable">No Laborable / Otros permisos</option>
                     <option value="comision">Comisión de Servicio</option>
@@ -624,9 +624,16 @@
                 if (dow === 6) defaultType = 'nolaborable';
 
                 const data = db[k] || { type: defaultType };
-                if (data.type === 'laborable' || data.type === 'comision') tTarget += cfg.minDay;
+                
+                // Si el día no es laborable ni comisión, nos aseguramos de que no compute horas
+                const esLaborableOComision = (data.type === 'laborable' || data.type === 'comision');
+                if (esLaborableOComision) {
+                    tTarget += cfg.minDay;
+                }
 
-                const dMin = calcMin(data), sEx = calcSEx(data, k);
+                const dMin = esLaborableOComision ? calcMin(data) : 0; 
+                const sEx = esLaborableOComision ? calcSEx(data, k) : 0;
+                
                 tWork += dMin; tExtra += sEx;
                 
                 let colorClass = `bg-${data.type}`;
@@ -638,8 +645,8 @@
                 const dayBox = document.createElement('div');
                 dayBox.className = `day-box ${colorClass} ${esHoy}`;
                 dayBox.innerHTML = `<div class="day-top-bar"><div class="day-number">${d}</div>${data.notes?'<div class="comment-indicator" title="Tiene anotaciones">💬</div>':''}</div>
-                    <div class="day-info">${data.tIn1?`${data.tIn1}-${data.tOut1}`:''}${data.tIn2?` ${data.tIn2}-${data.tOut2}`:''}</div>
-                    ${dMin>0?`<div class="day-total">${fmtH(dMin)}</div>`:''}`;
+                    <div class="day-info">${esLaborableOComision && data.tIn1?`${data.tIn1}-${data.tOut1}`:''}${esLaborableOComision && data.tIn2?` ${data.tIn2}-${data.tOut2}`:''}</div>
+                    ${esLaborableOComision && dMin>0?`<div class="day-total">${fmtH(dMin)}</div>`:''}`;
                 dayBox.onclick = () => openModal(k, d);
                 grid.appendChild(dayBox);
             }
@@ -684,7 +691,11 @@
                 let mEx=0, mDi=0;
                 for(let d=1; d<=new Date(y,m+1,0).getDate(); d++) {
                     const k=`${y}-${m}-${d}`; 
-                    if(db[k]){ mEx+=calcSEx(db[k], k); if(db[k].type==='extras') mDi+=cfg.minDay; }
+                    if(db[k]) {
+                        const isLabOrCom = (db[k].type === 'laborable' || db[k].type === 'comision');
+                        if (isLabOrCom) mEx+=calcSEx(db[k], k); 
+                        if(db[k].type==='extras') mDi+=cfg.minDay; 
+                    }
                 }
                 let mCo=Math.round(mEx*1.75); yEx+=mEx; yCo+=mCo; yDi+=mDi;
                 const saldoMes = mCo - mDi;
@@ -729,10 +740,26 @@
             let def = (dow === 0)?'festivo':(dow===6?'nolaborable':'laborable');
             document.getElementById('modalDateTitle').innerText = `${d} de ${months[currentDate.getMonth()]}`;
             document.getElementById('dayType').value = data.type || def;
-            document.getElementById('t-in-1').value = data.tIn1||''; document.getElementById('t-out-1').value = data.tOut1||'';
-            document.getElementById('t-in-2').value = data.tIn2||''; document.getElementById('t-out-2').value = data.tOut2||'';
-            document.getElementById('dayNotes').value = data.notes||'';
+            
+            const isLabOrCom = (document.getElementById('dayType').value === 'laborable' || document.getElementById('dayType').value === 'comision');
+            
+            document.getElementById('t-in-1').value = isLabOrCom ? (data.tIn1 || '') : ''; 
+            document.getElementById('t-out-1').value = isLabOrCom ? (data.tOut1 || '') : '';
+            document.getElementById('t-in-2').value = isLabOrCom ? (data.tIn2 || '') : ''; 
+            document.getElementById('t-out-2').value = isLabOrCom ? (data.tOut2 || '') : '';
+            document.getElementById('dayNotes').value = data.notes || '';
             document.getElementById('modalOverlay').style.display = 'flex';
+        }
+
+        // Función para limpiar automáticamente los inputs de hora al cambiar el tipo de día en el modal
+        function handleDayTypeChange() {
+            const newType = document.getElementById('dayType').value;
+            if (newType !== 'laborable' && newType !== 'comision') {
+                document.getElementById('t-in-1').value = '';
+                document.getElementById('t-out-1').value = '';
+                document.getElementById('t-in-2').value = '';
+                document.getElementById('t-out-2').value = '';
+            }
         }
 
         function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
@@ -752,7 +779,6 @@
             document.getElementById('configModalOverlay').style.display = 'flex';
         }
 
-        // Cierra modales de configuración
         function closeConfigModal() { document.getElementById('configModalOverlay').style.display = 'none'; }
 
         function saveAnnualLimits() {
@@ -780,27 +806,33 @@
             const [y, m, d] = currentEditingKey.split('-').map(Number);
             const cfg = getConfig(y);
             
-            const in1 = document.getElementById('t-in-1').value;
-            const out1 = document.getElementById('t-out-1').value;
-            const in2 = document.getElementById('t-in-2').value;
-            const out2 = document.getElementById('t-out-2').value;
+            const isLabOrCom = (newType === 'laborable' || newType === 'comision');
 
-            if ((in1 && !out1) || (!in1 && out1)) {
-                alert("⚠️ Error en Turno de Mañana:\nDebes rellenar tanto la hora de entrada como la de salida.");
-                return;
-            }
-            if (in1 && out1 && tToM(out1) <= tToM(in1)) {
-                alert("⚠️ Error en Turno de Mañana:\nLa hora de salida no puede ser igual o anterior a la hora de entrada.");
-                return;
-            }
+            let in1 = '', out1 = '', in2 = '', out2 = '';
 
-            if ((in2 && !out2) || (!in2 && out2)) {
-                alert("⚠️ Error en Turno de Tarde:\nDebes rellenar tanto la hora de entrada como la de salida.");
-                return;
-            }
-            if (in2 && out2 && tToM(out2) <= tToM(in2)) {
-                alert("⚠️ Error en Turno de Tarde:\nLa hora de salida no puede ser igual o anterior a la hora de entrada.");
-                return;
+            if (isLabOrCom) {
+                in1 = document.getElementById('t-in-1').value;
+                out1 = document.getElementById('t-out-1').value;
+                in2 = document.getElementById('t-in-2').value;
+                out2 = document.getElementById('t-out-2').value;
+
+                if ((in1 && !out1) || (!in1 && out1)) {
+                    alert("⚠️ Error en Turno de Mañana:\nDebes rellenar tanto la hora de entrada como la de salida.");
+                    return;
+                }
+                if (in1 && out1 && tToM(out1) <= tToM(in1)) {
+                    alert("⚠️ Error en Turno de Mañana:\nLa hora de salida no puede ser igual o anterior a la hora de entrada.");
+                    return;
+                }
+
+                if ((in2 && !out2) || (!in2 && out2)) {
+                    alert("⚠️ Error en Turno de Tarde:\nDebes rellenar tanto la hora de entrada como la de salida.");
+                    return;
+                }
+                if (in2 && out2 && tToM(out2) <= tToM(in2)) {
+                    alert("⚠️ Error en Turno de Tarde:\nLa hora de salida no puede ser igual o anterior a la hora de entrada.");
+                    return;
+                }
             }
 
             if (newType === 'vacaciones' || newType === 'asuntos') {
@@ -857,9 +889,9 @@
                     let def = (dow === 0)?'festivo':(dow===6?'nolaborable':'laborable');
                     const data = db[k] || { type: def };
                     
-                    // Acumulamos minutos de horas extras hechos (para saber los días totales que se generan)
                     if(db[k]) {
-                        totalExMinutes += calcSEx(data, k);
+                        const isLabOrCom = (data.type === 'laborable' || data.type === 'comision');
+                        if (isLabOrCom) totalExMinutes += calcSEx(data, k);
                         if(data.type==='vacaciones') v++; 
                         if(data.type==='asuntos') a++; 
                         if(data.type==='extras') e++;
@@ -874,7 +906,6 @@
                 mDiv.appendChild(dDiv); container.appendChild(mDiv);
             }
             
-            // Cálculo de los días totales generados por Horas Extras (Factor 1.75)
             const totalCompensatedMinutes = Math.round(totalExMinutes * 1.75);
             const totalGeneratedDays = Math.floor(totalCompensatedMinutes / cfg.minDay);
             
