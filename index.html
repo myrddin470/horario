@@ -1,937 +1,1037 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control Horario - JCOS</title>
-   
-    <link rel="icon" type="image/png" href="favicon.png" sizes="32x32">
-    <link rel="icon" type="image/png" href="icon-desktop.png" sizes="192x192">
-    <link rel="apple-touch-icon" href="icon-desktop.png">
-   
-   <style>
-        :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --primary-light: rgba(79, 70, 229, 0.1);
-            --bg: #f8fafc;
-            --card: #ffffff;
-            --text: #0f172a;
-            --text-secondary: #64748b;
-            --border: #e2e8f0;
-            
-            /* Colores de Estado Estilizados */
-            --c-laborable: #ffffff;
-            --c-nolaborable-sat: #ffffff;
-            --c-nolaborable-other: #e2e8f0; 
-            --c-comision: #fef08a; 
-            --c-vacaciones: #3b82f6; 
-            --c-asuntos: #10b981; 
-            --c-extras: #d946ef; 
-            --c-festivo: #f87171; 
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Control Horario - JCOS</title>
+<link rel="icon" type="image/png" href="favicon.png" sizes="32x32">
+<link rel="icon" type="image/png" href="icon-desktop.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icon-desktop.png">
+<style>
+:root{
+  --bg:#f3f5fa; --card:#fff; --ink:#0f172a; --muted:#64748b; --line:#e4e8f0;
+  --brand:#4f46e5; --brand-2:#4338ca; --brand-soft:rgba(79,70,229,.09);
+  --pos:#059669; --neg:#dc2626; --radius:14px;
+  --shadow:0 1px 2px rgba(15,23,42,.04),0 4px 14px rgba(15,23,42,.05);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:14px;line-height:1.4;-webkit-font-smoothing:antialiased}
+button{font-family:inherit}
+.hidden{display:none!important}
 
-        * { box-sizing: border-box; }
+/* Tipos de día */
+.t-laborable{--tbg:#fff;--tfg:#0f172a}
+.t-nolaborable{--tbg:#f1f5f9;--tfg:#475569}
+.t-rest{--tbg:#f8fafc;--tfg:#94a3b8}
+.t-comision{--tbg:#f1e7da;--tfg:#7a5c3e}
+.t-vacaciones{--tbg:#dbeafe;--tfg:#1d4ed8}
+.t-asuntos{--tbg:#d1fae5;--tfg:#047857}
+.t-extras{--tbg:#fae8ff;--tfg:#a21caf}
+.t-festivo{--tbg:#fee2e2;--tfg:#b91c1c}
 
-        body { 
-            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
-            background: var(--bg); 
-            color: var(--text); 
-            margin: 0; 
-            padding: 24px; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center;
-            min-height: 100vh;
-            -webkit-font-smoothing: antialiased;
-        }
+/* Carga */
+.loading-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;justify-content:center;align-items:center;z-index:3000;gap:14px}
+.spinner{width:38px;height:38px;border:3px solid var(--line);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{color:var(--muted);font-weight:600}
 
-        /* Estructura Full-Width */
-        .app-container { 
-            width: 100%; 
-            max-width: 100%;
-            margin: 0 auto;
-        }
-        
-        .hidden { display: none !important; }
+/* Login */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:34px 30px;width:100%;max-width:380px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:.02em}
+.brand-logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--brand),#7c3aed);color:#fff;display:grid;place-items:center;font-size:17px}
+.login-card h2{margin:18px 0 4px;font-size:1.25rem}
+.login-card p.sub{margin:0 0 22px;color:var(--muted)}
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:14px}
+.field label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;font:inherit;color:var(--ink)}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
+input:disabled{background:#f1f5f9;color:#94a3b8}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:9px 14px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:600;font-size:.85rem;cursor:pointer;transition:.15s}
+.btn:hover{background:#f8fafc;border-color:#cbd5e1}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+.btn.primary:hover{background:var(--brand-2)}
+.btn.danger{color:var(--neg);border-color:#fecaca}
+.btn.danger:hover{background:#fef2f2}
+.btn.icon{padding:9px 12px}
+.btn.block{width:100%}
+.link{background:none;border:none;color:var(--brand);font-weight:600;cursor:pointer;padding:0;font-size:.82rem}
+.msg{margin-top:12px;font-size:.82rem;font-weight:600}
+.msg.err{color:var(--neg)} .msg.ok{color:var(--pos)}
 
-        /* PANTALLA DE CARGA */
-        .loading-screen {
-            position: fixed; inset: 0; background: var(--bg); display: flex;
-            flex-direction: column; justify-content: center; align-items: center; z-index: 2000;
-        }
-        .spinner {
-            width: 48px; height: 48px; border: 4px solid #e2e8f0;
-            border-top-color: var(--primary); border-radius: 50%;
-            animation: spin 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite; margin-bottom: 20px;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-text { font-weight: 600; color: var(--text-secondary); font-size: 1.1rem; letter-spacing: -0.01em; }
+/* App */
+.app{max-width:1400px;margin:0 auto;padding:18px 20px 40px}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
+.topbar .brand small{color:var(--muted);font-weight:500;margin-left:4px}
+.user-box{display:flex;align-items:center;gap:8px}
+.chip-user{background:#fff;border:1px solid var(--line);padding:6px 12px;border-radius:99px;font-weight:600;font-size:.8rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-        /* PANTALLA DE LOGIN */
-        .login-container {
-            background: var(--card); padding: 40px; border-radius: 24px;
-            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05), 0 10px 10px -5px rgba(0,0,0,0.03); 
-            width: 100%; max-width: 420px;
-            margin-top: 10vh; border: 1px solid var(--border); text-align: center;
-        }
-        .login-container h2 { margin: 0 0 8px 0; color: var(--primary); font-weight: 800; font-size: 1.6rem; letter-spacing: -0.02em; }
-        .login-container p { color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 32px; font-weight: 500; }
-        .login-group { display: flex; flex-direction: column; text-align: left; gap: 8px; margin-bottom: 20px; }
-        .login-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
-        .login-group input { 
-            padding: 14px; border: 1px solid var(--border); border-radius: 12px; font-size: 1rem; 
-            font-family: inherit; transition: all 0.2s; background: #f8fafc;
-        }
-        .login-group input:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px var(--primary-light); }
-        .btn-login { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 12px; font-weight: 600; font-size: 1rem; cursor: pointer; margin-top: 12px; transition: background 0.2s; }
-        .btn-login:hover { background: var(--primary-hover); }
-        .login-error { color: #ef4444; font-size: 0.85rem; font-weight: 600; margin-top: 16px; }
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:10px 12px;box-shadow:var(--shadow);margin-bottom:12px}
+.nav{display:flex;align-items:center;gap:6px}
+.nav select{width:auto;padding:8px 10px;font-weight:600}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
 
-        /* INTERFAZ PRINCIPAL - DASHBOARD HEADER */
-        .main-header-bar {
-            width: 100%; background: var(--card); padding: 20px 32px; border-radius: 20px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 4px 6px -1px rgba(0,0,0,0.03); margin-bottom: 24px; border: 1px solid var(--border);
-            display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-        }
-        .main-header-bar h1 { margin: 0; font-size: 1.3rem; letter-spacing: 1px; color: var(--text); font-weight: 800; }
-        .copy-text { font-size: 0.85rem; color: var(--text-secondary); font-weight: 500; margin-left: 6px; opacity: 0.7; }
-        .user-info-box { display: flex; align-items: center; gap: 12px; }
-        .user-logged-text { font-size: 0.85rem; color: var(--text); font-weight: 600; background: #f1f5f9; padding: 8px 16px; border-radius: 9999px; display: inline-block; }
-        .btn-logout { background: #fee2e2; color: #ef4444; border: none; padding: 8px 16px; font-size: 0.85rem; font-weight: 600; border-radius: 9999px; cursor: pointer; transition: all 0.2s; }
-        .btn-logout:hover { background: #fca5a5; color: #b91c1c; }
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+.stat .l{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.stat .v{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;margin-top:2px}
+.stat .v.pos{color:var(--pos)} .stat .v.neg{color:var(--neg)}
+.stat .s{font-size:.72rem;color:var(--muted)}
+.stat button.link{margin-top:2px}
 
-        /* NAV CONTROLS */
-        .header-nav { 
-            display: flex; justify-content: space-between; align-items: center; background: var(--card); 
-            padding: 20px 32px; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); 
-            margin-bottom: 24px; gap: 16px; flex-wrap: wrap; border: 1px solid var(--border);
-        }
-        .nav-controls { display: flex; align-items: center; gap: 12px; }
-        .btn-nav { background: #ffffff; color: var(--text); border: 1px solid var(--border); padding: 10px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
-        .btn-nav:hover { background: #f8fafc; border-color: #cbd5e1; }
-        select { padding: 10px 16px; border-radius: 10px; border: 1px solid var(--border); font-weight: 600; background: white; cursor: pointer; color: var(--text); }
-        select:focus { outline: none; border-color: var(--primary); }
+/* Calendario */
+.cal-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:10px;box-shadow:var(--shadow)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:7px}
+.dow{text-align:center;font-size:.68rem;font-weight:700;color:var(--muted);letter-spacing:.06em;padding:4px 0}
+.day{position:relative;display:flex;flex-direction:column;justify-content:space-between;text-align:left;min-height:112px;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--tbg);color:var(--tfg);cursor:pointer;transition:transform .12s,box-shadow .12s,border-color .12s}
+.day:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(15,23,42,.1);border-color:#c7cdd9}
+.day .top{display:flex;justify-content:space-between;align-items:flex-start;gap:4px}
+.day .num{font-weight:700;font-size:1.05rem;line-height:1}
+.day .tag{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.03em;opacity:.9;white-space:nowrap}
+.day .note{font-size:.7rem}
+.day .hrs{font-size:.74rem;color:#475569;font-weight:600;line-height:1.3;margin-top:3px}
+.day .hrs span{display:block;white-space:nowrap}
+.day .bot{display:flex;justify-content:space-between;align-items:flex-end;gap:4px;margin-top:2px}
+.day .tot{font-size:.74rem;font-weight:700;color:var(--ink)}
+.day .ext{font-size:.62rem;font-weight:700;color:#a21caf;background:#fae8ff;border-radius:6px;padding:1px 5px}
+.day.today{border-color:var(--brand);box-shadow:0 0 0 2px var(--brand)}
+.day.t-rest .num{color:#94a3b8}
+.pad{min-height:0}
+.selbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;background:var(--brand-soft);border:1px solid rgba(79,70,229,.3);border-radius:var(--radius);padding:8px 12px;margin-bottom:12px}
+.selbar .info{font-weight:700;color:var(--brand-2)}
+.selbar .info small{color:var(--muted);font-weight:500;margin-left:8px}
+.selbar .btns{display:flex;gap:6px;flex-wrap:wrap}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.day.sel{box-shadow:0 0 0 2px var(--brand);background-image:linear-gradient(rgba(79,70,229,.16),rgba(79,70,229,.16))}
+.check{display:flex;gap:8px;align-items:center;font-size:.85rem;margin-top:4px;cursor:pointer}
+.check input{width:auto;padding:0}
 
-        /* KPI STATS CARDS */
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 24px; }
-        .stat-card { background: var(--card); padding: 24px; border-radius: 20px; text-align: left; box-shadow: 0 1px 3px rgba(0,0,0,0.02); border: 1px solid var(--border); position: relative; overflow: hidden; }
-        .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--border); }
-        .stat-card:nth-child(1)::before { background: var(--primary); }
-        .stat-card:nth-child(2)::before { background: #10b981; }
-        .stat-card:nth-child(3)::before { background: #d946ef; }
-        .stat-label { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
-        .stat-value { display: block; font-size: 1.8rem; font-weight: 800; margin-top: 6px; letter-spacing: -0.02em; }
-        .btn-view-extras { margin-top: 12px; background: var(--primary-light); color: var(--primary); border: none; padding: 8px 14px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; font-weight: 600; transition: all 0.2s; width: 100%; text-align: center; }
-        .btn-view-extras:hover { background: var(--primary); color: white; }
+.legend{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:10px;padding:0 4px;font-size:.72rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend i{width:11px;height:11px;border-radius:4px;background:var(--tbg);border:1px solid var(--tfg);display:inline-block}
 
-        /* CALENDARIO MENSUAL */
-        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 12px; width: 100%; }
-        .day-header-name { text-align: center; font-weight: 700; color: var(--text-secondary); font-size: 0.8rem; padding: 12px 0; text-transform: uppercase; letter-spacing: 0.05em; }
-        
-        .day-box { 
-            background: var(--card); border-radius: 16px; min-height: 140px; padding: 14px; 
-            border: 1px solid var(--border); cursor: pointer; position: relative; display: flex; 
-            flex-direction: column; transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-        }
-        .day-box:hover { transform: translateY(-4px); box-shadow: 0 12px 20px -8px rgba(0,0,0,0.08); border-color: #cbd5e1; }
-        .day-top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;}
-        .day-number { font-weight: 700; font-size: 1.25rem; color: var(--text); }
-        .comment-indicator { font-size: 1.1rem; opacity: 0.9; cursor: help; }
-        .day-info { font-size: 0.85rem; font-weight: 600; color: #475569; line-height: 1.4; background: rgba(0,0,0,0.02); padding: 4px 8px; border-radius: 8px; inline-size: max-content; max-width: 100%; }
-        .day-total { margin-top: auto; font-weight: 700; font-size: 0.85rem; text-align: right; color: var(--primary); background: var(--primary-light); padding: 4px 8px; border-radius: 8px; align-self: flex-end; }
+/* Anual */
+.annual-sum{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.sum{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
+.sum .l{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.sum .v{font-size:1.15rem;font-weight:800;margin:2px 0 8px}
+.bar{height:6px;border-radius:9px;background:#eef1f6;overflow:hidden}
+.bar b{display:block;height:100%;width:0;border-radius:9px;background:var(--brand);transition:width .3s}
+.annual{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.mini{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:10px;cursor:pointer;box-shadow:var(--shadow);transition:.15s;text-align:left;font:inherit}
+.mini:hover{border-color:var(--brand)}
+.mini h4{margin:0 0 6px;font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.mini-days{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.md{aspect-ratio:1;display:grid;place-items:center;font-size:.6rem;font-weight:600;border-radius:4px;background:var(--tbg);color:var(--tfg)}
 
-        /* DESTACAR EL DÍA ACTUAL (HOY) */
-        .day-today {
-            outline: 3px solid var(--primary);
-            outline-offset: -3px;
-            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.25), 0 4px 6px -4px rgba(79, 70, 229, 0.25) !important;
-            animation: pulse-today 2s infinite alternate;
-        }
-        @keyframes pulse-today {
-            0% { outline-color: var(--primary); }
-            100% { outline-color: #818cf8; }
-        }
+/* Modales */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:2000;padding:14px}
+.overlay.open{display:flex}
+.modal{background:#fff;border-radius:18px;padding:22px;width:100%;max-width:440px;max-height:92vh;overflow:auto;box-shadow:0 25px 50px -12px rgba(15,23,42,.3)}
+.modal.wide{max-width:860px}
+.modal h3{margin:0 0 2px;font-size:1.05rem;text-transform:capitalize}
+.modal .sub{color:var(--muted);font-size:.8rem;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.shift{border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:12px}
+.shift .t{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
+.shift .field{margin-bottom:0}
+.hint{font-size:.78rem;color:var(--muted);background:#f8fafc;border-radius:10px;padding:8px 10px;margin-bottom:12px}
+.modal-actions{display:flex;gap:8px;margin-top:16px}
+.modal-actions .btn{flex:1}
+.modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}
+.modal-head h3{margin:0;text-transform:none}
 
-        /* COLORES DINÁMICOS DE ESTADOS */
-        .bg-laborable { background-color: var(--c-laborable); }
-        .bg-nolaborable-sat { background-color: var(--c-nolaborable-sat); }
-        .bg-nolaborable-other { background-color: var(--c-nolaborable-other); }
-       
-       .bg-comision { background-color: rgba(217, 196, 154, 0.35); border-color: rgba(217, 196, 154, 0.7); color: #634819; }
-        .bg-comision .day-number { color: #634819; }
-        .bg-comision .day-total { color: #634819; background: rgba(217, 196, 154, 0.4); }
-        
-       .bg-vacaciones { background-color: rgba(59, 130, 246, 0.28); border-color: rgba(59, 130, 246, 0.6); color: #1e40af; }
-        .bg-vacaciones .day-number { color: #1e40af; }
-        .bg-vacaciones .day-total { color: #1e40af; background: rgba(59, 130, 246, 0.3); }
-        
-        .bg-asuntos { background-color: rgba(16, 185, 129, 0.28); border-color: rgba(16, 185, 129, 0.6); color: #065f46; }
-        .bg-asuntos .day-number { color: #065f46; }
-        .bg-asuntos .day-total { color: #065f46; background: rgba(16, 185, 129, 0.3); }
-        
-        .bg-extras { background-color: rgba(217, 70, 239, 0.28); border-color: rgba(217, 70, 239, 0.6); color: #86198f; }
-        .bg-extras .day-number { color: #86198f; }
-        .bg-extras .day-total { color: #86198f; background: rgba(217, 70, 239, 0.3); }
-        
-       .bg-festivo { background-color: rgba(248, 113, 113, 0.28); border-color: rgba(248, 113, 113, 0.6); color: #991b1b; }
-        .bg-festivo .day-number { color: #991b1b; }
-        .bg-festivo .day-total { color: #991b1b; background: rgba(248, 113, 113, 0.3); }
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:.84rem;min-width:620px}
+th{background:#f8fafc;text-align:left;padding:10px 12px;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-bottom:1px solid var(--line)}
+td{padding:9px 12px;border-bottom:1px solid #f1f4f9}
+tr.total td{background:#f1f5f9;font-weight:800}
+.pos{color:var(--pos)} .neg{color:var(--neg)}
 
-        /* VISTA ANUAL */
-        .annual-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px; width: 100%; }
-        .mini-month { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); border: 1px solid var(--border); }
-        .mini-month-name { text-align: center; font-weight: 700; margin-bottom: 14px; color: var(--text); text-transform: uppercase; font-size: 0.9rem; letter-spacing: 0.05em; }
-        .mini-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
-        .mini-day { aspect-ratio: 1; border-radius: 6px; font-size: 0.7rem; display: flex; align-items: center; justify-content: center; font-weight: 600; border: 1px solid #f1f5f9; }
-        
-        .annual-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 24px; }
-        .summary-item { padding: 18px; border-radius: 16px; color: white; text-align: center; font-weight: 700; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+.footer{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:18px}
+.footer .btn{font-size:.78rem;padding:7px 12px;color:var(--muted)}
 
-        /* MODALES MODERNOS */
-        .modal-overlay { 
-            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.4); 
-            display: none; justify-content: center; align-items: center; z-index: 1000; 
-            backdrop-filter: blur(8px); padding: 16px;
-        }
-        .modal { 
-            background: white; padding: 32px; border-radius: 24px; width: 100%; max-width: 950px; 
-            max-height: 90vh; overflow-y: auto; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); 
-            border: 1px solid var(--border);
-        }
-        .modal-day-edit, .modal-config-edit { max-width: 480px; }
-        
-        /* TABLAS REPORTE */
-        .table-responsive-container { overflow-x: auto; width: 100%; border-radius: 12px; border: 1px solid var(--border); }
-        .extra-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; background: white; text-align: left; }
-        .extra-table th { background: #f8fafc; padding: 14px 16px; border-bottom: 2px solid var(--border); font-weight: 700; color: var(--text-secondary); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; }
-        .extra-table td { padding: 14px 16px; border-bottom: 1px solid #f1f5f9; color: var(--text); }
-        .extra-table tr.total-row { background: #f1f5f9; font-weight: 800; color: var(--primary); }
-        .text-neg { color: #ef4444 !important; }
-        .text-pos { color: #10b981 !important; }
+.toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(20px);background:#0f172a;color:#fff;padding:10px 16px;border-radius:10px;font-weight:600;font-size:.84rem;opacity:0;pointer-events:none;transition:.25s;z-index:4000;max-width:90vw}
+.toast.show{opacity:1;transform:translateX(-50%)}
+.toast.err{background:var(--neg)}
 
-        /* HERRAMIENTAS INFERIORES */
-        .footer-tools { margin-top: 40px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; padding-bottom: 40px; width: 100%; }
-        .btn-tool { padding: 12px 20px; border-radius: 10px; border: 1px solid var(--border); background: white; color: #475569; font-weight: 600; cursor: pointer; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition: all 0.2s; font-size: 0.9rem; }
-        .btn-tool:hover { background: #f8fafc; border-color: #cbd5e1; color: var(--text); }
-
-        /* DETALLES FORMULARIOS */
-        .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
-        .input-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; width: 100%; }
-        .input-group label { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em; }
-        input, select, textarea { padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 0.95rem; font-family: inherit; background: #f8fafc; width: 100%; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); background: #fff; box-shadow: 0 0 0 4px var(--primary-light); }
-
-        .progress-bar-container { width: 100%; background-color: rgba(255,255,255,0.25); border-radius: 9999px; height: 6px; margin-top: 8px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; border-radius: 9999px; transition: width 0.3s ease; background-color: #ffffff; }
-
-        /* MEDIA QUERIES */
-        @media (max-width: 1024px) {
-            body { padding: 16px; }
-            .main-header-bar, .header-nav { padding: 16px 20px; }
-            .day-box { min-height: 120px; padding: 10px; }
-        }
-
-        @media (max-width: 768px) {
-            .main-header-bar { flex-direction: column; text-align: center; justify-content: center; }
-            .header-nav { flex-direction: column; align-items: stretch; }
-            .nav-controls { justify-content: center; }
-            .header-nav style { width: 100%; }
-            .header-nav button, .header-nav div { width: 100%; justify-content: center; }
-            .calendar-grid { gap: 6px; }
-            .day-box { min-height: 95px; padding: 8px; border-radius: 10px; }
-            .day-number { font-size: 1.1rem; }
-            .day-info { font-size: 0.7rem; padding: 2px 4px; border-radius: 4px; word-break: break-all; inline-size: auto;}
-            .day-total { font-size: 0.75rem; padding: 2px 4px; }
-            .stats-grid { grid-template-columns: 1fr; }
-            .modal { padding: 20px; border-radius: 16px; }
-        }
-
-        @media (max-width: 480px) {
-            .calendar-grid { gap: 4px; }
-            .day-header-name { font-size: 0.7rem; padding: 6px 0; }
-            .day-box { min-height: 80px; padding: 6px; }
-            .day-number { font-size: 0.95rem; }
-            .day-info { display: none; }
-            .day-total { font-size: 0.65rem; padding: 1px 3px; }
-            .modal-grid { grid-template-columns: 1fr; }
-        }
-    </style>
-
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+@media (max-width:760px){
+  .stats,.annual-sum{grid-template-columns:repeat(2,1fr)}
+  .day{min-height:64px;padding:5px}
+  .day .hrs,.day .ext{display:none}
+  .day .tag{font-size:.52rem}
+  .toolbar{padding:8px}
+  .actions{width:100%}.actions .btn{flex:1}
+}
+@media (max-width:460px){
+  .app{padding:10px 8px 30px}
+  .cal{gap:3px}
+  .day{min-height:50px;border-radius:8px}
+  .day .num{font-size:.85rem}
+  .day .tag{display:none}
+  .day .tot{font-size:.62rem}
+  .chip-user{display:none}
+  .grid2{grid-template-columns:1fr 1fr}
+}
+</style>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 </head>
 <body>
 
-    <div class="loading-screen" id="app-loading-screen">
-        <div class="spinner"></div>
-        <div class="loading-text" id="loading-status-text">Iniciando Control Horario...</div>
+<div class="loading-screen" id="loading"><div class="spinner"></div><div class="loading-text" id="loading-text">Iniciando…</div></div>
+
+<!-- LOGIN -->
+<div class="login-wrap hidden" id="login-screen">
+  <form class="login-card" id="login-form" autocomplete="on">
+    <div class="brand"><div class="brand-logo">⏱</div>CONTROL HORARIO</div>
+    <h2>Iniciar sesión</h2>
+    <p class="sub">Área del empleado</p>
+    <div class="field"><label for="login-user">Usuario / Email</label><input type="text" id="login-user" autocomplete="username" placeholder="usuario o correo@dominio.com"></div>
+    <div class="field"><label for="login-pass">Contraseña</label><input type="password" id="login-pass" autocomplete="current-password"></div>
+    <button type="submit" class="btn primary block">Entrar</button>
+    <div style="margin-top:12px;text-align:center"><button type="button" class="link" id="btn-reset">¿Has olvidado la contraseña?</button></div>
+    <div class="msg hidden" id="login-msg"></div>
+  </form>
+</div>
+
+<!-- APP -->
+<div class="app hidden" id="app">
+  <div class="topbar">
+    <div class="brand"><div class="brand-logo">⏱</div><span>CONTROL HORARIO <small>© JCOS</small></span></div>
+    <div class="user-box">
+      <span class="chip-user" id="user-label"></span>
+      <button class="btn" id="btn-logout">Salir</button>
+    </div>
+  </div>
+
+  <!-- VISTA MENSUAL -->
+  <section id="view-monthly">
+    <div class="toolbar">
+      <div class="nav">
+        <button class="btn icon" id="btn-prev" aria-label="Mes anterior">❮</button>
+        <select id="monthSelect" aria-label="Mes"></select>
+        <select id="yearSelect" aria-label="Año"></select>
+        <button class="btn icon" id="btn-next" aria-label="Mes siguiente">❯</button>
+        <button class="btn" id="btn-today">Hoy</button>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btn-select">☑ Selección múltiple</button>
+        <button class="btn" id="btn-config">⚙ Ajustes</button>
+        <button class="btn primary" id="btn-annual">Vista anual</button>
+      </div>
     </div>
 
-    <div class="login-container hidden" id="login-screen">
-        <h2>Control Horario</h2>
-        <p>Área del empleado • Multiusuario</p>
-        
-        <div class="login-group">
-            <label>Usuario / Email</label>
-            <input type="text" id="login-user" placeholder="ejemplo o ejemplo@correo.com">
-        </div>
-        <div class="login-group">
-            <label>Contraseña</label>
-            <input type="password" id="login-pass" >
-        </div>
-        
-        <button class="btn-login" onclick="execLogin()">Iniciar Sesión</button>
-        <div class="login-error hidden" id="login-error-msg">Usuario o contraseña incorrectos</div>
+    <div class="selbar hidden" id="selbar">
+      <div class="info"><span id="sel-count">0 días seleccionados</span><small>Pulsa los días · Mayús + clic para un rango</small></div>
+      <div class="btns">
+        <button class="btn" id="btn-sel-weekdays">Lunes a viernes del mes</button>
+        <button class="btn" id="btn-sel-clear">Limpiar</button>
+        <button class="btn primary" id="btn-sel-apply">Aplicar a la selección…</button>
+      </div>
     </div>
 
-    <div class="app-container hidden" id="main-app-content">
-        <header class="main-header-bar">
-            <h1>CONTROL HORARIO <span class="copy-text">© JCOS</span></h1>
-            <div class="user-info-box">
-                <span class="user-logged-text" id="label-logged-user"></span>
-                <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
-            </div>
-        </header>
-
-        <div id="view-monthly">
-            <header class="header-nav">
-                <div class="nav-controls">
-                    <button class="btn-nav" onclick="changeMonth(-1)">❮</button>
-                    <select id="monthSelect" onchange="updateDateFromSelects()"></select>
-                    <select id="yearSelect" onchange="updateDateFromSelects()"></select>
-                    <button class="btn-nav" onclick="changeMonth(1)">❯</button>
-                </div>
-                <div style="display:flex; gap:10px; flex-wrap: wrap;">
-                    <button class="btn-nav" style="background: var(--primary); color: white;" onclick="openConfigModal()">⚙️ Ajustes Horario</button>
-                    <button class="btn-nav" style="background: var(--primary); color: white;" onclick="toggleView()">Vista Anual</button>
-                </div>
-            </header>
-
-            <div class="stats-grid">
-                <div class="stat-card"><span class="stat-label">Horas Mes:</span><span class="stat-value" id="target-hours">0h</span></div>
-                <div class="stat-card"><span class="stat-label">Horas Trabajadas:</span><span class="stat-value" id="worked-hours">0h</span></div>
-                <div class="stat-card">
-                    <span class="stat-label">Saldo / H. Extras</span>
-                    <span class="stat-value" id="balance-extras">0 / 0</span>
-                    <button class="btn-view-extras" onclick="openExtraReport()">Ver H. Extras</button>
-                </div>
-            </div>
-
-            <div class="calendar-grid" id="calendar-body"></div>
-        </div>
-
-        <div class="app-container hidden" id="view-annual">
-            <header class="header-nav">
-                <h2 id="annual-title" style="margin:0; font-weight: 800;">Resumen Anual <span id="annual-year-text" style="color: var(--primary);"></span></h2>
-                <button class="btn-nav" style="background: var(--primary); color: white;" onclick="toggleView()">Volver al Mes</button>
-            </header>
-
-            <div class="annual-summary">
-                <div class="summary-item" style="background: var(--c-vacaciones); display: flex; flex-direction: column; gap: 5px;">
-                    <div>Vacaciones: <span id="count-vaca">0</span></div>
-                    <div class="progress-bar-container">
-                        <div id="bar-vaca" class="progress-bar-fill" style="width: 0%"></div>
-                    </div>
-                </div>
-                <div class="summary-item" style="background: var(--c-asuntos); display: flex; flex-direction: column; gap: 5px;">
-                    <div>Asuntos propios: <span id="count-asun">0</span></div>
-                    <div class="progress-bar-container">
-                        <div id="bar-asun" class="progress-bar-fill" style="width: 0%"></div>
-                    </div>
-                </div>
-                <div class="summary-item" style="background: #c026d3; display: flex; flex-direction: column; gap: 5px;">
-                    <div>H. Extras: <span id="count-extr">0</span></div>
-                    <div class="progress-bar-container">
-                        <div id="bar-extr" class="progress-bar-fill" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="annual-grid" id="annual-calendar-container"></div>
-        </div>
+    <div class="stats">
+      <div class="stat"><div class="l">Horas objetivo</div><div class="v" id="st-target">0h</div><div class="s" id="st-target-s"></div></div>
+      <div class="stat"><div class="l">Trabajadas</div><div class="v" id="st-worked">0h</div><div class="s" id="st-worked-s"></div></div>
+      <div class="stat"><div class="l">Saldo del mes</div><div class="v" id="st-balance">0h</div><div class="s">Trabajadas − objetivo</div></div>
+      <div class="stat"><div class="l">Horas extra</div><div class="v" id="st-extra">0h</div><button class="link" id="btn-report">Ver informe de compensación →</button></div>
     </div>
 
-    <div class="modal-overlay" id="extraReportOverlay">
-        <div class="modal">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px; gap: 10px; flex-wrap: wrap;">
-                <h2 style="margin:0; color: var(--primary); font-weight: 800;">Informe de Compensación <span id="report-year"></span></h2>
-                <button class="btn-nav" style="background:#ef4444; color: white; border: none;" onclick="closeExtraReport()">Cerrar</button>
-            </div>
-            <div class="table-responsive-container">
-                <table class="extra-table">
-                    <thead>
-                        <tr>
-                            <th>MES</th>
-                            <th>H. EXTRAS (100%)</th>
-                            <th>COMPENSACIÓN (1.75)</th>
-                            <th>DÍAS GENERADOS</th>
-                            <th>DÍAS DISFRUTADOS</th>
-                            <th>SALDO (D H M)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="report-body"></tbody>
-                    <tfoot id="report-footer"></tfoot>
-                </table>
-            </div>
-        </div>
+    <div class="cal-card">
+      <div class="cal" id="calendar"></div>
+      <div class="legend" id="legend"></div>
     </div>
+  </section>
 
-    <div class="modal-overlay" id="modalOverlay">
-        <div class="modal modal-day-edit">
-            <h3 id="modalDateTitle" style="margin-top:0; font-weight: 800; font-size: 1.3rem;">Editar Día</h3>
-            <div class="input-group">
-                <label>Tipo de Día</label>
-                <select id="dayType" onchange="handleDayTypeChange()">
-                    <option value="laborable">Laborable</option>
-                    <option value="nolaborable">No Laborable / Otros permisos</option>
-                    <option value="comision">Comisión de Servicio</option>
-                    <option value="vacaciones">Vacaciones</option>
-                    <option value="asuntos">Asuntos Propios</option>
-                    <option value="extras">Horas Extras </option>
-                    <option value="festivo">Festivo </option>
-                </select>
-            </div>
-            <div class="modal-grid">
-                <div class="input-group"><label>Entrada M.</label><input type="time" id="t-in-1"></div>
-                <div class="input-group"><label>Salida M.</label><input type="time" id="t-out-1"></div>
-                <div class="input-group"><label>Entrada T.</label><input type="time" id="t-in-2"></div>
-                <div class="input-group"><label>Salida T.</label><input type="time" id="t-out-2"></div>
-            </div>
-            <div class="input-group">
-                <label>Comentarios</label>
-                <textarea id="dayNotes" rows="2" placeholder="Escribe aquí anotaciones..."></textarea>
-            </div>
-           
-            <div style="display:flex; flex-direction:column; gap:8px; margin-top:20px;">
-                <div style="display:flex; gap:10px;">
-                    <button class="btn-nav" style="flex:2; background: var(--primary); color: white; border: none; justify-content: center;" onclick="saveDayData()">Guardar Datos</button>
-                    <button class="btn-nav" style="flex:1; background:#cbd5e1; color:#334155; border: none; justify-content: center;" onclick="closeModal()">Cancelar</button>
-                </div>
-                <div style="display:flex; gap:10px;">
-                    <button class="btn-nav" style="flex:1; background:#475569; color:white; font-size:0.8rem; border: none; justify-content: center;" onclick="clearDayData()">Eliminar Todo</button>
-                </div>
-            </div>
-        </div>
+  <!-- VISTA ANUAL -->
+  <section id="view-annual" class="hidden">
+    <div class="toolbar">
+      <div class="nav">
+        <button class="btn icon" id="btn-year-prev" aria-label="Año anterior">❮</button>
+        <strong style="font-size:1.05rem;padding:0 8px">Resumen <span id="annual-year" style="color:var(--brand)"></span></strong>
+        <button class="btn icon" id="btn-year-next" aria-label="Año siguiente">❯</button>
+      </div>
+      <div class="actions">
+        <button class="btn" id="btn-report2">Informe de compensación</button>
+        <button class="btn primary" id="btn-monthly">Volver al mes</button>
+      </div>
     </div>
-
-    <div class="modal-overlay" id="configModalOverlay">
-        <div class="modal modal-config-edit">
-            <h3 style="margin-top:0; color: var(--primary); font-weight: 800;">⚙️ Parámetros del Año <span id="configModalYearTitle"></span></h3>
-            
-            <div class="modal-grid">
-                <div class="input-group">
-                    <label>Tope Vacaciones (Días)</label>
-                    <input type="number" id="input-top-vaca" min="0">
-                </div>
-                <div class="input-group">
-                    <label>Tope Asuntos (Días)</label>
-                    <input type="number" id="input-top-asun" min="0">
-                </div>
-            </div>
-            
-            <div class="input-group">
-                <label>Jornada Diaria Estándar</label>
-                <input type="time" id="input-cfg-jornada">
-            </div>
-
-            <div class="modal-grid">
-                <div class="input-group">
-                    <label>Límite Extras Mañana</label>
-                    <input type="time" id="input-cfg-h-manana">
-                </div>
-                <div class="input-group">
-                    <label>Límite Extras Tarde</label>
-                    <input type="time" id="input-cfg-h-tarde">
-                </div>
-            </div>
-
-            <div style="display:flex; gap:10px; margin-top:25px;">
-                <button class="btn-nav" style="flex:2; background: var(--primary); color: white; border: none; justify-content: center;" onclick="saveAnnualLimits()">Guardar Ajustes</button>
-                <button class="btn-nav" style="flex:1; background:#cbd5e1; color:#334155; border: none; justify-content: center;" onclick="closeConfigModal()">Cancelar</button>
-            </div>
-        </div>
+    <div class="annual-sum">
+      <div class="sum"><div class="l">Vacaciones</div><div class="v" id="c-vaca">0</div><div class="bar"><b id="b-vaca" style="background:#3b82f6"></b></div></div>
+      <div class="sum"><div class="l">Asuntos propios</div><div class="v" id="c-asun">0</div><div class="bar"><b id="b-asun" style="background:#10b981"></b></div></div>
+      <div class="sum"><div class="l">Compensación disfrutada</div><div class="v" id="c-extr">0</div><div class="bar"><b id="b-extr" style="background:#c026d3"></b></div></div>
+      <div class="sum"><div class="l">Horas extra del año</div><div class="v" id="c-hex">0h</div><div class="bar"><b style="width:0"></b></div></div>
     </div>
+    <div class="annual" id="annual-grid"></div>
+  </section>
 
-    <div class="footer-tools hidden" id="footer-tools-bar">
-        <button class="btn-tool" onclick="exportData()">📥 Exportar JSON</button>
-        <button class="btn-tool" onclick="document.getElementById('importInput').click()">📤 Importar JSON</button>
-        <button class="btn-tool" onclick="clearData()" style="color:#ef4444; border-color: #fca5a5;">🗑️ Borrar Todo</button>
-        <input type="file" id="importInput" class="hidden" accept=".json" onchange="importData(event)">
+  <div class="footer">
+    <button class="btn" id="btn-export">📥 Exportar JSON</button>
+    <button class="btn" id="btn-import">📤 Importar JSON</button>
+    <button class="btn danger" id="btn-clear">🗑 Borrar todo</button>
+    <input type="file" id="importInput" class="hidden" accept=".json,application/json">
+  </div>
+</div>
+
+<!-- MODAL DÍA -->
+<div class="overlay" id="dayOverlay">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="dayTitle">
+    <h3 id="dayTitle">Editar día</h3>
+    <div class="sub">Tipo de día y registro horario</div>
+    <div class="field"><label for="dayType">Tipo de día</label>
+      <select id="dayType">
+        <option value="laborable">Laborable</option>
+        <option value="nolaborable">No laborable / otros permisos</option>
+        <option value="comision">Comisión de servicio</option>
+        <option value="vacaciones">Vacaciones</option>
+        <option value="asuntos">Asuntos propios</option>
+        <option value="extras">Horas extras (día de compensación)</option>
+        <option value="festivo">Festivo</option>
+      </select>
     </div>
+    <div id="hours-block">
+      <div class="hint hidden" id="hint-extra">En sábados, domingos, festivos y no laborables, todas las horas registradas cuentan como horas extra.</div>
+      <div class="hint hidden" id="hint-comision">La comisión cuenta como día laborable: introduce las horas para que se computen como trabajadas.</div>
+      <div class="shift"><div class="t">Turno de mañana</div><div class="grid2">
+        <div class="field"><label for="t-in-1">Entrada</label><input type="time" id="t-in-1"></div>
+        <div class="field"><label for="t-out-1">Salida</label><input type="time" id="t-out-1"></div></div></div>
+      <div class="shift"><div class="t">Turno de tarde</div><div class="grid2">
+        <div class="field"><label for="t-in-2">Entrada</label><input type="time" id="t-in-2"></div>
+        <div class="field"><label for="t-out-2">Salida</label><input type="time" id="t-out-2"></div></div></div>
+    </div>
+    <div class="hint hidden" id="hint-nohours">Este tipo de día no registra horas.</div>
+    <div class="field"><label for="dayNotes">Comentarios</label><textarea id="dayNotes" rows="2" maxlength="500" placeholder="Anotaciones…"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn primary" id="btn-save-day">Guardar</button>
+      <button class="btn" id="btn-cancel-day">Cancelar</button>
+      <button class="btn danger" id="btn-clear-day" style="flex:.8">Eliminar</button>
+    </div>
+  </div>
+</div>
 
-    <script>
-        // CONFIGURACIÓN OFICIAL DE TU PROYECTO FIREBASE
-        const firebaseConfig = {
-            apiKey: "AIzaSyD0AQaJyAuIzF1odZk9X47QuS6z77JzjPg",
-            authDomain: "gestionhoras-f5042.firebaseapp.com",
-            databaseURL: "https://gestionhoras-f5042-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "gestionhoras-f5042",
-            storageBucket: "gestionhoras-f5042.firebasestorage.app",
-            messagingSenderId: "368157771470",
-            appId: "1:368157771470:web:3a53d36d716e8a7583b29f"
-        };
+<!-- MODAL VARIOS DÍAS -->
+<div class="overlay" id="bulkOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3>Aplicar a varios días</h3>
+    <div class="sub" id="bulk-count"></div>
+    <div class="field"><label for="bulkType">Tipo de día</label>
+      <select id="bulkType">
+        <option value="laborable">Laborable</option>
+        <option value="nolaborable">No laborable / otros permisos</option>
+        <option value="comision">Comisión de servicio</option>
+        <option value="vacaciones">Vacaciones</option>
+        <option value="asuntos">Asuntos propios</option>
+        <option value="extras">Horas extras (día de compensación)</option>
+        <option value="festivo">Festivo</option>
+      </select>
+    </div>
+    <div id="bulk-hours">
+      <div class="hint hidden" id="bulk-hint-extra">En no laborables y festivos, todas las horas registradas cuentan como horas extra.</div>
+      <div class="hint hidden" id="bulk-hint-comision">La comisión cuenta como día laborable: introduce las horas para que se computen como trabajadas.</div>
+      <div class="shift"><div class="t">Turno de mañana</div><div class="grid2">
+        <div class="field"><label for="b-in-1">Entrada</label><input type="time" id="b-in-1"></div>
+        <div class="field"><label for="b-out-1">Salida</label><input type="time" id="b-out-1"></div></div></div>
+      <div class="shift"><div class="t">Turno de tarde</div><div class="grid2">
+        <div class="field"><label for="b-in-2">Entrada</label><input type="time" id="b-in-2"></div>
+        <div class="field"><label for="b-out-2">Salida</label><input type="time" id="b-out-2"></div></div></div>
+    </div>
+    <div class="hint hidden" id="bulk-nohours">Este tipo de día no registra horas.</div>
+    <div class="field"><label for="bulk-notes">Comentarios</label><textarea id="bulk-notes" rows="2" maxlength="500" placeholder="Vacío = mantener los comentarios existentes"></textarea></div>
+    <label class="check"><input type="checkbox" id="bulk-skip" checked> Omitir sábados y domingos</label>
+    <div class="hint" style="margin-top:12px">Se sustituirá el registro de cada día seleccionado por el tipo y las horas indicados.</div>
+    <div class="modal-actions">
+      <button class="btn primary" id="btn-bulk-apply">Aplicar</button>
+      <button class="btn" id="btn-bulk-cancel">Cancelar</button>
+      <button class="btn danger" id="btn-bulk-delete" style="flex:1.2">Eliminar registros</button>
+    </div>
+  </div>
+</div>
 
-        // Inicializamos Firebase
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const rtdb = firebase.database();
+<!-- MODAL AJUSTES -->
+<div class="overlay" id="configOverlay">
+  <div class="modal" role="dialog" aria-modal="true">
+    <h3>⚙ Parámetros del año <span id="cfg-year"></span></h3>
+    <div class="sub">Se aplican solo al año seleccionado</div>
+    <div class="grid2">
+      <div class="field"><label for="cfg-vaca">Tope vacaciones (días)</label><input type="number" id="cfg-vaca" min="0"></div>
+      <div class="field"><label for="cfg-asun">Tope asuntos (días)</label><input type="number" id="cfg-asun" min="0"></div>
+    </div>
+    <div class="field"><label for="cfg-jornada">Jornada diaria estándar</label><input type="time" id="cfg-jornada"></div>
+    <div class="grid2">
+      <div class="field"><label for="cfg-man">Límite extras mañana</label><input type="time" id="cfg-man"></div>
+      <div class="field"><label for="cfg-tar">Límite extras tarde</label><input type="time" id="cfg-tar"></div>
+    </div>
+    <div class="hint">Cuentan como extra las horas trabajadas antes del límite de mañana o después del límite de tarde.</div>
+    <div class="modal-actions">
+      <button class="btn primary" id="btn-save-cfg">Guardar</button>
+      <button class="btn" id="btn-cancel-cfg">Cancelar</button>
+    </div>
+  </div>
+</div>
 
-        let currentDate = new Date();
-        let db = {}; 
-        let currentUserUid = ""; 
+<!-- MODAL INFORME -->
+<div class="overlay" id="reportOverlay">
+  <div class="modal wide" role="dialog" aria-modal="true">
+    <div class="modal-head">
+      <h3>Informe de compensación <span id="report-year" style="color:var(--brand)"></span></h3>
+      <button class="btn" id="btn-close-report">Cerrar</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Mes</th><th>H. extra (100%)</th><th>Compensación (×1,75)</th><th>Días generados</th><th>Días disfrutados</th><th>Saldo</th></tr></thead>
+        <tbody id="report-body"></tbody>
+        <tfoot id="report-foot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
 
-        const months = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
-        const dayNames = ["LU", "MA", "MI", "JU", "VI", "SA", "DO"];
+<div class="toast" id="toast"></div>
 
-        function tToM(t) { if(!t) return 0; const [h, m] = t.split(':').map(Number); return h*60+m; }
-        function mToT(m) { const h = Math.floor(m/60), mm = m%60; return `${String(h).padStart(2,'0')}:${String(mm).padStart(2,'0')}`; }
-        function fmtH(m) { const a=Math.abs(m); return `${m<0?'-':''}${Math.floor(a/60)}h ${a%60}m`; }
-        function fmtReportH(m) { const a = Math.abs(m), hh = Math.floor(a/60), mm = a%60; return `${m<0?'-':''}<strong>${hh}h ${mm}m</strong>`; }
-        
-        function getConfig(year) {
-            const def = { maxVaca: 22, maxAsun: 6, minDay: 7*60, limitMorning: 7*60+30, limitEvening: 18*60+30 };
-            if (!db._config || !db._config[year]) return def;
-            const c = db._config[year];
-            return {
-                maxVaca: c.maxVaca !== undefined ? c.maxVaca : def.maxVaca,
-                maxAsun: c.maxAsun !== undefined ? c.maxAsun : def.maxAsun,
-                minDay: c.minDay !== undefined ? c.minDay : def.minDay,
-                limitMorning: c.limitMorning !== undefined ? c.limitMorning : def.limitMorning,
-                limitEvening: c.limitEvening !== undefined ? c.limitEvening : def.limitEvening
-            };
-        }
+<script>
+/* ============================================================
+   CONFIGURACIÓN
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyD0AQaJyAuIzF1odZk9X47QuS6z77JzjPg",
+  authDomain: "gestionhoras-f5042.firebaseapp.com",
+  databaseURL: "https://gestionhoras-f5042-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "gestionhoras-f5042",
+  storageBucket: "gestionhoras-f5042.firebasestorage.app",
+  messagingSenderId: "368157771470",
+  appId: "1:368157771470:web:3a53d36d716e8a7583b29f"
+};
+// Si el usuario escribe solo "juan", se completa con este dominio. Déjalo en '' para exigir el email completo.
+const DOMINIO_POR_DEFECTO = '@correo.com';
 
-        function fmtReportDHM(m, year) { 
-            const cfg = getConfig(year);
-            const a = Math.abs(m), dd = Math.floor(a/cfg.minDay), rem = a%cfg.minDay, hh = Math.floor(rem/60), mm = rem%60; 
-            return `${m<0?'-':''}<strong>${dd}d ${hh}h ${mm}m</strong>`; 
-        }
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const rtdb = firebase.database();
 
-        // CONTROLADOR DE ESTADO DE SESIÓN NATIVO DE FIREBASE
-        auth.onAuthStateChanged(function(user) {
-            if (user) {
-                // Usuario autenticado correctamente
-                currentUserUid = user.uid;
-                document.getElementById("loading-status-text").innerText = "Sincronizando con Firebase...";
-                
-                // Leemos los datos en tiempo real de Firebase
-                rtdb.ref('usuarios/' + currentUserUid + '/calendario').on('value', function(snapshot) {
-                    db = snapshot.val() || {};
-                    
-                    // Renderizamos la interfaz
-                    populateSelects();
-                    renderMonthly();
-                    
-                    document.getElementById("app-loading-screen").classList.add("hidden");
-                    document.getElementById("login-screen").classList.add("hidden");
-                    document.getElementById("main-app-content").classList.remove("hidden");
-                    document.getElementById("footer-tools-bar").classList.remove("hidden");
-                    document.getElementById("label-logged-user").innerText = `Usuario: ${user.email.split('@')[0]}`;
-                });
-            } else {
-                // No hay sesión activa
-                document.getElementById("main-app-content").classList.add("hidden");
-                document.getElementById("footer-tools-bar").classList.add("hidden");
-                document.getElementById("app-loading-screen").classList.add("hidden");
-                document.getElementById("login-screen").classList.remove("hidden");
-            }
-        });
+/* ============================================================
+   ESTADO Y UTILIDADES
+   ============================================================ */
+const MONTHS = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const DAYS = ["LU","MA","MI","JU","VI","SA","DO"];
+const TYPE_LABEL = {laborable:'Laborable',nolaborable:'No laborable',comision:'Comisión',vacaciones:'Vacaciones',asuntos:'Asuntos',extras:'Horas extras',festivo:'Festivo'};
+const TYPE_TAG = {nolaborable:'No lab.',comision:'Comisión',vacaciones:'Vacac.',asuntos:'Asuntos',extras:'H. extras',festivo:'Festivo'};
+const HOURS_TYPES = ['laborable','comision','nolaborable','festivo'];   // tipos donde se pueden registrar horas
+const WORK_TYPES = ['laborable','comision'];                            // tipos que generan jornada objetivo
+const KEY_RE = /^\d{4}-\d{1,2}-\d{1,2}$/;
+const TIME_RE = /^\d{2}:\d{2}$/;
 
-        // INICIO DE SESIÓN SEGURO CON FIREBASE AUTH
-        function execLogin() {
-            let userField = document.getElementById("login-user").value.trim().toLowerCase();
-            const passField = document.getElementById("login-pass").value;
-            const errorMsg = document.getElementById("login-error-msg");
+let db = {};                 // claves "año-mes(0-11)-día" y "_config"
+let baseRef = null;          // referencia a usuarios/{uid}/calendario
+let currentDate = new Date(); currentDate.setDate(1);
+let editingKey = null;
+let uiReady = false;
 
-            if (!userField || !passField) {
-                errorMsg.innerText = "Por favor, rellena todos los campos.";
-                errorMsg.classList.remove("hidden");
-                return;
-            }
+const $ = id => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; };
 
-            // Comodidad multiusuario: Si el usuario no escribe el correo completo, le añadimos tu dominio por defecto de pruebas
-            if (!userField.includes('@')) {
-                userField += '@correo.com';
-            }
+const tToM = t => { if (!t) return 0; const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+const mToT = m => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
+const fmtH = m => { const a = Math.abs(m); return `${m < 0 ? '-' : ''}${Math.floor(a / 60)}h ${String(a % 60).padStart(2, '0')}m`; };
+const fmtD = (m, jornada) => { const a = Math.abs(m), d = Math.floor(a / jornada), r = a % jornada; return `${m < 0 ? '-' : ''}${d}d ${Math.floor(r / 60)}h ${r % 60}m`; };
+const keyOf = (y, m, d) => `${y}-${m}-${d}`;
+const parseKey = k => k.split('-').map(Number);
+const daysIn = (y, m) => new Date(y, m + 1, 0).getDate();
+const dowOf = (y, m, d) => new Date(y, m, d).getDay();
+const isWeekend = w => w === 0 || w === 6;
+const defaultType = w => w === 0 ? 'festivo' : (w === 6 ? 'nolaborable' : 'laborable');
+const getDay = (y, m, d) => db[keyOf(y, m, d)] || { type: defaultType(dowOf(y, m, d)) };
 
-            errorMsg.classList.add("hidden");
-            document.getElementById("login-screen").classList.add("hidden");
-            document.getElementById("app-loading-screen").classList.remove("hidden");
-            document.getElementById("loading-status-text").innerText = "Verificando credenciales...";
+function toast(msg, isErr) {
+  const t = $('toast'); t.textContent = msg; t.className = 'toast show' + (isErr ? ' err' : '');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.className = 'toast', 2800);
+}
 
-            auth.signInWithEmailAndPassword(userField, passField)
-                .catch(function(error) {
-                    document.getElementById("app-loading-screen").classList.add("hidden");
-                    document.getElementById("login-screen").classList.remove("hidden");
-                    errorMsg.innerText = "Usuario o contraseña incorrectos.";
-                    errorMsg.classList.remove("hidden");
-                });
-        }
+function getConfig(year) {
+  const def = { maxVaca: 22, maxAsun: 6, minDay: 420, limitMorning: 450, limitEvening: 1110 };
+  const c = db._config && db._config[year];
+  if (!c) return def;
+  return {
+    maxVaca: c.maxVaca ?? def.maxVaca, maxAsun: c.maxAsun ?? def.maxAsun, minDay: c.minDay || def.minDay,
+    limitMorning: c.limitMorning ?? def.limitMorning, limitEvening: c.limitEvening ?? def.limitEvening
+  };
+}
 
-        // GUARDADO AUTOMÁTICO EN LA NUBE NATIVA DE FIREBASE
-        function saveDataToCloud() {
-            if (!currentUserUid) return;
-            rtdb.ref('usuarios/' + currentUserUid + '/calendario').set(db)
-                .catch(function(error) {
-                    console.error("Error al guardar en Firebase:", error);
-                });
-        }
+/* ============================================================
+   CÁLCULOS (una sola fuente de verdad para mes, año e informe)
+   ============================================================ */
+function rawMin(d) {
+  let m = 0;
+  if (d.tIn1 && d.tOut1) m += tToM(d.tOut1) - tToM(d.tIn1);
+  if (d.tIn2 && d.tOut2) m += tToM(d.tOut2) - tToM(d.tIn2);
+  return Math.max(m, 0);
+}
+// Minutos trabajados del día. La comisión se comporta como un laborable: solo suman las horas introducidas.
+function dayMinutes(d, cfg) {
+  if (!HOURS_TYPES.includes(d.type)) return 0;
+  return rawMin(d);
+}
+// Minutos de horas extra del día.
+function dayExtra(d, y, m, day, cfg) {
+  if (!HOURS_TYPES.includes(d.type)) return 0;
+  const raw = rawMin(d);
+  if (!raw) return 0;
+  const w = dowOf(y, m, day);
+  if (isWeekend(w) || d.type === 'festivo' || d.type === 'nolaborable') return raw;
+  let ex = 0; const rs = [];
+  if (d.tIn1 && d.tOut1) rs.push([tToM(d.tIn1), tToM(d.tOut1)]);
+  if (d.tIn2 && d.tOut2) rs.push([tToM(d.tIn2), tToM(d.tOut2)]);
+  rs.forEach(([s, e]) => {
+    if (s < cfg.limitMorning) ex += Math.min(e, cfg.limitMorning) - s;
+    if (e > cfg.limitEvening) ex += e - Math.max(s, cfg.limitEvening);
+  });
+  return ex;
+}
+function monthStats(y, m) {
+  const cfg = getConfig(y);
+  const s = { target: 0, worked: 0, extra: 0, enjoyed: 0, workDays: 0 };
+  for (let d = 1; d <= daysIn(y, m); d++) {
+    const data = getDay(y, m, d);
+    if (WORK_TYPES.includes(data.type)) { s.target += cfg.minDay; s.workDays++; }
+    s.worked += dayMinutes(data, cfg);
+    s.extra += dayExtra(data, y, m, d, cfg);
+    if (data.type === 'extras') s.enjoyed += cfg.minDay;
+  }
+  s.comp = Math.round(s.extra * 1.75);
+  return s;
+}
+function yearStats(y) {
+  const t = { extra: 0, comp: 0, enjoyedMin: 0, vaca: 0, asun: 0, extrasDays: 0 };
+  for (let m = 0; m < 12; m++) {
+    const s = monthStats(y, m);
+    t.extra += s.extra; t.comp += s.comp; t.enjoyedMin += s.enjoyed;
+    for (let d = 1; d <= daysIn(y, m); d++) {
+      const ty = (db[keyOf(y, m, d)] || {}).type;
+      if (ty === 'vacaciones') t.vaca++;
+      if (ty === 'asuntos') t.asun++;
+      if (ty === 'extras') t.extrasDays++;
+    }
+  }
+  return t;
+}
 
-        function cerrarSesion() {
-            if(confirm("¿Quieres cerrar sesión?")) {
-                auth.signOut().then(function() {
-                    location.reload();
-                });
-            }
-        }
+/* ============================================================
+   AUTENTICACIÓN Y SINCRONIZACIÓN
+   ============================================================ */
+function showLoading(txt) { $('loading-text').textContent = txt; $('loading').classList.remove('hidden'); }
+function hideLoading() { $('loading').classList.add('hidden'); }
+function loginMsg(txt, ok) { const m = $('login-msg'); m.textContent = txt; m.className = 'msg ' + (ok ? 'ok' : 'err'); }
 
-        function populateSelects() {
-            const mSel = document.getElementById('monthSelect'), ySel = document.getElementById('yearSelect');
-            if (mSel.options.length > 0) return; // Ya inicializados
-            mSel.innerHTML = ""; ySel.innerHTML = "";
-            months.forEach((m, i) => mSel.add(new Option(m, i)));
-            const curY = new Date().getFullYear();
-            for(let i = curY - 5; i <= curY + 10; i++) ySel.add(new Option(i, i));
-        }
+function normalizeEmail(v) {
+  v = v.trim().toLowerCase();
+  if (v && !v.includes('@') && DOMINIO_POR_DEFECTO) v += DOMINIO_POR_DEFECTO;
+  return v;
+}
 
-        function renderMonthly() {
-            const y = currentDate.getFullYear(), m = currentDate.getMonth();
-            const cfg = getConfig(y);
+auth.onAuthStateChanged(user => {
+  if (baseRef) { baseRef.off(); baseRef = null; }
+  if (!user) {
+    db = {}; uiReady = false;
+    $('app').classList.add('hidden');
+    hideLoading();
+    $('login-screen').classList.remove('hidden');
+    return;
+  }
+  showLoading('Sincronizando…');
+  $('user-label').textContent = user.email.split('@')[0];
+  baseRef = rtdb.ref('usuarios/' + user.uid + '/calendario');
+  baseRef.on('value', snap => {
+    db = snap.val() || {};
+    if (!uiReady) { initUI(); uiReady = true; }
+    $('login-screen').classList.add('hidden');
+    $('app').classList.remove('hidden');
+    hideLoading();
+    render();
+  }, err => {
+    console.error(err); hideLoading();
+    toast('No se pudieron leer los datos (revisa las reglas de Firebase)', true);
+  });
+});
 
-            document.getElementById('monthSelect').value = m;
-            document.getElementById('yearSelect').value = y;
-            const grid = document.getElementById('calendar-body');
-            grid.innerHTML = '';
-            dayNames.forEach(d => { const div = document.createElement('div'); div.className='day-header-name'; div.innerText=d; grid.appendChild(div); });
+$('login-form').addEventListener('submit', e => {
+  e.preventDefault();
+  const email = normalizeEmail($('login-user').value), pass = $('login-pass').value;
+  if (!email || !pass) return loginMsg('Rellena usuario y contraseña.');
+  if (!email.includes('@')) return loginMsg('Escribe tu correo electrónico completo.');
+  $('login-msg').classList.add('hidden');
+  showLoading('Verificando credenciales…');
+  auth.signInWithEmailAndPassword(email, pass).catch(() => {
+    hideLoading(); $('login-screen').classList.remove('hidden');
+    loginMsg('Usuario o contraseña incorrectos.');
+    $('login-msg').classList.remove('hidden');
+  });
+});
+$('btn-reset').addEventListener('click', () => {
+  const email = normalizeEmail($('login-user').value);
+  if (!email.includes('@')) { loginMsg('Escribe tu correo arriba y vuelve a pulsar.'); $('login-msg').classList.remove('hidden'); return; }
+  auth.sendPasswordResetEmail(email)
+    .then(() => { loginMsg('Si el correo existe, recibirás un enlace para restablecer la contraseña.', true); $('login-msg').classList.remove('hidden'); })
+    .catch(() => { loginMsg('No se pudo enviar el correo.'); $('login-msg').classList.remove('hidden'); });
+});
+$('btn-logout').addEventListener('click', () => {
+  if (!confirm('¿Cerrar sesión?')) return;
+  auth.signOut().then(() => { $('login-pass').value = ''; });
+});
 
-            const firstDay = new Date(y, m, 1).getDay();
-            const offset = (firstDay === 0) ? 6 : firstDay - 1;
-            for(let i=0; i<offset; i++) grid.appendChild(document.createElement('div'));
+/* Guardado por día (no sobrescribe el resto del calendario) */
+const dbErr = e => { console.error(e); toast('Error al guardar en la nube', true); };
+function saveDay(k, data) { db[k] = data; if (baseRef) baseRef.child(k).set(data).catch(dbErr); }
+function deleteDay(k) { delete db[k]; if (baseRef) baseRef.child(k).remove().catch(dbErr); }
+function saveConfig(y, cfg) { (db._config = db._config || {})[y] = cfg; if (baseRef) baseRef.child('_config/' + y).set(cfg).catch(dbErr); }
 
-            let tWork = 0, tTarget = 0, tExtra = 0;
-            
-            // Obtenemos la fecha real del sistema para comparar con precisión
-            const hoy = new Date();
-            const hoyD = hoy.getDate();
-            const hoyM = hoy.getMonth();
-            const hoyY = hoy.getFullYear();
+/* ============================================================
+   INTERFAZ
+   ============================================================ */
+function initUI() {
+  const ms = $('monthSelect'), ys = $('yearSelect');
+  ms.replaceChildren(); ys.replaceChildren();
+  MONTHS.forEach((n, i) => ms.add(new Option(n, i)));
+  const cy = new Date().getFullYear();
+  for (let y = cy - 5; y <= cy + 10; y++) ys.add(new Option(y, y));
+  const lg = $('legend'); lg.replaceChildren();
+  ['laborable','comision','vacaciones','asuntos','extras','festivo','nolaborable'].forEach(t => {
+    const s = el('span'); const i = el('i'); i.className = 't-' + t; s.append(i, TYPE_LABEL[t]); lg.appendChild(s);
+  });
+}
+const isAnnual = () => !$('view-annual').classList.contains('hidden');
+function render() { isAnnual() ? renderAnnual() : renderMonthly(); }
 
-            for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
-                const k = `${y}-${m}-${d}`, dow = new Date(y,m,d).getDay();
-                let defaultType = 'laborable';
-                if (dow === 0) defaultType = 'festivo';
-                if (dow === 6) defaultType = 'nolaborable';
+function renderMonthly() {
+  const y = currentDate.getFullYear(), m = currentDate.getMonth(), cfg = getConfig(y);
+  $('monthSelect').value = m; $('yearSelect').value = y;
+  const grid = $('calendar'); grid.replaceChildren();
+  DAYS.forEach(n => grid.appendChild(el('div', 'dow', n)));
+  const first = new Date(y, m, 1).getDay();
+  for (let i = 0; i < (first === 0 ? 6 : first - 1); i++) grid.appendChild(el('div', 'pad'));
 
-                const data = db[k] || { type: defaultType };
-                
-                // Si el día no es laborable ni comisión, nos aseguramos de que no compute horas
-                const esLaborableOComision = (data.type === 'laborable' || data.type === 'comision');
-                if (esLaborableOComision) {
-                    tTarget += cfg.minDay;
-                }
+  const now = new Date();
+  for (let d = 1; d <= daysIn(y, m); d++) {
+    const k = keyOf(y, m, d), w = dowOf(y, m, d), explicit = !!db[k];
+    const data = getDay(y, m, d);
+    const mins = dayMinutes(data, cfg), ex = dayExtra(data, y, m, d, cfg);
+    const cls = (!explicit && w === 6) ? 't-rest' : 't-' + data.type;
+    const isToday = d === now.getDate() && m === now.getMonth() && y === now.getFullYear();
 
-                const dMin = esLaborableOComision ? calcMin(data) : 0; 
-                const sEx = esLaborableOComision ? calcSEx(data, k) : 0;
-                
-                tWork += dMin; tExtra += sEx;
-                
-                let colorClass = `bg-${data.type}`;
-                if (data.type === 'nolaborable') colorClass = (dow === 6) ? 'bg-nolaborable-sat' : 'bg-nolaborable-other';
+    const b = el('button', `day ${cls}${isToday ? ' today' : ''}${selected.has(k) ? ' sel' : ''}`); b.type = 'button';
+    if (selMode) b.setAttribute('aria-pressed', selected.has(k));
+    b.setAttribute('aria-label', `${d} de ${MONTHS[m]}: ${TYPE_LABEL[data.type]}`);
+    if (data.notes) b.title = data.notes;
 
-                // Verificamos si este casillero coincide exactamente con el día de hoy
-                const esHoy = (d === hoyD && m === hoyM && y === hoyY) ? 'day-today' : '';
+    const top = el('div', 'top');
+    top.appendChild(el('span', 'num', d));
+    const right = el('span');
+    if (data.notes) right.appendChild(el('span', 'note', '💬'));
+    if (explicit && TYPE_TAG[data.type] && !(data.type === 'nolaborable' && !explicit)) right.appendChild(el('span', 'tag', ' ' + TYPE_TAG[data.type]));
+    top.appendChild(right);
+    b.appendChild(top);
 
-                const dayBox = document.createElement('div');
-                dayBox.className = `day-box ${colorClass} ${esHoy}`;
-                dayBox.innerHTML = `<div class="day-top-bar"><div class="day-number">${d}</div>${data.notes?'<div class="comment-indicator" title="Tiene anotaciones">💬</div>':''}</div>
-                    <div class="day-info">${esLaborableOComision && data.tIn1?`${data.tIn1}-${data.tOut1}`:''}${esLaborableOComision && data.tIn2?` ${data.tIn2}-${data.tOut2}`:''}</div>
-                    ${esLaborableOComision && dMin>0?`<div class="day-total">${fmtH(dMin)}</div>`:''}`;
-                dayBox.onclick = () => openModal(k, d);
-                grid.appendChild(dayBox);
-            }
-            document.getElementById('target-hours').innerText = fmtH(tTarget);
-            document.getElementById('worked-hours').innerText = fmtH(tWork);
-            document.getElementById('balance-extras').innerText = `${(tWork-tTarget>=0?'+':'')}${fmtH(tWork-tTarget)} / ${fmtH(tExtra)}`;
-        }
+    const mid = el('div');
+    if (HOURS_TYPES.includes(data.type)) {
+      if (data.tIn1 || data.tIn2) {
+        const h = el('div', 'hrs');
+        if (data.tIn1) h.appendChild(el('span', '', `${data.tIn1} - ${data.tOut1}`));
+        if (data.tIn2) h.appendChild(el('span', '', `${data.tIn2} - ${data.tOut2}`));
+        mid.appendChild(h);
+      }
+    }
+    b.appendChild(mid);
 
-        function calcMin(d) {
-            let m = 0;
-            if(d.tIn1 && d.tOut1) m += (tToM(d.tOut1) - tToM(d.tIn1));
-            if(d.tIn2 && d.tOut2) m += (tToM(d.tOut2) - tToM(d.tIn2));
-            return m;
-        }
+    const bot = el('div', 'bot');
+    bot.appendChild(el('span', 'ext', ex > 0 ? '+' + fmtH(ex) : ''));
+    if (!ex) bot.firstChild.remove();
+    bot.appendChild(el('span', 'tot', mins > 0 ? fmtH(mins) : ''));
+    if (ex === 0) bot.style.justifyContent = 'flex-end';
+    b.appendChild(bot);
 
-        function calcSEx(d, k) {
-            if (!d.tIn1 && !d.tIn2) return 0;
-            const [year, month, day] = k.split('-').map(Number);
-            const dow = new Date(year, month, day).getDay();
-            const cfg = getConfig(year);
-            
-            if (dow === 0 || dow === 6 || d.type === 'festivo' || d.type === 'nolaborable' || d.type === 'extras') return calcMin(d); 
+    b.addEventListener('click', ev => onDayClick(k, ev));
+    grid.appendChild(b);
+  }
 
-            let ex = 0; const rs = [];
-            if(d.tIn1 && d.tOut1) rs.push([tToM(d.tIn1), tToM(d.tOut1)]);
-            if(d.tIn2 && d.tOut2) rs.push([tToM(d.tIn2), tToM(d.tOut2)]);
-            rs.forEach(([s, e]) => {
-                if (s < cfg.limitMorning) ex += Math.min(e, cfg.limitMorning) - s;
-                if (e > cfg.limitEvening) ex += e - Math.max(s, cfg.limitEvening);
-            });
-            return ex;
-        }
+  const s = monthStats(y, m), bal = s.worked - s.target;
+  $('st-target').textContent = fmtH(s.target);
+  $('st-target-s').textContent = `${s.workDays} días laborables`;
+  $('st-worked').textContent = fmtH(s.worked);
+  $('st-worked-s').textContent = s.target ? `${Math.round(s.worked / s.target * 100)}% del objetivo` : '';
+  const bv = $('st-balance'); bv.textContent = (bal > 0 ? '+' : '') + fmtH(bal);
+  bv.className = 'v' + (bal > 0 ? ' pos' : bal < 0 ? ' neg' : '');
+  $('st-extra').textContent = fmtH(s.extra);
+}
 
-        function openExtraReport() {
-            const y = currentDate.getFullYear(); const cfg = getConfig(y);
-            document.getElementById('report-year').innerText = y;
-            const body = document.getElementById('report-body');
-            const foot = document.getElementById('report-footer');
-            body.innerHTML = ''; let yEx=0, yCo=0, yDi=0;
-            
-            for(let m=0; m<12; m++) {
-                let mEx=0, mDi=0;
-                for(let d=1; d<=new Date(y,m+1,0).getDate(); d++) {
-                    const k=`${y}-${m}-${d}`; 
-                    if(db[k]) {
-                        const isLabOrCom = (db[k].type === 'laborable' || db[k].type === 'comision');
-                        if (isLabOrCom) mEx+=calcSEx(db[k], k); 
-                        if(db[k].type==='extras') mDi+=cfg.minDay; 
-                    }
-                }
-                let mCo=Math.round(mEx*1.75); yEx+=mEx; yCo+=mCo; yDi+=mDi;
-                const saldoMes = mCo - mDi;
-                
-                const txtEx = mEx === 0 ? "-" : fmtReportH(mEx);
-                const txtCo = mCo === 0 ? "-" : fmtReportH(mCo);
-                const txtGen = mCo === 0 ? "-" : fmtReportDHM(mCo, y);
-                const txtDis = mDi === 0 ? "-" : `<strong>${Math.floor(mDi / cfg.minDay)}d</strong>`;
-                
-                let txtSal = "-"; let claseColor = "";
-                if (saldoMes > 0) {
-                    const d = Math.floor(saldoMes/cfg.minDay), rem = saldoMes%cfg.minDay, h = Math.floor(rem/60), min = rem%60;
-                    txtSal = `<strong>+${d}d ${h}h ${min}m</strong>`; claseColor = "text-pos";
-                } else if (saldoMes < 0) { txtSal = fmtReportDHM(saldoMes, y); claseColor = "text-neg"; }
+function renderAnnual() {
+  const y = currentDate.getFullYear(), cfg = getConfig(y), st = yearStats(y);
+  $('annual-year').textContent = y;
+  const g = $('annual-grid'); g.replaceChildren();
+  const now = new Date();
+  for (let m = 0; m < 12; m++) {
+    const card = el('button', 'mini'); card.type = 'button';
+    card.setAttribute('aria-label', 'Abrir ' + MONTHS[m]);
+    card.appendChild(el('h4', '', MONTHS[m]));
+    const days = el('div', 'mini-days');
+    const first = new Date(y, m, 1).getDay();
+    for (let i = 0; i < (first === 0 ? 6 : first - 1); i++) days.appendChild(el('div'));
+    for (let d = 1; d <= daysIn(y, m); d++) {
+      const k = keyOf(y, m, d), w = dowOf(y, m, d), data = getDay(y, m, d);
+      const cls = (!db[k] && w === 6) ? 't-rest' : 't-' + (data.type === 'comision' ? 'laborable' : data.type);
+      const c = el('div', 'md ' + cls, d);
+      if (d === now.getDate() && m === now.getMonth() && y === now.getFullYear()) c.style.boxShadow = '0 0 0 1.5px var(--brand)';
+      days.appendChild(c);
+    }
+    card.appendChild(days);
+    card.addEventListener('click', () => { currentDate = new Date(y, m, 1); showMonthly(); });
+    g.appendChild(card);
+  }
+  const genDays = Math.floor(st.comp / cfg.minDay);
+  $('c-vaca').textContent = `${st.vaca} / ${cfg.maxVaca}`;
+  $('c-asun').textContent = `${st.asun} / ${cfg.maxAsun}`;
+  $('c-extr').textContent = `${st.extrasDays} / ${genDays} d`;
+  $('c-hex').textContent = fmtH(st.extra);
+  const setBar = (id, v, max) => { const b = $(id); b.style.width = (max > 0 ? Math.min(v / max * 100, 100) : 0) + '%'; b.style.background = v > max ? '#ef4444' : ''; };
+  setBar('b-vaca', st.vaca, cfg.maxVaca); setBar('b-asun', st.asun, cfg.maxAsun); setBar('b-extr', st.extrasDays, genDays);
+  $('b-vaca').style.background = st.vaca > cfg.maxVaca ? '#ef4444' : '#3b82f6';
+  $('b-asun').style.background = st.asun > cfg.maxAsun ? '#ef4444' : '#10b981';
+  $('b-extr').style.background = st.extrasDays > genDays ? '#ef4444' : '#c026d3';
+}
 
-                const tr = document.createElement('tr');
-                tr.innerHTML = `<td>${months[m]}</td><td>${txtEx}</td><td>${txtCo}</td><td>${txtGen}</td><td>${txtDis}</td><td class="${claseColor}">${txtSal}</td>`;
-                body.appendChild(tr);
-            }
-            
-            const saldoTotal = yCo - yDi;
-            const tTxtEx = yEx === 0 ? "-" : fmtReportH(yEx);
-            const tTxtCo = yCo === 0 ? "-" : fmtReportH(yCo);
-            const tTxtGen = yCo === 0 ? "-" : fmtReportDHM(yCo, y);
-            const tTxtDis = yDi === 0 ? "-" : `<strong>${Math.floor(yDi / cfg.minDay)}d</strong>`;
-            
-            let tTxtSal = "-"; let tClaseColor = "";
-            if (saldoTotal > 0) {
-                const d = Math.floor(saldoTotal/cfg.minDay), rem = saldoTotal%cfg.minDay, h = Math.floor(rem/60), min = rem%60;
-                tTxtSal = `<strong>+${d}d ${h}h ${min}m</strong>`; tClaseColor = "text-pos";
-            } else if (saldoTotal < 0) { tTxtSal = fmtReportDHM(saldoTotal, y); tClaseColor = "text-neg"; }
+function showMonthly() { $('view-annual').classList.add('hidden'); $('view-monthly').classList.remove('hidden'); renderMonthly(); }
+function showAnnual() { $('view-monthly').classList.add('hidden'); $('view-annual').classList.remove('hidden'); renderAnnual(); }
 
-            foot.innerHTML = `<tr class="total-row"><td>TOTAL ANUAL</td><td>${tTxtEx}</td><td>${tTxtCo}</td><td>${tTxtGen}</td><td>${tTxtDis}</td><td class="${tClaseColor}">${tTxtSal}</td></tr>`;
-            document.getElementById('extraReportOverlay').style.display = 'flex';
-        }
+/* Navegación (siempre día 1 para evitar saltos de mes) */
+const changeMonth = s => { currentDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + s, 1); renderMonthly(); };
+const changeYear = s => { currentDate = new Date(currentDate.getFullYear() + s, currentDate.getMonth(), 1); renderAnnual(); };
+$('btn-prev').onclick = () => changeMonth(-1);
+$('btn-next').onclick = () => changeMonth(1);
+$('btn-today').onclick = () => { const n = new Date(); currentDate = new Date(n.getFullYear(), n.getMonth(), 1); renderMonthly(); };
+$('monthSelect').onchange = $('yearSelect').onchange = () => { currentDate = new Date(+$('yearSelect').value, +$('monthSelect').value, 1); renderMonthly(); };
+$('btn-annual').onclick = showAnnual;
+$('btn-monthly').onclick = showMonthly;
+$('btn-year-prev').onclick = () => changeYear(-1);
+$('btn-year-next').onclick = () => changeYear(1);
 
-        let currentEditingKey = null;
+/* ============================================================
+   MODAL DE DÍA
+   ============================================================ */
+function openOverlay(id) { $(id).classList.add('open'); }
+function closeOverlay(id) { $(id).classList.remove('open'); }
 
-        function openModal(k, d) {
-            currentEditingKey = k; const data = db[k] || {};
-            const dow = new Date(k.split('-')[0], k.split('-')[1], k.split('-')[2]).getDay();
-            let def = (dow === 0)?'festivo':(dow===6?'nolaborable':'laborable');
-            document.getElementById('modalDateTitle').innerText = `${d} de ${months[currentDate.getMonth()]}`;
-            document.getElementById('dayType').value = data.type || def;
-            
-            const isLabOrCom = (document.getElementById('dayType').value === 'laborable' || document.getElementById('dayType').value === 'comision');
-            
-            document.getElementById('t-in-1').value = isLabOrCom ? (data.tIn1 || '') : ''; 
-            document.getElementById('t-out-1').value = isLabOrCom ? (data.tOut1 || '') : '';
-            document.getElementById('t-in-2').value = isLabOrCom ? (data.tIn2 || '') : ''; 
-            document.getElementById('t-out-2').value = isLabOrCom ? (data.tOut2 || '') : '';
-            document.getElementById('dayNotes').value = data.notes || '';
-            document.getElementById('modalOverlay').style.display = 'flex';
-        }
+function updateHoursBlock() {
+  const t = $('dayType').value, can = HOURS_TYPES.includes(t);
+  $('hours-block').classList.toggle('hidden', !can);
+  $('hint-nohours').classList.toggle('hidden', can);
+  $('hint-extra').classList.toggle('hidden', !(t === 'nolaborable' || t === 'festivo'));
+  $('hint-comision').classList.toggle('hidden', t !== 'comision');
+  if (!can) ['t-in-1','t-out-1','t-in-2','t-out-2'].forEach(i => $(i).value = '');
+}
+$('dayType').onchange = updateHoursBlock;
 
-        // Función para limpiar automáticamente los inputs de hora al cambiar el tipo de día en el modal
-        function handleDayTypeChange() {
-            const newType = document.getElementById('dayType').value;
-            if (newType !== 'laborable' && newType !== 'comision') {
-                document.getElementById('t-in-1').value = '';
-                document.getElementById('t-out-1').value = '';
-                document.getElementById('t-in-2').value = '';
-                document.getElementById('t-out-2').value = '';
-            }
-        }
+function openDay(k) {
+  editingKey = k;
+  const [y, m, d] = parseKey(k), data = db[k] || {};
+  $('dayTitle').textContent = new Date(y, m, d).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  $('dayType').value = data.type || defaultType(dowOf(y, m, d));
+  $('t-in-1').value = data.tIn1 || ''; $('t-out-1').value = data.tOut1 || '';
+  $('t-in-2').value = data.tIn2 || ''; $('t-out-2').value = data.tOut2 || '';
+  $('dayNotes').value = data.notes || '';
+  updateHoursBlock();
+  openOverlay('dayOverlay');
+}
 
-        function closeModal() { document.getElementById('modalOverlay').style.display = 'none'; }
-        function closeExtraReport() { document.getElementById('extraReportOverlay').style.display = 'none'; }
+function saveDayData() {
+  const type = $('dayType').value, [y, m, d] = parseKey(editingKey), cfg = getConfig(y);
+  const can = HOURS_TYPES.includes(type);
+  let in1 = '', out1 = '', in2 = '', out2 = '';
+  if (can) {
+    in1 = $('t-in-1').value; out1 = $('t-out-1').value; in2 = $('t-in-2').value; out2 = $('t-out-2').value;
+    if (!!in1 !== !!out1) return alert('Turno de mañana: rellena entrada y salida.');
+    if (in1 && tToM(out1) <= tToM(in1)) return alert('Turno de mañana: la salida debe ser posterior a la entrada.');
+    if (!!in2 !== !!out2) return alert('Turno de tarde: rellena entrada y salida.');
+    if (in2 && tToM(out2) <= tToM(in2)) return alert('Turno de tarde: la salida debe ser posterior a la entrada.');
+    if (in1 && in2 && tToM(in2) < tToM(out1)) return alert('El turno de tarde no puede empezar antes de que termine el de mañana.');
+  }
+  if (type === 'vacaciones' || type === 'asuntos') {
+    const max = type === 'vacaciones' ? cfg.maxVaca : cfg.maxAsun;
+    let count = 0;
+    for (let mo = 0; mo < 12; mo++) for (let da = 1; da <= daysIn(y, mo); da++) {
+      const kk = keyOf(y, mo, da);
+      if (kk !== editingKey && db[kk] && db[kk].type === type) count++;
+    }
+    if (count + 1 > max && !confirm(`Vas a superar el límite anual de ${type === 'vacaciones' ? 'VACACIONES' : 'ASUNTOS PROPIOS'} (${max} días). Acumularías ${count + 1}.\n\n¿Guardar de todas formas?`)) return;
+  }
+  const data = { type };
+  if (in1) { data.tIn1 = in1; data.tOut1 = out1; }
+  if (in2) { data.tIn2 = in2; data.tOut2 = out2; }
+  const notes = $('dayNotes').value.trim();
+  if (notes) data.notes = notes;
+  saveDay(editingKey, data);
+  closeOverlay('dayOverlay');
+  render();
+}
+$('btn-save-day').onclick = saveDayData;
+$('btn-cancel-day').onclick = () => closeOverlay('dayOverlay');
+$('btn-clear-day').onclick = () => {
+  if (!confirm('¿Eliminar todos los datos de este día?')) return;
+  deleteDay(editingKey); closeOverlay('dayOverlay'); render();
+};
 
-        function openConfigModal() {
-            const y = currentDate.getFullYear();
-            const cfg = getConfig(y);
-            
-            document.getElementById('configModalYearTitle').innerText = y;
-            document.getElementById('input-top-vaca').value = cfg.maxVaca;
-            document.getElementById('input-top-asun').value = cfg.maxAsun;
-            document.getElementById('input-cfg-jornada').value = mToT(cfg.minDay);
-            document.getElementById('input-cfg-h-manana').value = mToT(cfg.limitMorning);
-            document.getElementById('input-cfg-h-tarde').value = mToT(cfg.limitEvening);
-            
-            document.getElementById('configModalOverlay').style.display = 'flex';
-        }
+/* ============================================================
+   AJUSTES
+   ============================================================ */
+/* ============================================================
+   SELECCIÓN MÚLTIPLE DE DÍAS
+   ============================================================ */
+let selMode = false;
+const selected = new Set();
+let lastSel = null;
 
-        function closeConfigModal() { document.getElementById('configModalOverlay').style.display = 'none'; }
+function updateSelBar() {
+  $('selbar').classList.toggle('hidden', !selMode);
+  const n = selected.size;
+  $('sel-count').textContent = n + (n === 1 ? ' día seleccionado' : ' días seleccionados');
+  $('btn-sel-apply').disabled = n === 0;
+  $('btn-sel-clear').disabled = n === 0;
+  const b = $('btn-select');
+  b.classList.toggle('primary', selMode);
+  b.textContent = selMode ? '✕ Salir de selección' : '☑ Selección múltiple';
+}
+function setSelMode(on) {
+  selMode = on;
+  if (!on) { selected.clear(); lastSel = null; }
+  updateSelBar(); renderMonthly();
+}
+function addRange(a, b) {
+  const [y1, m1, d1] = parseKey(a), [y2, m2, d2] = parseKey(b);
+  let s = new Date(y1, m1, d1), e = new Date(y2, m2, d2);
+  if (s > e) [s, e] = [e, s];
+  for (const t = new Date(s); t <= e; t.setDate(t.getDate() + 1)) selected.add(keyOf(t.getFullYear(), t.getMonth(), t.getDate()));
+}
+function onDayClick(k, ev) {
+  if (!selMode) return openDay(k);
+  if (ev.shiftKey && lastSel) addRange(lastSel, k);
+  else if (selected.has(k)) selected.delete(k);
+  else selected.add(k);
+  lastSel = k;
+  updateSelBar(); renderMonthly();
+}
+$('btn-select').onclick = () => setSelMode(!selMode);
+$('btn-sel-clear').onclick = () => { selected.clear(); lastSel = null; updateSelBar(); renderMonthly(); };
+$('btn-sel-weekdays').onclick = () => {
+  const y = currentDate.getFullYear(), m = currentDate.getMonth();
+  for (let d = 1; d <= daysIn(y, m); d++) if (!isWeekend(dowOf(y, m, d))) selected.add(keyOf(y, m, d));
+  updateSelBar(); renderMonthly();
+};
 
-        function saveAnnualLimits() {
-            const y = currentDate.getFullYear();
-            if (!db._config) db._config = {};
-            if (!db._config[y]) db._config[y] = {};
-            
-            db._config[y].maxVaca = parseInt(document.getElementById('input-top-vaca').value, 10) || 0;
-            db._config[y].maxAsun = parseInt(document.getElementById('input-top-asun').value, 10) || 0;
-            db._config[y].minDay = tToM(document.getElementById('input-cfg-jornada').value) || 7*60;
-            db._config[y].limitMorning = tToM(document.getElementById('input-cfg-h-manana').value) || 7*60+30;
-            db._config[y].limitEvening = tToM(document.getElementById('input-cfg-h-tarde').value) || 18*60+30;
-            
-            saveDataToCloud(); 
-            closeConfigModal(); 
-            if(!document.getElementById('view-annual').classList.contains('hidden')) {
-                renderAnnual();
-            } else {
-                renderMonthly();
-            }
-        }
+function updateBulkHours() {
+  const t = $('bulkType').value, can = HOURS_TYPES.includes(t);
+  $('bulk-hours').classList.toggle('hidden', !can);
+  $('bulk-nohours').classList.toggle('hidden', can);
+  $('bulk-hint-extra').classList.toggle('hidden', !(t === 'nolaborable' || t === 'festivo'));
+  $('bulk-hint-comision').classList.toggle('hidden', t !== 'comision');
+  if (!can) ['b-in-1','b-out-1','b-in-2','b-out-2'].forEach(i => $(i).value = '');
+}
+$('bulkType').onchange = updateBulkHours;
 
-       function saveDayData() {
-            const newType = document.getElementById('dayType').value;
-            const [y, m, d] = currentEditingKey.split('-').map(Number);
-            const cfg = getConfig(y);
-            
-            const isLabOrCom = (newType === 'laborable' || newType === 'comision');
+function bulkTargets() {
+  const skip = $('bulk-skip').checked;
+  return [...selected].filter(k => { const [y, m, d] = parseKey(k); return !(skip && isWeekend(dowOf(y, m, d))); });
+}
+$('btn-sel-apply').onclick = () => {
+  if (!selected.size) return;
+  $('bulk-count').textContent = (selected.size + (selected.size === 1 ? ' día seleccionado' : ' días seleccionados')) + ' · tipo, horario y comentarios se aplicarán a todos';
+  $('bulkType').value = 'laborable';
+  ['b-in-1','b-out-1','b-in-2','b-out-2'].forEach(i => $(i).value = '');
+  $('bulk-notes').value = ''; $('bulk-skip').checked = true;
+  updateBulkHours();
+  openOverlay('bulkOverlay');
+};
+$('btn-bulk-cancel').onclick = () => closeOverlay('bulkOverlay');
 
-            let in1 = '', out1 = '', in2 = '', out2 = '';
+function finishBulk(msg) {
+  closeOverlay('bulkOverlay');
+  selected.clear(); lastSel = null;
+  updateSelBar(); render(); toast(msg);
+}
+$('btn-bulk-apply').onclick = () => {
+  const type = $('bulkType').value, keys = bulkTargets();
+  if (!keys.length) return alert('No hay días a los que aplicar: todos los seleccionados son fin de semana y está activada la opción de omitirlos.');
+  let in1 = '', out1 = '', in2 = '', out2 = '';
+  if (HOURS_TYPES.includes(type)) {
+    in1 = $('b-in-1').value; out1 = $('b-out-1').value; in2 = $('b-in-2').value; out2 = $('b-out-2').value;
+    if (!!in1 !== !!out1) return alert('Turno de mañana: rellena entrada y salida.');
+    if (in1 && tToM(out1) <= tToM(in1)) return alert('Turno de mañana: la salida debe ser posterior a la entrada.');
+    if (!!in2 !== !!out2) return alert('Turno de tarde: rellena entrada y salida.');
+    if (in2 && tToM(out2) <= tToM(in2)) return alert('Turno de tarde: la salida debe ser posterior a la entrada.');
+    if (in1 && in2 && tToM(in2) < tToM(out1)) return alert('El turno de tarde no puede empezar antes de que termine el de mañana.');
+  }
+  if (type === 'vacaciones' || type === 'asuntos') {
+    const byYear = {}; keys.forEach(k => { const y = parseKey(k)[0]; byYear[y] = (byYear[y] || 0) + 1; });
+    const set = new Set(keys), over = [];
+    for (const [ys, n] of Object.entries(byYear)) {
+      const y = +ys, max = type === 'vacaciones' ? getConfig(y).maxVaca : getConfig(y).maxAsun;
+      let count = 0;
+      for (let mo = 0; mo < 12; mo++) for (let da = 1; da <= daysIn(y, mo); da++) {
+        const kk = keyOf(y, mo, da);
+        if (!set.has(kk) && db[kk] && db[kk].type === type) count++;
+      }
+      if (count + n > max) over.push(`${y}: acumularías ${count + n} de ${max} días`);
+    }
+    if (over.length && !confirm(`Vas a superar el límite anual de ${type === 'vacaciones' ? 'VACACIONES' : 'ASUNTOS PROPIOS'}:\n\n${over.join('\n')}\n\n¿Aplicar de todas formas?`)) return;
+  }
+  const notes = $('bulk-notes').value.trim(), upd = {};
+  keys.forEach(k => {
+    const data = { type };
+    if (in1) { data.tIn1 = in1; data.tOut1 = out1; }
+    if (in2) { data.tIn2 = in2; data.tOut2 = out2; }
+    const n = notes || (db[k] && db[k].notes);
+    if (n) data.notes = n;
+    upd[k] = data; db[k] = data;
+  });
+  if (baseRef) baseRef.update(upd).catch(dbErr);
+  finishBulk(`${keys.length} ${keys.length === 1 ? 'día actualizado' : 'días actualizados'}`);
+};
+$('btn-bulk-delete').onclick = () => {
+  const keys = bulkTargets().filter(k => db[k]);
+  if (!keys.length) return alert('Ninguno de los días seleccionados tiene datos que eliminar.');
+  if (!confirm(`¿Eliminar los registros de ${keys.length} ${keys.length === 1 ? 'día' : 'días'}?`)) return;
+  const upd = {};
+  keys.forEach(k => { upd[k] = null; delete db[k]; });
+  if (baseRef) baseRef.update(upd).catch(dbErr);
+  finishBulk(`${keys.length} ${keys.length === 1 ? 'registro eliminado' : 'registros eliminados'}`);
+};
 
-            if (isLabOrCom) {
-                in1 = document.getElementById('t-in-1').value;
-                out1 = document.getElementById('t-out-1').value;
-                in2 = document.getElementById('t-in-2').value;
-                out2 = document.getElementById('t-out-2').value;
+$('btn-config').onclick = () => {
+  const y = currentDate.getFullYear(), c = getConfig(y);
+  $('cfg-year').textContent = y;
+  $('cfg-vaca').value = c.maxVaca; $('cfg-asun').value = c.maxAsun;
+  $('cfg-jornada').value = mToT(c.minDay);
+  $('cfg-man').value = mToT(c.limitMorning); $('cfg-tar').value = mToT(c.limitEvening);
+  openOverlay('configOverlay');
+};
+$('btn-cancel-cfg').onclick = () => closeOverlay('configOverlay');
+$('btn-save-cfg').onclick = () => {
+  const y = currentDate.getFullYear();
+  const jornada = tToM($('cfg-jornada').value);
+  if (jornada <= 0) return alert('La jornada diaria debe ser mayor que 0.');
+  saveConfig(y, {
+    maxVaca: Math.max(parseInt($('cfg-vaca').value, 10) || 0, 0),
+    maxAsun: Math.max(parseInt($('cfg-asun').value, 10) || 0, 0),
+    minDay: jornada,
+    limitMorning: tToM($('cfg-man').value) || 450,
+    limitEvening: tToM($('cfg-tar').value) || 1110
+  });
+  closeOverlay('configOverlay'); render();
+};
 
-                if ((in1 && !out1) || (!in1 && out1)) {
-                    alert("⚠️ Error en Turno de Mañana:\nDebes rellenar tanto la hora de entrada como la de salida.");
-                    return;
-                }
-                if (in1 && out1 && tToM(out1) <= tToM(in1)) {
-                    alert("⚠️ Error en Turno de Mañana:\nLa hora de salida no puede ser igual o anterior a la hora de entrada.");
-                    return;
-                }
+/* ============================================================
+   INFORME DE COMPENSACIÓN
+   ============================================================ */
+function openReport() {
+  const y = currentDate.getFullYear(), cfg = getConfig(y), J = cfg.minDay;
+  $('report-year').textContent = y;
+  const body = $('report-body'), foot = $('report-foot');
+  body.replaceChildren(); foot.replaceChildren();
+  const strong = txt => { const s = el('strong', '', txt); return s; };
+  const cell = (tr, content, cls) => { const td = el('td', cls || ''); if (typeof content === 'string') td.textContent = content; else td.appendChild(content); tr.appendChild(td); };
+  const saldoCell = (tr, v) => {
+    if (v === 0) return cell(tr, '-');
+    cell(tr, strong((v > 0 ? '+' : '') + fmtD(v, J)), v > 0 ? 'pos' : 'neg');
+  };
+  const addRow = (parent, label, ex, comp, enj, cls) => {
+    const tr = el('tr', cls || '');
+    cell(tr, label);
+    cell(tr, ex ? strong(fmtH(ex)) : '-');
+    cell(tr, comp ? strong(fmtH(comp)) : '-');
+    cell(tr, comp ? strong(fmtD(comp, J)) : '-');
+    cell(tr, enj ? strong(Math.floor(enj / J) + 'd') : '-');
+    saldoCell(tr, comp - enj);
+    parent.appendChild(tr);
+  };
+  let tEx = 0, tCo = 0, tEn = 0;
+  for (let m = 0; m < 12; m++) {
+    const s = monthStats(y, m);
+    tEx += s.extra; tCo += s.comp; tEn += s.enjoyed;
+    addRow(body, MONTHS[m], s.extra, s.comp, s.enjoyed);
+  }
+  addRow(foot, 'TOTAL ANUAL', tEx, tCo, tEn, 'total');
+  openOverlay('reportOverlay');
+}
+$('btn-report').onclick = openReport;
+$('btn-report2').onclick = openReport;
+$('btn-close-report').onclick = () => closeOverlay('reportOverlay');
 
-                if ((in2 && !out2) || (!in2 && out2)) {
-                    alert("⚠️ Error en Turno de Tarde:\nDebes rellenar tanto la hora de entrada como la de salida.");
-                    return;
-                }
-                if (in2 && out2 && tToM(out2) <= tToM(in2)) {
-                    alert("⚠️ Error en Turno de Tarde:\nLa hora de salida no puede ser igual o anterior a la hora de entrada.");
-                    return;
-                }
-            }
+/* ============================================================
+   EXPORTAR / IMPORTAR / BORRAR
+   ============================================================ */
+$('btn-export').onclick = () => {
+  const blob = new Blob([JSON.stringify(db, null, 1)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `control_horario_${new Date().toISOString().slice(0, 10)}.json`; a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+};
+$('btn-import').onclick = () => $('importInput').click();
 
-            if (newType === 'vacaciones' || newType === 'asuntos') {
-                const maxAllowed = cfg[newType === 'vacaciones' ? 'maxVaca' : 'maxAsun'];
-                let count = 0;
-                for (let month = 0; month < 12; month++) {
-                    for (let day = 1; day <= new Date(y, month + 1, 0).getDate(); day++) {
-                        const k = `${y}-${month}-${day}`;
-                        if (k !== currentEditingKey && db[k] && db[k].type === newType) count++;
-                    }
-                }
-                if (count + 1 > maxAllowed) {
-                    const nombreFiltro = newType === 'vacaciones' ? 'VACACIONES' : 'ASUNTOS PROPIOS';
-                    if (!confirm(`⚠️ ¡ADVERTENCIA DE TOPE!\n\nVas a superar el límite anual de ${nombreFiltro}.\nLímite máximo permitido: ${maxAllowed} días.\nCon este día acumularás: ${count + 1} días.\n\n¿Quieres guardarlo de todas formas?`)) return;
-                }
-            }
+function sanitizeImport(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) throw new Error('Estructura no válida');
+  const out = {}; let days = 0;
+  for (const [k, v] of Object.entries(raw)) {
+    if (k === '_config') {
+      if (!v || typeof v !== 'object') continue;
+      out._config = {};
+      for (const [yr, c] of Object.entries(v)) {
+        if (!/^\d{4}$/.test(yr) || !c || typeof c !== 'object') continue;
+        const num = x => (Number.isFinite(+x) && +x >= 0 && +x < 100000) ? +x : undefined;
+        const cc = {};
+        ['maxVaca','maxAsun','minDay','limitMorning','limitEvening'].forEach(f => { const n = num(c[f]); if (n !== undefined) cc[f] = n; });
+        out._config[yr] = cc;
+      }
+      continue;
+    }
+    if (!KEY_RE.test(k) || !v || typeof v !== 'object' || !TYPE_LABEL[v.type]) throw new Error('Registro no válido: ' + k);
+    const day = { type: v.type };
+    [['tIn1','tOut1'],['tIn2','tOut2']].forEach(([a, b]) => {
+      if (TIME_RE.test(v[a] || '') && TIME_RE.test(v[b] || '')) { day[a] = v[a]; day[b] = v[b]; }
+    });
+    if (typeof v.notes === 'string' && v.notes.trim()) day.notes = v.notes.slice(0, 500);
+    out[k] = day; days++;
+  }
+  return { out, days };
+}
+$('importInput').onchange = e => {
+  const file = e.target.files[0]; e.target.value = '';
+  if (!file) return;
+  const r = new FileReader();
+  r.onload = ev => {
+    try {
+      const { out, days } = sanitizeImport(JSON.parse(ev.target.result));
+      if (!confirm(`Se importarán ${days} días y SE REEMPLAZARÁN todos tus datos actuales.\n\nTe recomendamos exportar una copia antes. ¿Continuar?`)) return;
+      db = out;
+      baseRef.set(out).then(() => toast('Datos importados')).catch(dbErr);
+      render();
+    } catch (err) { alert('No se pudo importar el archivo: ' + err.message); }
+  };
+  r.readAsText(file);
+};
+$('btn-clear').onclick = () => {
+  if (!confirm('¿Seguro que quieres borrar TODOS tus datos? Esta acción no se puede deshacer.')) return;
+  if (!confirm('Última confirmación: se vaciará tu calendario completo.')) return;
+  db = {}; baseRef.remove().then(() => toast('Datos borrados')).catch(dbErr); render();
+};
 
-            db[currentEditingKey] = {
-                type: newType,
-                tIn1: in1, tOut1: out1,
-                tIn2: in2, tOut2: out2,
-                notes: document.getElementById('dayNotes').value
-            };
-            saveDataToCloud(); 
-            closeModal(); 
-            renderMonthly();
-        }
-
-        function clearDayData() {
-            if(confirm("¿Seguro que quieres eliminar por completo todos los registros e historial de este día?")) { delete db[currentEditingKey]; saveDataToCloud(); closeModal(); renderMonthly(); }
-        }
-
-        function toggleView() {
-            document.getElementById('view-monthly').classList.toggle('hidden');
-            document.getElementById('view-annual').classList.toggle('hidden');
-            if(!document.getElementById('view-annual').classList.contains('hidden')) renderAnnual();
-            else renderMonthly();
-        }
-
-        function renderAnnual() {
-            const container = document.getElementById('annual-calendar-container'), y = currentDate.getFullYear();
-            document.getElementById('annual-year-text').innerText = y;
-            const cfg = getConfig(y);
-            
-            container.innerHTML = ''; let v=0, a=0, e=0, totalExMinutes=0;
-            for(let m=0; m<12; m++) {
-                const mDiv = document.createElement('div'); mDiv.className = 'mini-month';
-                mDiv.innerHTML = `<div class="mini-month-name">${months[m]}</div>`;
-                const dDiv = document.createElement('div'); dDiv.className = 'mini-days';
-                const off = (new Date(y, m, 1).getDay() === 0) ? 6 : new Date(y, m, 1).getDay() - 1;
-                for(let i=0; i<off; i++) dDiv.appendChild(document.createElement('div'));
-                for(let d=1; d<=new Date(y, m+1, 0).getDate(); d++) {
-                    const k=`${y}-${m}-${d}`, dow=new Date(y,m,d).getDay();
-                    let def = (dow === 0)?'festivo':(dow===6?'nolaborable':'laborable');
-                    const data = db[k] || { type: def };
-                    
-                    if(db[k]) {
-                        const isLabOrCom = (data.type === 'laborable' || data.type === 'comision');
-                        if (isLabOrCom) totalExMinutes += calcSEx(data, k);
-                        if(data.type==='vacaciones') v++; 
-                        if(data.type==='asuntos') a++; 
-                        if(data.type==='extras') e++;
-                    }
-                    
-                    const dEl = document.createElement('div');
-                    let typeClass = data.type;
-                    if(data.type === 'comision') typeClass = 'laborable';
-                    if(data.type === 'nolaborable') typeClass = (dow === 6) ? 'nolaborable-sat' : 'nolaborable-other';
-                    dEl.className = `mini-day bg-${typeClass}`; dEl.innerText = d; dDiv.appendChild(dEl);
-                }
-                mDiv.appendChild(dDiv); container.appendChild(mDiv);
-            }
-            
-            const totalCompensatedMinutes = Math.round(totalExMinutes * 1.75);
-            const totalGeneratedDays = Math.floor(totalCompensatedMinutes / cfg.minDay);
-            
-            document.getElementById('count-vaca').innerText = `${v} / ${cfg.maxVaca}`;
-            document.getElementById('count-asun').innerText = `${a} / ${cfg.maxAsun}`;
-            document.getElementById('count-extr').innerText = `${e} / ${totalGeneratedDays}d`;
-            
-            const pctVaca = cfg.maxVaca > 0 ? Math.min((v / cfg.maxVaca) * 100, 100) : 0;
-            const pctAsun = cfg.maxAsun > 0 ? Math.min((a / cfg.maxAsun) * 100, 100) : 0;
-            const pctExtr = totalGeneratedDays > 0 ? Math.min((e / totalGeneratedDays) * 100, 100) : 0;
-            
-            const barVacaEl = document.getElementById('bar-vaca'), 
-                  barAsunEl = document.getElementById('bar-asun'),
-                  barExtrEl = document.getElementById('bar-extr');
-                  
-            barVacaEl.style.width = pctVaca + '%'; barAsunEl.style.width = pctAsun + '%'; barExtrEl.style.width = pctExtr + '%';
-            barVacaEl.style.backgroundColor = v > cfg.maxVaca ? '#ef4444' : '';
-            barAsunEl.style.backgroundColor = a > cfg.maxAsun ? '#ef4444' : '';
-            barExtrEl.style.backgroundColor = e > totalGeneratedDays ? '#ef4444' : '';
-        }
-
-        function changeMonth(s) { currentDate.setMonth(currentDate.getMonth()+s); renderMonthly(); }
-        function updateDateFromSelects() { currentDate.setFullYear(document.getElementById('yearSelect').value); currentDate.setMonth(document.getElementById('monthSelect').value); renderMonthly(); }
-        function exportData() { const blob = new Blob([JSON.stringify(db)], {type:'application/json'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`control_horario_backup.json`; a.click(); }
-        function importData(e) { const r = new FileReader(); r.onload = (ev) => { db = JSON.parse(ev.target.result); renderMonthly(); saveDataToCloud(); }; r.readAsText(e.target.files[0]); }
-        function clearData() { if(confirm("¿Seguro que quieres borrar TODOS los datos guardados? Esto vaciará tu base de datos.")) { db = {}; renderMonthly(); saveDataToCloud(); } }
-    </script>
+/* ============================================================
+   CIERRE DE MODALES: clic fuera y tecla Escape
+   ============================================================ */
+document.querySelectorAll('.overlay').forEach(o => o.addEventListener('mousedown', e => { if (e.target === o) o.classList.remove('open'); }));
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Escape') return;
+  const open = document.querySelectorAll('.overlay.open');
+  if (open.length) open.forEach(o => o.classList.remove('open'));
+  else if (selMode) setSelMode(false);
+});
+</script>
 </body>
 </html>
