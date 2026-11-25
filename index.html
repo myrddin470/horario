@@ -130,7 +130,6 @@ input:disabled{background:#f1f5f9;color:#94a3b8}
 .overlay{position:fixed;inset:0;background:rgba(15,23,42,.45);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;z-index:2000;padding:14px}
 .overlay.open{display:flex}
 .modal{background:#fff;border-radius:18px;padding:22px;width:100%;max-width:440px;max-height:92vh;overflow:auto;box-shadow:0 25px 50px -12px rgba(15,23,42,.3)}
-.modal.wide{max-width:860px}
 .modal h3{margin:0 0 2px;font-size:1.05rem;text-transform:capitalize}
 .modal .sub{color:var(--muted);font-size:.8rem;margin-bottom:14px}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -149,6 +148,35 @@ th{background:#f8fafc;text-align:left;padding:10px 12px;font-size:.68rem;text-tr
 td{padding:9px 12px;border-bottom:1px solid #f1f4f9}
 tr.total td{background:#f1f5f9;font-weight:800}
 .pos{color:var(--pos)} .neg{color:var(--neg)}
+
+/* Informe de compensación */
+.modal.wide{max-width:980px}
+.rep-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.rep-kpi{border:1px solid var(--line);border-radius:14px;padding:14px 16px;background:#fff}
+.rep-kpi .l{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.rep-kpi .v{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin:4px 0 2px;line-height:1.15}
+.rep-kpi .s{font-size:.72rem;color:var(--muted)}
+.rep-kpi.main{border-color:transparent;background:linear-gradient(135deg,var(--brand),#7c3aed);color:#fff}
+.rep-kpi.main .l,.rep-kpi.main .s{color:rgba(255,255,255,.8)}
+.rep-kpi.main.pos{background:linear-gradient(135deg,#059669,#10b981)}
+.rep-kpi.main.neg{background:linear-gradient(135deg,#dc2626,#f87171)}
+.rep-wrap{overflow-x:auto}
+table.rep{border-collapse:separate;border-spacing:0}
+table.rep th{white-space:nowrap}
+table.rep th:nth-child(n+2),table.rep td:nth-child(n+2){text-align:right;font-variant-numeric:tabular-nums}
+table.rep tbody tr:nth-child(even) td{background:#fafbfd}
+table.rep tbody tr:hover td{background:var(--brand-soft)}
+table.rep td:first-child{font-weight:600}
+table.rep tr.dim td{color:#b3bcc9}
+table.rep tr.dim td:first-child{color:#94a3b8;font-weight:500}
+table.rep tr.cur td{background:var(--brand-soft)!important;box-shadow:inset 0 1px 0 rgba(79,70,229,.25),inset 0 -1px 0 rgba(79,70,229,.25)}
+table.rep tr.cur td:first-child{box-shadow:inset 3px 0 0 var(--brand),inset 0 1px 0 rgba(79,70,229,.25),inset 0 -1px 0 rgba(79,70,229,.25)}
+table.rep tfoot td{background:#eef0fb;font-weight:800;border-top:2px solid var(--brand);border-bottom:none;color:var(--ink)}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-weight:700;font-size:.78rem}
+.badge.pos{background:#d1fae5;color:#047857}
+.badge.neg{background:#fee2e2;color:#b91c1c}
+.badge.cur-tag{background:var(--brand);color:#fff;font-size:.6rem;letter-spacing:.04em;margin-left:6px;padding:1px 7px;vertical-align:middle}
+@media (max-width:760px){.rep-kpis{grid-template-columns:repeat(2,1fr)}.rep-kpi .v{font-size:1.2rem}}
 
 .footer{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:18px}
 .footer .btn{font-size:.78rem;padding:7px 12px;color:var(--muted)}
@@ -381,8 +409,14 @@ tr.total td{background:#f1f5f9;font-weight:800}
       <h3>Informe de compensación <span id="report-year" style="color:var(--brand)"></span></h3>
       <button class="btn" id="btn-close-report">Cerrar</button>
     </div>
-    <div class="table-wrap">
-      <table>
+    <div class="rep-kpis">
+      <div class="rep-kpi"><div class="l">Horas extra</div><div class="v" id="rk-ex">-</div><div class="s">Total en bruto del año</div></div>
+      <div class="rep-kpi"><div class="l">Compensación ×1,75</div><div class="v" id="rk-co">-</div><div class="s" id="rk-co-s"></div></div>
+      <div class="rep-kpi"><div class="l">Disfrutado</div><div class="v" id="rk-en">-</div><div class="s">Días de permiso usados</div></div>
+      <div class="rep-kpi main" id="rk-main"><div class="l">Disponible</div><div class="v" id="rk-av">-</div><div class="s">Compensación − disfrutado</div></div>
+    </div>
+    <div class="table-wrap rep-wrap">
+      <table class="rep">
         <thead><tr><th>Mes</th><th>H. extra (100%)</th><th>Compensación (×1,75)</th><th>Días generados</th><th>Días disfrutados</th><th>Saldo</th></tr></thead>
         <tbody id="report-body"></tbody>
         <tfoot id="report-foot"></tfoot>
@@ -951,11 +985,13 @@ function openReport() {
   const cell = (tr, content, cls) => { const td = el('td', cls || ''); if (typeof content === 'string') td.textContent = content; else td.appendChild(content); tr.appendChild(td); };
   const saldoCell = (tr, v) => {
     if (v === 0) return cell(tr, '-');
-    cell(tr, strong((v > 0 ? '+' : '') + fmtD(v, J)), v > 0 ? 'pos' : 'neg');
+    cell(tr, el('span', 'badge ' + (v > 0 ? 'pos' : 'neg'), (v > 0 ? '+' : '') + fmtD(v, J)));
   };
-  const addRow = (parent, label, ex, comp, enj, cls) => {
+  const addRow = (parent, label, ex, comp, enj, cls, isCur) => {
     const tr = el('tr', cls || '');
-    cell(tr, label);
+    const first = el('td'); first.textContent = label;
+    if (isCur) first.appendChild(el('span', 'badge cur-tag', 'ACTUAL'));
+    tr.appendChild(first);
     cell(tr, ex ? strong(fmtH(ex)) : '-');
     cell(tr, comp ? strong(fmtH(comp)) : '-');
     cell(tr, comp ? strong(fmtD(comp, J)) : '-');
@@ -963,13 +999,25 @@ function openReport() {
     saldoCell(tr, comp - enj);
     parent.appendChild(tr);
   };
+  const hoy = new Date();
   let tEx = 0, tCo = 0, tEn = 0;
   for (let m = 0; m < 12; m++) {
     const s = monthStats(y, m);
     tEx += s.extra; tCo += s.comp; tEn += s.enjoyed;
-    addRow(body, MONTHS[m], s.extra, s.comp, s.enjoyed);
+    const isCur = y === hoy.getFullYear() && m === hoy.getMonth();
+    const empty = s.extra === 0 && s.comp === 0 && s.enjoyed === 0;
+    addRow(body, MONTHS[m], s.extra, s.comp, s.enjoyed, (isCur ? 'cur ' : '') + (empty ? 'dim' : ''), isCur);
   }
   addRow(foot, 'TOTAL ANUAL', tEx, tCo, tEn, 'total');
+
+  // Tarjetas resumen (mismas cifras que la fila de total)
+  const avail = tCo - tEn;
+  $('rk-ex').textContent = tEx ? fmtH(tEx) : '0h';
+  $('rk-co').textContent = tCo ? fmtH(tCo) : '0h';
+  $('rk-co-s').textContent = tCo ? `= ${fmtD(tCo, J)} generados` : 'Sin horas generadas';
+  $('rk-en').textContent = Math.floor(tEn / J) + (Math.floor(tEn / J) === 1 ? ' día' : ' días');
+  $('rk-av').textContent = avail === 0 ? '0d 0h 0m' : (avail > 0 ? '+' : '') + fmtD(avail, J);
+  $('rk-main').className = 'rep-kpi main' + (avail > 0 ? ' pos' : avail < 0 ? ' neg' : '');
   openOverlay('reportOverlay');
 }
 $('btn-report').onclick = openReport;
