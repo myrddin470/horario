@@ -72,7 +72,8 @@ input:disabled{background:#f1f5f9;color:#94a3b8}
 .nav select{width:auto;padding:8px 10px;font-weight:600}
 .actions{display:flex;gap:6px;flex-wrap:wrap}
 
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}
+@media (max-width:1100px){.stats{grid-template-columns:repeat(3,1fr)}}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;box-shadow:var(--shadow)}
 .stat .l{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
 .stat .v{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;margin-top:2px}
@@ -237,6 +238,7 @@ tr.total td{background:#f1f5f9;font-weight:800}
       <div class="stat"><div class="l">Horas objetivo</div><div class="v" id="st-target">0h</div><div class="s" id="st-target-s"></div></div>
       <div class="stat"><div class="l">Trabajadas</div><div class="v" id="st-worked">0h</div><div class="s" id="st-worked-s"></div></div>
       <div class="stat"><div class="l">Saldo del mes</div><div class="v" id="st-balance">0h</div><div class="s">Trabajadas − objetivo</div></div>
+      <div class="stat"><div class="l">Trabajadas hasta ayer</div><div class="v" id="st-until">0h</div><div class="s" id="st-until-s"></div></div>
       <div class="stat"><div class="l">Horas extra</div><div class="v" id="st-extra">0h</div><button class="link" id="btn-report">Ver informe de compensación →</button></div>
     </div>
 
@@ -489,10 +491,11 @@ function dayExtra(d, y, m, day, cfg) {
   });
   return ex;
 }
-function monthStats(y, m) {
+function monthStats(y, m, upTo) {
   const cfg = getConfig(y);
   const s = { target: 0, worked: 0, extra: 0, enjoyed: 0, workDays: 0 };
-  for (let d = 1; d <= daysIn(y, m); d++) {
+  const last = upTo === undefined ? daysIn(y, m) : Math.min(upTo, daysIn(y, m));
+  for (let d = 1; d <= last; d++) {
     const data = getDay(y, m, d);
     if (WORK_TYPES.includes(data.type)) { s.target += cfg.minDay; s.workDays++; }
     s.worked += dayMinutes(data, cfg);
@@ -662,6 +665,15 @@ function renderMonthly() {
   const bv = $('st-balance'); bv.textContent = (bal > 0 ? '+' : '') + fmtH(bal);
   bv.className = 'v' + (bal > 0 ? ' pos' : bal < 0 ? ' neg' : '');
   $('st-extra').textContent = fmtH(s.extra);
+
+  // Trabajadas hasta ayer (sin contar hoy)
+  const hoy = new Date(), cur = hoy.getFullYear() * 12 + hoy.getMonth(), shown = y * 12 + m;
+  const upTo = shown < cur ? daysIn(y, m) : shown > cur ? 0 : hoy.getDate() - 1;
+  const u = monthStats(y, m, upTo), ub = u.worked - u.target;
+  $('st-until').textContent = fmtH(u.worked);
+  $('st-until-s').textContent = upTo === 0
+    ? 'Aún no hay días anteriores a hoy'
+    : `Del 1 al ${upTo} de ${MONTHS[m].toLowerCase()} · objetivo ${fmtH(u.target)} · ${ub > 0 ? '+' : ''}${fmtH(ub)}`;
 }
 
 function renderAnnual() {
